@@ -74,6 +74,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.divider,
     borderRadius: radius.md,
+    // Web preview: the accent border is the focus indicator.
+    outlineWidth: 0,
   },
   withIcon: { paddingLeft: 34 },
 });
