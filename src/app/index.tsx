@@ -15,5 +15,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#161826',
   },
-  text: { color: '#e9e9ed', fontSize: 20 },
+  text: { color: '#e9e9ed', fontSize: 20, fontFamily: 'Inter_500Medium' },
 });

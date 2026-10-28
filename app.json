@@ -10,7 +10,12 @@
     "backgroundColor": "#161826",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.dieseldelta"
+      "bundleIdentifier": "app.dieseldelta",
+      "infoPlist": {
+        "NSCameraUsageDescription": "DieselDelta uses the camera to scan product barcodes and grocery receipts. Receipt photos are processed on this device.",
+        "NSPhotoLibraryAddUsageDescription": "DieselDelta saves share cards to your photo library.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "app.dieseldelta",
@@ -35,7 +40,8 @@
           "imageWidth": 76
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
