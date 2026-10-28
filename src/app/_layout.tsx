@@ -7,6 +7,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { colors } from '@/theme';
+import { ToastHost } from '@/ui';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +24,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <Stack screenOptions={{ headerShown: false, contentStyle: styles.root }} />
+      <ToastHost />
       <StatusBar style="light" />
     </GestureHandlerRootView>
   );

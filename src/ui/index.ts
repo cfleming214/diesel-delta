@@ -14,3 +14,5 @@ export { Stepper } from './Stepper';
 export { Tag, type TagTone } from './Tag';
 export { Text, type TextProps, type TextVariant } from './Text';
 export { Toggle } from './Toggle';
+export { Sheet } from './Sheet';
+export { ToastHost } from './Toast';
