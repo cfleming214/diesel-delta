@@ -10,6 +10,8 @@ type Props = TextInputProps & {
   height?: number;
   textStyle?: TextStyle;
   invalid?: boolean;
+  /** Tabular figures for numeric entry (ZIP, price). */
+  numeric?: boolean;
 };
 
 /** `.input`: surface fill, 1px divider border that turns accent on focus. */
@@ -18,6 +20,7 @@ export function Input({
   height = 44,
   textStyle,
   invalid,
+  numeric = false,
   onFocus,
   onBlur,
   style,
@@ -47,7 +50,7 @@ export function Input({
         }}
         style={[
           styles.input,
-          tabular,
+          numeric && tabular,
           { minHeight: height },
           IconCmp ? styles.withIcon : null,
           (focused || invalid) && { borderColor: invalid ? colors.accentRamp[300] : colors.accent },
