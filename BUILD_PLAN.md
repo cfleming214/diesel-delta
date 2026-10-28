@@ -42,7 +42,7 @@ Use the **current stable Expo SDK** (SDK 58 / React Native 0.88 at project start
 | Font | `@expo-google-fonts/inter` (400 and 500 only) |
 | Blur and gradients | `expo-blur` for the tab bar. `expo-linear-gradient` for fading rules. Skia `RadialGradient` for the screen ground and the share card. |
 | Haptics | `expo-haptics`: a selection tick on each scrub snap and toggle |
-| Bottom sheet | `@gorhom/bottom-sheet` |
+| Bottom sheet | Custom `Sheet` (`Modal` + Reanimated + Gesture Handler) — the spec is simple and avoids a third-party dependency on Reanimated internals |
 | Camera and barcode | `expo-camera` (`CameraView` with `barcodeScannerSettings`) |
 | Receipt OCR | `@react-native-ml-kit/text-recognition`, on device. Needs a dev build. |
 | Share card | `react-native-view-shot`, `expo-sharing`, `expo-media-library` |
@@ -148,7 +148,7 @@ Root Stack (headerShown: false)
 - **Custom tab bar:** a 22pt icon over a 10pt label. The active tab uses the accent color, a filled icon, and an 18×2 accent mark with an 8pt glow. Padding is 6/6/28. Top rule fades over 48pt.
 - **Deep links:** use the `dieseldelta://` scheme plus universal links for `dd.app/d/:code` (share cards) and `dd.app/i/:id` (items).
 - **Toast:** one global host, 112pt from the bottom, auto-dismisses after 2.2s, driven by the `useUi` store.
-- **Sheets** (Methodology, Provenance): `@gorhom/bottom-sheet`. Backdrop is `neutral-900` at 65%, top radius 14, max 80% height, 36×4 grabber.
+- **Sheets** (Methodology, Provenance): `src/ui/Sheet` (drag down to dismiss). Backdrop is `neutral-900` at 65%, top radius 14, max 80% height, 36×4 grabber.
 
 ---
 
