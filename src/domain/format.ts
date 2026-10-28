@@ -49,3 +49,9 @@ export const dateAtIndex = (startDate: string, i: number) => {
   d.setDate(d.getDate() + i);
   return d;
 };
+
+/** Correlation to two decimals with a typographic minus; values that round to zero show `0.00`. */
+export const formatCorrelation = (r: number) => {
+  const rounded = Math.round(r * 100) / 100;
+  return (rounded < 0 ? MINUS : '') + Math.abs(rounded).toFixed(2);
+};

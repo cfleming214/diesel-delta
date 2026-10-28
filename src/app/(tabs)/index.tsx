@@ -49,6 +49,7 @@ export default function TodayScreen() {
               start={model.start}
               end={model.end}
               height={CHART_HEIGHT}
+              bleed={4}
               index={scrub}
               onIndexChange={setScrub}
               accessibilityValueText={`${day}: basket ${b.toFixed(1)}, diesel ${f.toFixed(1)}, gap ${sgn(b - f)} points`}
