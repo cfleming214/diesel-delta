@@ -6,6 +6,8 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { colors } from '@/theme';
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -27,5 +29,5 @@ export default function RootLayout() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#161826' },
+  root: { flex: 1, backgroundColor: colors.bg },
 });
