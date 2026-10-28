@@ -28,7 +28,7 @@ Where this plan says "per spec", the details (sizes, copy, colors) are in `desig
 
 ## 2. Tech stack
 
-Use the **current stable Expo SDK**. PLAN.md says "SDK 51+", and 51 is now old. Use the New Architecture, which is the default on recent SDKs. React Native 0.76+ is required for the `boxShadow` and `filter` style props that the glow effects rely on.
+Use the **current stable Expo SDK** (SDK 58 / React Native 0.88 at project start). PLAN.md says "SDK 51+", and 51 is now old. Use the New Architecture, which is the default on recent SDKs. React Native 0.76+ is required for the `boxShadow` and `filter` style props that the glow effects rely on.
 
 | Concern | Library |
 |---|---|
@@ -59,7 +59,7 @@ Use the **current stable Expo SDK**. PLAN.md says "SDK 51+", and 51 is now old. 
 ## 3. Project structure
 
 ```
-app/                              # Expo Router
+src/app/                          # Expo Router (SDK 58 convention: routes live in src/app)
   _layout.tsx                     # fonts, providers (Query, GestureHandler, BottomSheet, Toast), gate on onboarding
   onboarding.tsx                  # ZIP entry
   (tabs)/
