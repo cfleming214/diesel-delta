@@ -32,3 +32,13 @@ export const smoney = (v: number) => (v >= 0 ? '+' : MINUS) + '$' + Math.abs(v).
 /** `Oct 26` or `Oct 26, 2026`. */
 export const formatDate = (d: Date, withYear = false) =>
   `${MONTHS[d.getMonth()]} ${d.getDate()}${withYear ? `, ${d.getFullYear()}` : ''}`;
+
+/** Local calendar date → `yyyy-mm-dd`. */
+export const toISODate = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/** `yyyy-mm-dd` → local Date at midnight. */
+export const fromISODate = (s: string) => {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y!, m! - 1, d!);
+};
