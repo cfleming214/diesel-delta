@@ -105,7 +105,12 @@ export const fixtureApi: DataApi = {
     if (!/^\d{5}$/.test(zip)) throw new Error('Enter a 5-digit US ZIP code.');
     const key = zipRegion(zip);
     const series = regionalize(FUEL, key);
-    return { zip, region: publicRegion(key), currentDiesel: series[series.length - 1]! };
+    return {
+      zip,
+      region: publicRegion(key),
+      currentDiesel: series[series.length - 1]!,
+      asOf: toISODate(dateAt(series.length - 1)),
+    };
   },
 
   async getRegions() {

@@ -1,5 +1,138 @@
-import { Placeholder } from '@/components/Placeholder';
+import { useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
+import { GasPump, MapPin } from 'phosphor-react-native';
+import { useState } from 'react';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+
+import { api, queryKeys, useZipLookup } from '@/data';
+import { formatDate, fromISODate, money } from '@/domain';
+import { usePrefs } from '@/store/prefs';
+import { alpha, colors, em, layout } from '@/theme';
+import { Button, Card, Input, Kicker, Screen, Text } from '@/ui';
+
+const ZIP_ERROR = 'Enter a 5-digit US ZIP code.';
 
 export default function OnboardingScreen() {
-  return <Placeholder title="DieselDelta" nav="push" phase="Phase 2" />;
+  const [zip, setZip] = useState('');
+  const [error, setError] = useState(false);
+  const lookup = useZipLookup(zip);
+  const queryClient = useQueryClient();
+  const setLocation = usePrefs((s) => s.setLocation);
+
+  const onContinue = async () => {
+    if (!/^\d{5}$/.test(zip)) {
+      setError(true);
+      return;
+    }
+    const result = await queryClient.fetchQuery({
+      queryKey: queryKeys.zip(zip),
+      queryFn: () => api.lookupZip(zip),
+    });
+    setLocation(zip, result.region.key);
+    router.replace('/');
+  };
+
+  const found = zip.length === 5 ? lookup.data : undefined;
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.fill}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Screen paddingX={layout.onboardingX} contentStyle={styles.content}>
+        <View style={styles.brand}>
+          <GasPump size={20} color={colors.accent} />
+          <Text variant="control" style={styles.brandText}>
+            DieselDelta
+          </Text>
+        </View>
+
+        <View style={styles.intro}>
+          <Text variant="display" accessibilityRole="header">
+            When diesel falls, do grocery prices follow?
+          </Text>
+          <Text color={colors.neutral[400]}>
+            DieselDelta compares the regional diesel index with the shelf prices of the items you
+            buy. Your ZIP sets which fuel series is used.
+          </Text>
+        </View>
+
+        <View style={styles.field}>
+          <Text variant="caption" color={alpha(colors.text, 0.7)} nativeID="zip-label">
+            Home ZIP code
+          </Text>
+          <Input
+            accessibilityLabel="Home ZIP code"
+            aria-labelledby="zip-label"
+            value={zip}
+            onChangeText={(t) => {
+              setZip(t.replace(/\D/g, '').slice(0, 5));
+              setError(false);
+            }}
+            placeholder="77002"
+            keyboardType="number-pad"
+            textContentType="postalCode"
+            autoComplete="postal-code"
+            maxLength={5}
+            height={48}
+            numeric
+            invalid={error}
+            textStyle={styles.zip}
+            returnKeyType="done"
+            onSubmitEditing={onContinue}
+          />
+          {error ? (
+            <Text variant="caption" color={colors.accentRamp[300]} accessibilityRole="alert">
+              {ZIP_ERROR}
+            </Text>
+          ) : null}
+        </View>
+
+        {found ? (
+          <Card padding={14} gap={10} style={styles.card}>
+            <Kicker style={styles.kicker}>Fuel series</Kicker>
+            <View style={styles.regionRow}>
+              <MapPin size={18} color={colors.accent} style={styles.pin} />
+              <View style={styles.regionText}>
+                <Text variant="control" style={styles.regionName}>
+                  {found.region.name}
+                </Text>
+                <Text variant="bodySmall" color={colors.neutral[400]}>
+                  {`State series: ${found.region.state} retail diesel`}
+                </Text>
+              </View>
+            </View>
+            <Text variant="bodySmall" numeric color={colors.neutral[400]}>
+              {`Current price ${money(found.currentDiesel)}/gal, week of ${formatDate(fromISODate(found.asOf), true)}`}
+            </Text>
+          </Card>
+        ) : null}
+
+        <View style={styles.footer}>
+          <Button label="Continue" height={50} large block onPress={onContinue} />
+          <Text variant="caption" color={colors.neutral[500]} style={styles.center}>
+            Source: U.S. EIA weekly retail diesel. No account required.
+          </Text>
+        </View>
+      </Screen>
+    </KeyboardAvoidingView>
+  );
 }
+
+const styles = StyleSheet.create({
+  fill: { flex: 1 },
+  content: { gap: 22 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 22 },
+  brandText: { fontSize: 15 },
+  intro: { gap: 12, marginTop: 40 },
+  field: { gap: 5 },
+  zip: { fontSize: 20, letterSpacing: em(0.12, 20) },
+  card: { paddingHorizontal: 16 },
+  kicker: { fontSize: 10 },
+  regionRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  pin: { marginTop: 2 },
+  regionText: { gap: 2, flex: 1 },
+  regionName: { fontSize: 15 },
+  footer: { marginTop: 'auto', gap: 12, paddingBottom: 12 },
+  center: { textAlign: 'center' },
+});

@@ -72,7 +72,13 @@ export type RetailerScore = {
   categories: { category: string; pct: number }[];
 };
 
-export type ZipLookup = { zip: string; region: Region; currentDiesel: number };
+export type ZipLookup = {
+  zip: string;
+  region: Region;
+  currentDiesel: number;
+  /** ISO date of the latest fuel observation. */
+  asOf: string;
+};
 
 export interface DataApi {
   lookupZip(zip: string): Promise<ZipLookup>;
