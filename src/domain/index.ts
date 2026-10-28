@@ -4,3 +4,4 @@ export * from './format';
 export * from './series';
 export * from './stats';
 export * from './verdict';
+export * from './chart';
