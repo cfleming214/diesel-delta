@@ -16,3 +16,4 @@ export { Text, type TextProps, type TextVariant } from './Text';
 export { Toggle } from './Toggle';
 export { Sheet } from './Sheet';
 export { ToastHost } from './Toast';
+export { Slider } from './Slider';

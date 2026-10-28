@@ -6,6 +6,7 @@ import {
   bestLag,
   computeDelta,
   correlationAtLag,
+  formatCorrelation,
   formatDate,
   gridValues,
   indexWindow,
@@ -41,6 +42,11 @@ describe('format', () => {
     expect(smoney(5.12)).toBe('+$5.12');
     expect(smoney(-0.21)).toBe('−$0.21');
     expect(smoney(0)).toBe('+$0.00');
+  });
+  test('formatCorrelation', () => {
+    expect(formatCorrelation(0.38211)).toBe('0.38');
+    expect(formatCorrelation(-0.0026)).toBe('0.00');
+    expect(formatCorrelation(-0.456)).toBe('\u22120.46');
   });
   test('formatDate', () => {
     const d = new Date(2026, 9, 26);

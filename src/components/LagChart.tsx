@@ -21,6 +21,8 @@ type Props = {
   onIndexChange: (index: number | null) => void;
   /** Spoken summary of the selected day, for VoiceOver. */
   accessibilityValueText?: string;
+  /** Let the chart extend this many points past its container on each side. */
+  bleed?: number;
 };
 
 /** Days moved per VoiceOver increment/decrement. */
@@ -41,6 +43,7 @@ export function LagChart({
   index,
   onIndexChange,
   accessibilityValueText,
+  bleed = 0,
 }: Props) {
   const [width, setWidth] = useState(0);
   const geometry = useMemo(
@@ -86,7 +89,7 @@ export function LagChart({
   return (
     <GestureDetector gesture={pan}>
       <View
-        style={[styles.wrap, { height }]}
+        style={{ height, marginHorizontal: -bleed }}
         onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
         accessible
         accessibilityRole="adjustable"
@@ -197,6 +200,5 @@ function Cursor({
 }
 
 const styles = StyleSheet.create({
-  wrap: { marginHorizontal: -4 },
   svg: { overflow: 'visible' },
 });
