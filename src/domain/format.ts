@@ -42,3 +42,10 @@ export const fromISODate = (s: string) => {
   const [y, m, d] = s.split('-').map(Number);
   return new Date(y!, m! - 1, d!);
 };
+
+/** Calendar date of index `i` in a daily series that starts on `startDate`. */
+export const dateAtIndex = (startDate: string, i: number) => {
+  const d = fromISODate(startDate);
+  d.setDate(d.getDate() + i);
+  return d;
+};

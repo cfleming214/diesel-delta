@@ -35,7 +35,7 @@ Use the **current stable Expo SDK** (SDK 58 / React Native 0.88 at project start
 | Framework | `expo`, TypeScript (strict) |
 | Routing | `expo-router` with typed routes |
 | Server state | `@tanstack/react-query`, with `@tanstack/query-async-storage-persister` for the offline cache |
-| Client state | `zustand` with `persist` middleware on `react-native-mmkv` |
+| Client state | `zustand` with `persist` middleware on `@react-native-async-storage/async-storage` (small payloads; works in web preview and Jest, unlike MMKV) |
 | Charts | `victory-native` (XL), `@shopify/react-native-skia`, `react-native-reanimated`, `react-native-gesture-handler` |
 | Sparklines and small static charts | `react-native-svg`, which is cheaper than a Skia canvas per list row |
 | Icons | `phosphor-react-native`, regular weight plus fill |
@@ -156,7 +156,7 @@ Root Stack (headerShown: false)
 
 ### Zustand
 
-`usePrefs` is persisted with MMKV:
+`usePrefs` is persisted with AsyncStorage:
 - `zip`, `regionKey`
 - `basket`: `{ id, order, weight }[]`
 - `followed: string[]`
