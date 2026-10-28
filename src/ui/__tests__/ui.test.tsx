@@ -60,6 +60,20 @@ describe('Button', () => {
   });
 });
 
+describe('Text', () => {
+  test('uses tabular figures only when numeric', async () => {
+    await render(
+      <>
+        <Text>on-highway</Text>
+        <Text numeric>4.0</Text>
+      </>,
+    );
+    const flat = (t: string) => [screen.getByText(t).props.style].flat(Infinity);
+    expect(flat('on-highway').some((s) => s?.fontVariant)).toBe(false);
+    expect(flat('4.0').some((s) => s?.fontVariant?.includes('tabular-nums'))).toBe(true);
+  });
+});
+
 describe('Screen', () => {
   test('renders children inside the safe area', async () => {
     await render(

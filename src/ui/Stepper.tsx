@@ -37,7 +37,7 @@ export function Stepper({ value, onChange, min, max, format = String, accessibil
         accessibilityLabel="Decrease"
         onPress={() => onChange(clamp(value - 1))}
       />
-      <Text variant="control" style={styles.value}>
+      <Text variant="control" numeric style={styles.value}>
         {format(value)}
       </Text>
       <IconButton

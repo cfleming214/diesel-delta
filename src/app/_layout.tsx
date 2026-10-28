@@ -31,6 +31,7 @@ export default function RootLayout() {
         <Stack.Screen name="retailers" />
         <Stack.Screen name="share" options={{ presentation: 'modal' }} />
         <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="dev/kitchen-sink" />
       </Stack>
       <ToastHost />
       <StatusBar style="light" />

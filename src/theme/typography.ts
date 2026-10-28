@@ -40,5 +40,5 @@ export const type = {
   tabLabel: { fontFamily: fonts.medium, fontSize: 10 },
 } satisfies Record<string, TextStyle>;
 
-/** All numbers render with tabular figures. */
+/** Tabular figures; every number in the UI uses them (via `numeric` on Text and Input). */
 export const tabular: TextStyle = { fontVariant: ['tabular-nums'] };
