@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-90a63436-5188-4f8e-821c-9584c97d80be/styles.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<script src="_ds/nocturne-90a63436-5188-4f8e-821c-9584c97d80be/_ds_bundle.js"></script>
+<style>body{margin:0;background:var(--color-bg)}a{color:var(--color-accent)}a:hover{color:var(--color-accent-400)}button{font-family:inherit;color:inherit}input[type=range]{accent-color:var(--color-accent)}</style>
+</helmet>
+<div style="display:flex;justify-content:center;align-items:center;min-height:{{ wrapMinH }};padding:{{ wrapPad }};">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+<div style="height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden;color:var(--color-text);font-family:var(--font-body);background:radial-gradient(120% 55% at 0% 0%, var(--color-surface) 0%, var(--color-bg) 62%);">
+<div style="height:54px;flex:none;"></div>
+<div style="flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:{{ scrollPadB }};">
+
+<sc-if value="{{ isOnb }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Onboarding" style="padding:28px 24px 24px;display:flex;flex-direction:column;gap:22px;min-height:100%;">
+  <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;"><i class="ph ph-gas-pump" style="font-size:20px;color:var(--color-accent);"></i>DieselDelta</div>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-top:40px;">
+    <h1 style="font-size:34px;line-height:1.1;margin:0;letter-spacing:-0.025em;text-wrap:pretty;">When diesel falls, do grocery prices follow?</h1>
+    <p style="margin:0;font-size:15px;color:var(--color-neutral-400);text-wrap:pretty;">DieselDelta compares the regional diesel index with the shelf prices of the items you buy. Your ZIP sets which fuel series is used.</p>
+  </div>
+  <div class="field" style="display:flex;flex-direction:column;gap:2px;">
+    <label>Home ZIP code</label>
+    <input class="input" inputMode="numeric" maxLength="5" placeholder="77002" value="{{ zip }}" onChange="{{ onZip }}" style="min-height:48px;font-size:20px;letter-spacing:0.12em;font-variant-numeric:tabular-nums;">
+    <sc-if value="{{ zipError }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--color-accent-300);margin-top:4px;">Enter a 5-digit US ZIP code.</div></sc-if>
+  </div>
+  <sc-if value="{{ zipValid }}" hint-placeholder-val="{{ true }}">
+  <div class="card elev-sm" style="padding:14px 16px;gap:10px;">
+    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-300);">Fuel series</div>
+    <div style="display:flex;align-items:flex-start;gap:10px;"><i class="ph ph-map-pin" style="font-size:18px;color:var(--color-accent);margin-top:2px;"></i><div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:15px;font-weight:500;">{{ region.name }}</span><span style="font-size:13px;color:var(--color-neutral-400);">State series: {{ region.state }} retail diesel</span></div></div>
+    <div style="font-size:13px;color:var(--color-neutral-400);">Current price {{ region.price }}/gal, week of {{ todayLabel }}</div>
+  </div>
+  </sc-if>
+  <div style="margin-top:auto;display:flex;flex-direction:column;gap:12px;">
+    <button class="btn btn-primary btn-block" disabled="{{ zipInvalid }}" onClick="{{ finishOnb }}" style="min-height:50px;font-size:16px;">Continue</button>
+    <div style="font-size:12px;color:var(--color-neutral-500);text-align:center;">Source: U.S. EIA weekly retail diesel. No account required.</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Today" style="padding:6px 20px 24px;display:flex;flex-direction:column;gap:18px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div style="display:flex;flex-direction:column;gap:2px;"><h2 style="font-size:28px;margin:0;">Today</h2><span style="font-size:12px;color:var(--color-neutral-400);">{{ region.short }} · {{ todayLabel }}</span></div>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-secondary btn-icon" onClick="{{ goSearch }}" style="width:44px;height:44px;"><i class="ph ph-magnifying-glass" style="font-size:19px;"></i></button>
+      <button class="btn btn-secondary btn-icon" onClick="{{ goShare }}" style="width:44px;height:44px;"><i class="ph ph-share-network" style="font-size:19px;"></i></button>
+    </div>
+  </div>
+  <div class="seg" style="display:flex;width:100%;">
+    <sc-for list="{{ winOpts }}" as="o" hint-placeholder-count="4"><label class="seg-opt" style="flex:1;justify-content:center;min-height:38px;"><input type="radio" checked="{{ o.on }}" onChange="{{ o.pick }}">{{ o.label }}<sc-if value="{{ o.locked }}" hint-placeholder-val="{{ false }}"><i class="ph ph-lock-simple" style="font-size:12px;"></i></sc-if></label></sc-for>
+  </div>
+
+  <sc-if value="{{ layoutNumber }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-direction:column;gap:18px;">
+    <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-300);">Delta · {{ t.winLabel }}</span><span class="tag tag-accent">{{ t.severity }}</span></div>
+      <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:96px;line-height:1;font-weight:500;letter-spacing:-0.045em;font-variant-numeric:tabular-nums;text-shadow:0 0 36px color-mix(in srgb, var(--color-accent) 45%, transparent);">{{ t.deltaAbs }}</span><span style="font-size:20px;color:var(--color-neutral-400);">pts</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:14px;"><span style="display:flex;align-items:center;gap:6px;"><i class="ph ph-gas-pump" style="color:var(--color-neutral-400);"></i>Diesel</span><span style="font-variant-numeric:tabular-nums;">{{ t.fuelPct }}</span></div>
+        <div style="height:6px;border-radius:3px;background:var(--color-neutral-900);"><div style="height:100%;border-radius:3px;background:var(--color-neutral-400);width:{{ t.fuelBarW }};"></div></div>
+        <div style="font-size:12px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;">{{ t.fuelFrom }} → {{ t.fuelTo }} per gallon</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:14px;"><span style="display:flex;align-items:center;gap:6px;"><i class="ph ph-basket" style="color:var(--color-accent);"></i>Your basket</span><span style="font-variant-numeric:tabular-nums;">{{ t.basketPct }}</span></div>
+        <div style="height:6px;border-radius:3px;background:var(--color-neutral-900);"><div style="height:100%;border-radius:3px;background:var(--color-accent);box-shadow:0 0 10px var(--color-accent);width:{{ t.basketBarW }};"></div></div>
+        <div style="font-size:12px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;">{{ t.basketFrom }} → {{ t.basketTo }} for {{ basketCount }} items</div>
+      </div>
+    </div>
+    <p style="margin:0;font-size:15px;line-height:1.5;text-wrap:pretty;">{{ t.verdict }}</p>
+    <div class="card elev-sm" style="padding:14px 16px;flex-direction:row;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:12px;color:var(--color-neutral-400);">Diesel, last 7 days</span><span style="font-size:20px;font-variant-numeric:tabular-nums;">{{ t.fuelTo }}<span style="font-size:12px;color:var(--color-neutral-400);"> /gal</span></span></div>
+      <svg width="130" height="40" viewBox="0 0 130 40" style="overflow:visible;"><path d="{{ t.spark }}" fill="none" stroke="var(--color-accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></path></svg>
+    </div>
+    <sc-if value="{{ showChartLink }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary btn-block" onClick="{{ goChart }}" style="min-height:48px;font-size:15px;"><i class="ph ph-chart-line-up" style="font-size:18px;"></i>Open chart explorer</button></sc-if>
+    <button class="btn btn-primary btn-block" onClick="{{ goShare }}" style="min-height:48px;font-size:15px;"><i class="ph ph-share-network" style="font-size:18px;"></i>Share this Delta</button>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ layoutLines }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;">
+      <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-300);">Gap at {{ tc.dateLabel }}</span><span style="font-size:56px;line-height:1;letter-spacing:-0.04em;font-variant-numeric:tabular-nums;text-shadow:0 0 30px color-mix(in srgb, var(--color-accent) 45%, transparent);">{{ tc.gap }}<span style="font-size:16px;color:var(--color-neutral-400);letter-spacing:0;"> pts</span></span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;font-variant-numeric:tabular-nums;text-align:right;">
+        <span style="display:flex;align-items:center;justify-content:flex-end;gap:6px;"><span style="width:12px;height:2px;background:var(--color-accent);"></span>Basket {{ tc.bIdx }}</span>
+        <span style="display:flex;align-items:center;justify-content:flex-end;gap:6px;color:var(--color-neutral-400);"><span style="width:12px;height:2px;background:var(--color-neutral-400);"></span>Diesel {{ tc.fIdx }}</span>
+      </div>
+    </div>
+    <div style="position:relative;touch-action:none;margin:0 -4px;">
+      <svg viewBox="0 0 362 230" width="100%" style="display:block;overflow:visible;" onPointerMove="{{ onScrub }}" onPointerDown="{{ onScrub }}" onPointerLeave="{{ onScrubEnd }}">
+        <sc-for list="{{ tc.grid }}" as="g" hint-placeholder-count="3"><line x1="0" x2="362" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--color-divider)" stroke-dasharray="2 4"></line><text x="0" y="{{ g.ty }}" fill="var(--color-neutral-500)" font-size="10">{{ g.label }}</text></sc-for>
+        <path d="{{ tc.gapPath }}" fill="color-mix(in srgb, var(--color-accent) 14%, transparent)"></path>
+        <path d="{{ tc.fuelPath }}" fill="none" stroke="var(--color-neutral-400)" stroke-width="1.5"></path>
+        <path d="{{ tc.basketPath }}" fill="none" stroke="var(--color-accent)" stroke-width="2.2" style="filter:drop-shadow(0 0 6px var(--color-accent));"></path>
+        <line x1="{{ tc.sx }}" x2="{{ tc.sx }}" y1="0" y2="230" stroke="var(--color-neutral-600)"></line>
+        <circle cx="{{ tc.sx }}" cy="{{ tc.fy }}" r="4" fill="var(--color-bg)" stroke="var(--color-neutral-300)" stroke-width="1.5"></circle>
+        <circle cx="{{ tc.sx }}" cy="{{ tc.by }}" r="4.5" fill="var(--color-accent)"></circle>
+      </svg>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-neutral-500);margin-top:6px;padding:0 4px;"><span>{{ tc.x0 }}</span><span>Drag to scrub · indexed to 100</span><span>{{ tc.x1 }}</span></div>
+    </div>
+    <p style="margin:0;font-size:15px;line-height:1.5;text-wrap:pretty;">{{ t.verdict }}</p>
+    <button class="btn btn-primary btn-block" onClick="{{ goShare }}" style="min-height:48px;font-size:15px;"><i class="ph ph-share-network" style="font-size:18px;"></i>Share this chart</button>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ layoutBars }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;flex-direction:column;gap:20px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-300);">Change over {{ t.winLabel }}</span>
+      <div style="position:relative;height:132px;margin-top:6px;">
+        <div style="position:absolute;top:0;bottom:0;width:1px;background:var(--color-neutral-600);left:{{ bars.zero }};"></div>
+        <div style="position:absolute;top:8px;height:34px;border-radius:4px;background:var(--color-neutral-700);left:{{ bars.fLeft }};width:{{ bars.fW }};"></div>
+        <div style="position:absolute;top:14px;left:12px;font-size:13px;display:flex;gap:6px;align-items:center;"><i class="ph ph-gas-pump"></i>Diesel {{ t.fuelPct }}</div>
+        <div style="position:absolute;top:58px;height:34px;border-radius:4px;background:var(--color-accent);box-shadow:0 0 14px color-mix(in srgb, var(--color-accent) 60%, transparent);left:{{ bars.bLeft }};width:{{ bars.bW }};"></div>
+        <div style="position:absolute;top:64px;left:12px;font-size:13px;display:flex;gap:6px;align-items:center;"><i class="ph ph-basket"></i>Basket {{ t.basketPct }}</div>
+        <div style="position:absolute;top:104px;height:10px;border:1px solid var(--color-accent);border-top:none;left:{{ bars.gLeft }};width:{{ bars.gW }};"></div>
+        <div style="position:absolute;top:116px;font-size:11px;color:var(--color-accent-300);left:{{ bars.gLeft }};">Gap</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:10px;"><span style="font-size:72px;line-height:1;letter-spacing:-0.045em;font-variant-numeric:tabular-nums;text-shadow:0 0 30px color-mix(in srgb, var(--color-accent) 45%, transparent);">{{ t.deltaAbs }}</span><div style="display:flex;flex-direction:column;"><span style="font-size:15px;">points</span><span style="font-size:12px;color:var(--color-neutral-400);">{{ t.severity }}</span></div></div>
+    <p style="margin:0;font-size:15px;line-height:1.5;text-wrap:pretty;">{{ t.verdict }}</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;"><h5 style="margin:0;">Not rolled back</h5><button class="btn btn-ghost" onClick="{{ goBasket }}" style="font-size:13px;">Basket</button></div>
+      <div class="card elev-sm" style="padding:4px 14px;gap:0;">
+        <sc-for list="{{ gougeRows }}" as="r" hint-placeholder-count="3">
+          <button onClick="{{ r.open }}" style="display:flex;align-items:center;gap:10px;min-height:52px;background:none;border:0;border-bottom:1px solid var(--color-divider);padding:0;text-align:left;cursor:pointer;">
+            <div style="flex:1;display:flex;flex-direction:column;"><span style="font-size:14px;">{{ r.name }}</span><span style="font-size:12px;color:var(--color-neutral-400);">{{ r.store }} · {{ r.price }}</span></div>
+            <span style="font-size:13px;font-variant-numeric:tabular-nums;color:var(--color-accent-300);">+{{ r.unreturned }}</span><i class="ph ph-caret-right" style="color:var(--color-neutral-500);"></i>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isChart }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Chart" style="padding:6px 20px 24px;display:flex;flex-direction:column;gap:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;"><h2 style="font-size:28px;margin:0;">Chart</h2><span class="tag tag-neutral">{{ ch.scopeName }}</span></div>
+  <div style="display:flex;gap:8px;">
+    <div class="seg" style="display:flex;flex:1;"><sc-for list="{{ seriesOpts }}" as="o" hint-placeholder-count="2"><label class="seg-opt" style="flex:1;justify-content:center;min-height:36px;"><input type="radio" checked="{{ o.on }}" onChange="{{ o.pick }}">{{ o.label }}</label></sc-for></div>
+    <div class="seg" style="display:flex;flex:1.4;"><sc-for list="{{ scopeOpts }}" as="o" hint-placeholder-count="3"><label class="seg-opt" style="flex:1;justify-content:center;min-height:36px;padding:7px 6px;"><input type="radio" checked="{{ o.on }}" onChange="{{ o.pick }}">{{ o.label }}</label></sc-for></div>
+  </div>
+  <div class="card elev-sm" style="padding:14px 14px 10px;gap:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;font-variant-numeric:tabular-nums;">
+      <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:12px;color:var(--color-neutral-400);">{{ ch.dateLabel }}</span><span style="font-size:22px;">{{ ch.gap }} pts gap</span></div>
+      <div style="display:flex;flex-direction:column;gap:2px;font-size:12px;text-align:right;"><span style="color:var(--color-accent-300);">Basket {{ ch.bPrice }} · {{ ch.bIdx }}</span><span style="color:var(--color-neutral-400);">{{ ch.seriesName }} {{ ch.fPrice }} · {{ ch.fIdx }}</span></div>
+    </div>
+    <div style="touch-action:none;">
+      <svg viewBox="0 0 334 250" width="100%" style="display:block;overflow:visible;" onPointerMove="{{ onScrub }}" onPointerDown="{{ onScrub }}" onPointerLeave="{{ onScrubEnd }}">
+        <sc-for list="{{ ch.grid }}" as="g" hint-placeholder-count="3"><line x1="0" x2="334" y1="{{ g.y }}" y2="{{ g.y }}" stroke="var(--color-divider)" stroke-dasharray="2 4"></line><text x="0" y="{{ g.ty }}" fill="var(--color-neutral-500)" font-size="10">{{ g.label }}</text></sc-for>
+        <path d="{{ ch.gapPath }}" fill="color-mix(in srgb, var(--color-accent) 14%, transparent)"></path>
+        <path d="{{ ch.fuelPath }}" fill="none" stroke="var(--color-neutral-400)" stroke-width="1.5"></path>
+        <path d="{{ ch.basketPath }}" fill="none" stroke="var(--color-accent)" stroke-width="2.2" style="filter:drop-shadow(0 0 6px var(--color-accent));"></path>
+        <line x1="{{ ch.sx }}" x2="{{ ch.sx }}" y1="0" y2="250" stroke="var(--color-neutral-600)"></line>
+        <circle cx="{{ ch.sx }}" cy="{{ ch.fy }}" r="4" fill="var(--color-bg)" stroke="var(--color-neutral-300)" stroke-width="1.5"></circle>
+        <circle cx="{{ ch.sx }}" cy="{{ ch.by }}" r="4.5" fill="var(--color-accent)"></circle>
+      </svg>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-neutral-500);"><span>{{ ch.x0 }}</span><span>{{ ch.x1 }}</span></div>
+  </div>
+  <div class="seg" style="display:flex;width:100%;">
+    <sc-for list="{{ winOpts }}" as="o" hint-placeholder-count="4"><label class="seg-opt" style="flex:1;justify-content:center;min-height:38px;"><input type="radio" checked="{{ o.on }}" onChange="{{ o.pick }}">{{ o.label }}<sc-if value="{{ o.locked }}" hint-placeholder-val="{{ false }}"><i class="ph ph-lock-simple" style="font-size:12px;"></i></sc-if></label></sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;justify-content:space-between;font-size:14px;"><span>Lag: {{ lagLabel }}</span><span style="color:var(--color-neutral-400);font-size:13px;">Best fit {{ bestLag }} wks</span></div>
+    <input type="range" min="0" max="12" step="1" value="{{ lag }}" onChange="{{ onLag }}" style="width:100%;height:28px;">
+    <p style="margin:0;font-size:13px;color:var(--color-neutral-400);text-wrap:pretty;">Shifts the {{ ch.seriesLower }} line forward to test how many weeks shelf prices trail fuel. Correlation at this lag: {{ corr }}.</p>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBasket }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Basket" style="padding:6px 20px 24px;display:flex;flex-direction:column;gap:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+    <div style="display:flex;flex-direction:column;gap:2px;"><h2 style="font-size:28px;margin:0;">Basket</h2><span style="font-size:12px;color:var(--color-neutral-400);">{{ basketCount }} items · weighted by purchase frequency</span></div>
+    <div style="display:flex;gap:6px;">
+      <sc-if value="{{ showLogBtn }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary btn-icon" onClick="{{ goLog }}" style="width:44px;height:44px;"><i class="ph ph-receipt" style="font-size:19px;"></i></button></sc-if>
+      <button class="btn btn-secondary" onClick="{{ toggleEdit }}" style="min-height:44px;">{{ editLabel }}</button>
+      <button class="btn btn-primary btn-icon" onClick="{{ goSearch }}" style="width:44px;height:44px;"><i class="ph ph-plus" style="font-size:19px;"></i></button>
+    </div>
+  </div>
+  <div class="card elev-sm" style="padding:16px;gap:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-300);">Basket delta</span>
+      <div class="seg" style="display:flex;"><sc-for list="{{ baseOpts }}" as="o" hint-placeholder-count="3"><label class="seg-opt" style="padding:4px 9px;font-size:12px;"><input type="radio" checked="{{ o.on }}" onChange="{{ o.pick }}">{{ o.label }}</label></sc-for></div>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:8px;"><span style="font-size:40px;line-height:1;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;">{{ bk.change }}</span><span style="font-size:13px;color:var(--color-neutral-400);font-variant-numeric:tabular-nums;">{{ bk.from }} → {{ bk.to }}</span></div>
+    <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--color-neutral-900);gap:2px;"><div style="background:var(--color-neutral-500);width:{{ bk.fuelW }};"></div><div style="background:var(--color-accent);width:{{ bk.nonW }};"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;font-variant-numeric:tabular-nums;"><span style="display:flex;align-items:center;gap:6px;color:var(--color-neutral-300);"><span style="width:8px;height:8px;border-radius:2px;background:var(--color-neutral-500);"></span>Fuel-attributable {{ bk.fuel }}</span><span style="display:flex;align-items:center;gap:6px;color:var(--color-accent-300);"><span style="width:8px;height:8px;border-radius:2px;background:var(--color-accent);"></span>No fuel link {{ bk.non }}</span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;">
+    <sc-for list="{{ basketRows }}" as="r" hint-placeholder-count="8">
+      <div style="display:flex;align-items:center;gap:10px;min-height:64px;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent);">
+        <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.remove }}" aria-label="Remove" style="width:32px;height:44px;background:none;border:0;padding:0;cursor:pointer;color:var(--color-accent-300);"><i class="ph ph-minus-circle" style="font-size:22px;"></i></button></sc-if>
+        <button onClick="{{ r.open }}" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;padding:8px 0;text-align:left;cursor:pointer;">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.name }}</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-neutral-400);"><span class="tag {{ r.vClass }}" style="padding:1px 7px;font-size:10px;">{{ r.vLabel }}</span>{{ r.store }}</span></div>
+          <svg width="56" height="22" viewBox="0 0 56 22" style="flex:none;overflow:visible;"><path d="{{ r.spark }}" fill="none" stroke="{{ r.sparkColor }}" stroke-width="1.4"></path></svg>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;width:62px;font-variant-numeric:tabular-nums;"><span style="font-size:15px;">{{ r.price }}</span><span style="font-size:12px;color:var(--color-neutral-400);">{{ r.pct }}</span></div>
+        </button>
+        <button onClick="{{ r.follow }}" aria-label="Follow" style="width:36px;height:44px;background:none;border:0;padding:0;cursor:pointer;color:{{ r.starColor }};"><i class="{{ r.starIcon }}" style="font-size:18px;"></i></button>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isItem }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Item detail" style="padding:0 20px 24px;display:flex;flex-direction:column;gap:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <button class="btn btn-secondary btn-icon" onClick="{{ back }}" style="width:44px;height:44px;"><i class="ph ph-caret-left" style="font-size:19px;"></i></button>
+    <div style="display:flex;gap:6px;">
+      <button class="btn btn-secondary btn-icon" onClick="{{ item.follow }}" style="width:44px;height:44px;color:{{ item.starColor }};"><i class="{{ item.starIcon }}" style="font-size:19px;"></i></button>
+      <button class="btn btn-secondary btn-icon" onClick="{{ goShare }}" style="width:44px;height:44px;"><i class="ph ph-share-network" style="font-size:19px;"></i></button>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <span style="font-size:12px;color:var(--color-neutral-400);">{{ item.cat }} · {{ item.size }} · {{ item.store }}</span>
+    <h2 style="font-size:28px;margin:0;">{{ item.name }}</h2>
+    <div style="display:flex;"><span class="tag {{ item.vClass }}" style="font-size:12px;padding:4px 12px;">{{ item.vLabel }}</span></div>
+    <p style="margin:0;font-size:14px;color:var(--color-neutral-300);text-wrap:pretty;">{{ item.verdict }}</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+    <div class="card elev-sm" style="padding:10px 12px;gap:2px;"><span style="font-size:11px;color:var(--color-neutral-400);">Shelf price</span><span style="font-size:18px;font-variant-numeric:tabular-nums;">{{ item.price }}</span></div>
+    <div class="card elev-sm" style="padding:10px 12px;gap:2px;"><span style="font-size:11px;color:var(--color-neutral-400);">Unreturned</span><span style="font-size:18px;font-variant-numeric:tabular-nums;color:var(--color-accent-300);">{{ item.unreturned }}</span></div>
+    <div class="card elev-sm" style="padding:10px 12px;gap:2px;"><span style="font-size:11px;color:var(--color-neutral-400);">Diesel since last rise</span><span style="font-size:18px;font-variant-numeric:tabular-nums;">{{ item.fuelSince }}</span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;"><span>{{ ic.pHi }}</span><span>12 months</span><span>{{ ic.fHi }}</span></div>
+    <svg viewBox="0 0 362 170" width="100%" style="display:block;overflow:visible;">
+      <sc-for list="{{ ic.bands }}" as="b" hint-placeholder-count="2"><rect x="{{ b.x }}" y="0" width="{{ b.w }}" height="170" fill="color-mix(in srgb, var(--color-neutral-500) 10%, transparent)"></rect></sc-for>
+      <path d="{{ ic.fuelPath }}" fill="none" stroke="var(--color-neutral-400)" stroke-width="1.4" stroke-dasharray="3 3"></path>
+      <path d="{{ ic.pricePath }}" fill="none" stroke="var(--color-accent)" stroke-width="2" style="filter:drop-shadow(0 0 5px var(--color-accent));"></path>
+      <sc-for list="{{ ic.marks }}" as="m" hint-placeholder-count="3"><circle cx="{{ m.cx }}" cy="{{ m.cy }}" r="3.5" fill="var(--color-bg)" stroke="var(--color-accent)" stroke-width="1.5"></circle></sc-for>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--color-neutral-500);font-variant-numeric:tabular-nums;"><span>{{ ic.pLo }}</span><span style="display:flex;gap:12px;"><span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:2px;background:var(--color-accent);"></span>Price</span><span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:0;border-top:1.5px dashed var(--color-neutral-400);"></span>Diesel</span><span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:8px;background:color-mix(in srgb, var(--color-neutral-500) 25%, transparent);"></span>Fuel falling</span></span><span>{{ ic.fLo }}</span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:4px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;"><h5 style="margin:0;">Price changes</h5><button class="btn btn-ghost" onClick="{{ toggleProv }}" style="font-size:13px;min-height:36px;"><i class="ph ph-info"></i>Sources</button></div>
+    <sc-for list="{{ item.ledger }}" as="l" hint-placeholder-count="3">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent);font-variant-numeric:tabular-nums;">
+        <span style="font-size:14px;">{{ l.from }} → {{ l.to }}</span><span style="font-size:14px;text-align:right;">{{ l.pct }}</span>
+        <span style="font-size:12px;color:var(--color-neutral-400);">{{ l.date }} · Diesel {{ l.fuel }}</span><span style="font-size:12px;text-align:right;color:{{ l.tagColor }};">{{ l.tag }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSearch }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Search" style="padding:0 20px 24px;display:flex;flex-direction:column;gap:14px;">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="btn btn-secondary btn-icon" onClick="{{ back }}" style="width:44px;height:44px;flex:none;"><i class="ph ph-caret-left" style="font-size:19px;"></i></button>
+    <div style="flex:1;position:relative;"><i class="ph ph-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--color-neutral-400);"></i><input class="input" placeholder="Item, barcode or product link" value="{{ query }}" onChange="{{ onQuery }}" style="min-height:44px;padding-left:34px;"></div>
+    <button class="btn btn-primary btn-icon" onClick="{{ toggleScan }}" style="width:44px;height:44px;flex:none;"><i class="ph ph-barcode" style="font-size:20px;"></i></button>
+  </div>
+  <sc-if value="{{ scanning }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="position:relative;height:240px;border-radius:var(--radius-lg);background:var(--color-neutral-900);box-shadow:var(--shadow-sm);display:grid;place-items:center;">
+        <div style="position:absolute;inset:48px 40px;border:1.5px solid var(--color-accent);border-radius:var(--radius-md);box-shadow:0 0 18px color-mix(in srgb, var(--color-accent) 40%, transparent);"></div>
+        <div style="position:absolute;left:52px;right:52px;top:50%;height:1px;background:var(--color-accent);"></div>
+        <span style="position:absolute;bottom:14px;font-size:12px;color:var(--color-neutral-400);">Camera preview</span>
+      </div>
+      <div style="font-size:14px;color:var(--color-neutral-300);">Point the camera at a UPC or EAN barcode.</div>
+      <button class="btn btn-secondary btn-block" onClick="{{ simulateScan }}" style="min-height:44px;">Simulate a scan</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ showRecent }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <span style="font-size:13px;color:var(--color-neutral-400);">Type what's in your cart, scan a barcode, or paste a retailer link.</span>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;"><sc-for list="{{ recent }}" as="c" hint-placeholder-count="4"><button class="btn btn-secondary" onClick="{{ c.pick }}" style="min-height:36px;font-size:13px;">{{ c.label }}</button></sc-for></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ urlResolved }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-accent-300);"><i class="ph ph-link"></i>Resolved from retailer link</div></sc-if>
+  <div style="display:flex;flex-direction:column;">
+    <sc-for list="{{ results }}" as="r" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:10px;min-height:60px;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent);">
+        <button onClick="{{ r.open }}" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;background:none;border:0;padding:8px 0;text-align:left;cursor:pointer;"><span style="font-size:15px;">{{ r.name }} <span style="color:var(--color-neutral-400);font-size:13px;">{{ r.size }}</span></span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--color-neutral-400);"><span class="tag {{ r.vClass }}" style="padding:1px 7px;font-size:10px;">{{ r.vLabel }}</span>{{ r.price }} at {{ r.store }}</span></button>
+        <button class="btn btn-secondary" onClick="{{ r.toggle }}" style="min-height:36px;font-size:13px;color:{{ r.addColor }};"><i class="{{ r.addIcon }}"></i>{{ r.addLabel }}</button>
+      </div>
+    </sc-for>
+    <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}"><div style="padding:24px 0;font-size:14px;color:var(--color-neutral-400);">No tracked item matches “{{ query }}”.</div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLog }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Receipt log" style="padding:6px 20px 24px;display:flex;flex-direction:column;gap:16px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:8px;"><sc-if value="{{ logBack }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary btn-icon" onClick="{{ back }}" style="width:44px;height:44px;"><i class="ph ph-caret-left" style="font-size:19px;"></i></button></sc-if><h2 style="font-size:28px;margin:0;">Log</h2></div>
+    <span style="font-size:12px;color:var(--color-neutral-400);">Private to this device</span>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <button class="btn btn-primary" onClick="{{ modeCamera }}" style="min-height:48px;"><i class="ph ph-camera" style="font-size:18px;"></i>Scan receipt</button>
+    <button class="btn btn-secondary" onClick="{{ modeManual }}" style="min-height:48px;"><i class="ph ph-pencil-simple" style="font-size:18px;"></i>Enter manually</button>
+  </div>
+  <sc-if value="{{ logCamera }}" hint-placeholder-val="{{ false }}">
+    <div class="card elev-sm" style="padding:14px;gap:12px;">
+      <sc-if value="{{ ocrPending }}" hint-placeholder-val="{{ true }}">
+        <div style="height:200px;border-radius:var(--radius-md);background:var(--color-neutral-900);position:relative;display:grid;place-items:center;"><div style="position:absolute;inset:18px 70px;border:1.5px dashed var(--color-neutral-600);border-radius:6px;"></div><span style="font-size:12px;color:var(--color-neutral-400);">Hold the receipt flat inside the frame</span></div>
+        <button class="btn btn-primary btn-block" onClick="{{ capture }}" style="min-height:44px;">Capture</button>
+      </sc-if>
+      <sc-if value="{{ ocrDone }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;justify-content:space-between;font-size:13px;"><span>Kroger · Oct 28</span><span style="color:var(--color-neutral-400);">{{ ocrCount }} of 4 lines selected</span></div>
+        <sc-for list="{{ ocrLines }}" as="o" hint-placeholder-count="4"><button onClick="{{ o.toggle }}" style="display:flex;align-items:center;gap:10px;min-height:44px;background:none;border:0;padding:0;text-align:left;cursor:pointer;border-bottom:1px solid var(--color-divider);"><i class="{{ o.icon }}" style="font-size:20px;color:var(--color-accent);"></i><span style="flex:1;font-size:14px;">{{ o.name }}</span><span style="font-size:14px;font-variant-numeric:tabular-nums;">{{ o.price }}</span></button></sc-for>
+        <button class="btn btn-primary btn-block" onClick="{{ addOcr }}" style="min-height:44px;">Add {{ ocrCount }} prices</button>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ logManual }}" hint-placeholder-val="{{ false }}">
+    <div class="card elev-sm" style="padding:14px;gap:12px;">
+      <div class="field"><label>Item</label><input class="input" placeholder="e.g. Whole milk 1 gal" value="{{ form.item }}" onChange="{{ onFItem }}" style="min-height:44px;"><sc-if value="{{ errs.item }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--color-accent-300);margin-top:4px;">Enter an item name.</div></sc-if></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="field"><label>Price paid</label><input class="input" inputMode="decimal" placeholder="0.00" value="{{ form.price }}" onChange="{{ onFPrice }}" style="min-height:44px;font-variant-numeric:tabular-nums;"><sc-if value="{{ errs.price }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;color:var(--color-accent-300);margin-top:4px;">Enter a price above $0.</div></sc-if></div>
+        <div class="field"><label>Store</label><select class="input" value="{{ form.store }}" onChange="{{ onFStore }}" style="min-height:44px;"><sc-for list="{{ stores }}" as="s" hint-placeholder-count="6"><option value="{{ s }}">{{ s }}</option></sc-for></select></div>
+      </div>
+      <button class="btn btn-primary btn-block" onClick="{{ submitLog }}" style="min-height:44px;">Save price</button>
+    </div>
+  </sc-if>
+  <div style="display:flex;flex-direction:column;">
+    <h5 style="margin:0 0 4px;">History</h5>
+    <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+      <div style="display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent);">
+        <span style="font-size:15px;">{{ h.item }}</span><span style="font-size:15px;text-align:right;font-variant-numeric:tabular-nums;">{{ h.price }}</span>
+        <span style="font-size:12px;color:var(--color-neutral-400);">{{ h.store }} · {{ h.date }}</span><span style="font-size:12px;text-align:right;color:{{ h.cmpColor }};">{{ h.cmp }}</span>
+      </div>
+    </sc-for>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isInsights }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Insights" style="padding:6px 20px 24px;display:flex;flex-direction:column;gap:22px;">
+  <h2 style="font-size:28px;margin:0;">Insights</h2>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;flex-direction:column;gap:2px;"><h5 style="margin:0;">Pass-through by category</h5><span style="font-size:12px;color:var(--color-neutral-400);">Share of the 90-day diesel decline reflected in shelf prices</span></div>
+    <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+      <div style="display:grid;grid-template-columns:84px 1fr 40px;align-items:center;gap:10px;font-size:13px;min-height:24px;">
+        <span>{{ c.name }}</span>
+        <div style="height:6px;border-radius:3px;background:var(--color-neutral-900);"><div style="height:100%;border-radius:3px;background:var(--color-accent);width:{{ c.w }};"></div></div>
+        <span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--color-neutral-300);">{{ c.v }}</span>
+      </div>
+    </sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;">
+    <div style="display:flex;flex-direction:column;gap:2px;"><h5 style="margin:0;">Delta by region</h5><span style="font-size:12px;color:var(--color-neutral-400);">Your basket against each region's diesel series, {{ t.winLabel }}</span></div>
+    <table class="table" style="font-size:13px;">
+      <tbody><sc-for list="{{ regionRows }}" as="r" hint-placeholder-count="6"><tr><td style="padding:9px 0;color:{{ r.color }};">{{ r.name }}</td><td style="padding:9px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--color-neutral-400);">{{ r.fuel }}</td><td style="padding:9px 0;text-align:right;font-variant-numeric:tabular-nums;width:72px;">{{ r.delta }} pts</td></tr></sc-for></tbody>
+    </table>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:2px;">
+    <h5 style="margin:0 0 6px;">Break alerts</h5>
+    <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent);">
+        <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><span style="font-size:14px;">{{ a.title }}</span><span style="font-size:12px;color:var(--color-neutral-400);">{{ a.detail }}</span></div>
+        <button onClick="{{ a.toggle }}" aria-label="Toggle" style="width:46px;height:28px;border-radius:14px;padding:2px;border:1px solid {{ a.border }};background:{{ a.bg }};cursor:pointer;display:flex;justify-content:{{ a.justify }};"><span style="width:22px;height:22px;border-radius:11px;background:{{ a.knob }};"></span></button>
+      </div>
+    </sc-for>
+    <div style="display:flex;align-items:center;justify-content:space-between;min-height:52px;font-size:14px;"><span>Delta tolerance</span><div style="display:flex;align-items:center;gap:6px;"><button class="btn btn-secondary btn-icon" onClick="{{ tolDown }}" style="width:36px;height:36px;"><i class="ph ph-minus"></i></button><span style="width:56px;text-align:center;font-variant-numeric:tabular-nums;">{{ tol }} pts</span><button class="btn btn-secondary btn-icon" onClick="{{ tolUp }}" style="width:36px;height:36px;"><i class="ph ph-plus"></i></button></div></div>
+  </div>
+  <div class="card elev-sm" style="padding:2px 14px;gap:0;">
+    <button onClick="{{ goRetailers }}" style="display:flex;align-items:center;gap:12px;min-height:52px;background:none;border:0;border-bottom:1px solid var(--color-divider);padding:0;cursor:pointer;text-align:left;font-size:15px;"><i class="ph ph-storefront" style="font-size:20px;color:var(--color-accent);"></i><span style="flex:1;">Retailer scorecard</span><i class="ph ph-caret-right" style="color:var(--color-neutral-500);"></i></button>
+    <button onClick="{{ toggleMeth }}" style="display:flex;align-items:center;gap:12px;min-height:52px;background:none;border:0;border-bottom:1px solid var(--color-divider);padding:0;cursor:pointer;text-align:left;font-size:15px;"><i class="ph ph-book-open" style="font-size:20px;color:var(--color-accent);"></i><span style="flex:1;">Methodology and sources</span><i class="ph ph-caret-right" style="color:var(--color-neutral-500);"></i></button>
+    <button onClick="{{ goPaywall }}" style="display:flex;align-items:center;gap:12px;min-height:52px;background:none;border:0;padding:0;cursor:pointer;text-align:left;font-size:15px;"><i class="ph ph-star-four" style="font-size:20px;color:var(--color-accent);"></i><span style="flex:1;">DieselDelta Pro</span><span style="font-size:13px;color:var(--color-neutral-400);">{{ proLabel }}</span><i class="ph ph-caret-right" style="color:var(--color-neutral-500);"></i></button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isRetailers }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Retailer scorecard" style="padding:0 20px 24px;display:flex;flex-direction:column;gap:14px;">
+  <button class="btn btn-secondary btn-icon" onClick="{{ back }}" style="width:44px;height:44px;"><i class="ph ph-caret-left" style="font-size:19px;"></i></button>
+  <div style="display:flex;flex-direction:column;gap:4px;"><h2 style="font-size:28px;margin:0;">Retailer scorecard</h2><span style="font-size:13px;color:var(--color-neutral-400);text-wrap:pretty;">Share of fuel-driven increases rolled back after diesel fell, category-weighted median across each chain's tracked items.</span></div>
+  <div style="display:flex;flex-direction:column;">
+    <sc-for list="{{ retailers }}" as="r" hint-placeholder-count="6">
+      <div style="display:flex;flex-direction:column;border-bottom:1px solid color-mix(in srgb, var(--color-text) 8%, transparent);">
+        <button onClick="{{ r.toggle }}" style="display:flex;align-items:center;gap:14px;min-height:64px;background:none;border:0;padding:8px 0;cursor:pointer;text-align:left;">
+          <span style="width:44px;height:44px;flex:none;border-radius:var(--radius-md);border:1px solid {{ r.gradeBorder }};display:grid;place-items:center;font-size:17px;color:{{ r.gradeColor }};">{{ r.grade }}</span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><span style="font-size:15px;">{{ r.name }}</span><span style="font-size:12px;color:var(--color-neutral-400);">{{ r.items }} items tracked</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;"><span style="font-size:15px;font-variant-numeric:tabular-nums;">{{ r.ratio }}</span><span style="font-size:11px;color:var(--color-neutral-500);">rolled back</span></div>
+          <i class="{{ r.caret }}" style="color:var(--color-neutral-500);"></i>
+        </button>
+        <sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:8px;padding:0 0 14px 58px;">
+            <sc-for list="{{ r.cats }}" as="c" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:76px 1fr 34px;gap:8px;align-items:center;font-size:12px;"><span style="color:var(--color-neutral-300);">{{ c.name }}</span><div style="height:4px;border-radius:2px;background:var(--color-neutral-900);"><div style="height:100%;border-radius:2px;background:var(--color-accent);width:{{ c.w }};"></div></div><span style="text-align:right;font-variant-numeric:tabular-nums;">{{ c.v }}</span></div></sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  <div style="font-size:12px;color:var(--color-neutral-500);">Updated daily. Open JSON endpoint available on the API tier.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isShare }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Share card" style="padding:0 20px 24px;display:flex;flex-direction:column;gap:16px;">
+  <div style="display:flex;align-items:center;gap:10px;"><button class="btn btn-secondary btn-icon" onClick="{{ back }}" style="width:44px;height:44px;"><i class="ph ph-x" style="font-size:19px;"></i></button><h4 style="margin:0;">Share card</h4></div>
+  <div class="seg" style="display:flex;width:100%;"><sc-for list="{{ aspectOpts }}" as="o" hint-placeholder-count="3"><label class="seg-opt" style="flex:1;justify-content:center;min-height:38px;"><input type="radio" checked="{{ o.on }}" onChange="{{ o.pick }}">{{ o.label }}</label></sc-for></div>
+  <div style="display:grid;place-items:center;min-height:390px;">
+    <div style="width:{{ card.w }};height:{{ card.h }};border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-lg);background:radial-gradient(120% 70% at 0% 0%, var(--color-section-glow) 0%, var(--color-section) 45%, var(--color-bg) 100%);padding:{{ card.pad }};display:flex;flex-direction:column;gap:{{ card.gap }};">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-200);"><span style="display:flex;align-items:center;gap:5px;"><i class="ph ph-gas-pump" style="font-size:13px;"></i>DieselDelta</span><span>{{ t.winLabel }}</span></div>
+      <div style="display:flex;align-items:baseline;gap:6px;"><span style="font-size:{{ card.num }};line-height:1;letter-spacing:-0.045em;font-variant-numeric:tabular-nums;text-shadow:0 0 28px var(--color-accent);">{{ t.deltaAbs }}</span><span style="font-size:13px;color:var(--color-accent-200);">pts gap</span></div>
+      <p style="margin:0;font-size:{{ card.body }};line-height:1.4;color:var(--color-neutral-100);text-wrap:pretty;">{{ t.verdict }}</p>
+      <svg viewBox="0 0 362 230" preserveAspectRatio="none" width="100%" style="flex:1;min-height:40px;display:block;overflow:visible;"><path d="{{ tc.gapPath }}" fill="color-mix(in srgb, var(--color-accent) 22%, transparent)"></path><path d="{{ tc.fuelPath }}" fill="none" stroke="var(--color-neutral-300)" stroke-width="1.5" vector-effect="non-scaling-stroke"></path><path d="{{ tc.basketPath }}" fill="none" stroke="var(--color-accent-300)" stroke-width="2.2" vector-effect="non-scaling-stroke"></path></svg>
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:9px;color:var(--color-neutral-300);"><span>As of {{ todayLabel }} · {{ region.short }} · EIA retail diesel, retailer shelf prices</span><span style="color:var(--color-accent-200);white-space:nowrap;">dd.app/d/7k2q</span></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <button class="btn btn-secondary" onClick="{{ saveImage }}" style="min-height:48px;"><i class="ph ph-download-simple" style="font-size:18px;"></i>Save image</button>
+    <button class="btn btn-primary" onClick="{{ shareImage }}" style="min-height:48px;"><i class="ph ph-share-network" style="font-size:18px;"></i>Share</button>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isPaywall }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Pro paywall" style="padding:0 20px 24px;display:flex;flex-direction:column;gap:18px;">
+  <button class="btn btn-secondary btn-icon" onClick="{{ back }}" style="width:44px;height:44px;"><i class="ph ph-x" style="font-size:19px;"></i></button>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <span style="font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--color-accent-300);">DieselDelta Pro</span>
+    <h2 style="font-size:30px;margin:0;text-wrap:pretty;">More history, more baskets, local detail.</h2>
+    <p style="margin:0;font-size:14px;color:var(--color-neutral-400);">The headline Delta stays free and public.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <sc-for list="{{ proFeatures }}" as="f" hint-placeholder-count="6"><div style="display:flex;gap:10px;align-items:flex-start;font-size:14px;"><i class="ph ph-check" style="color:var(--color-accent);font-size:16px;margin-top:2px;"></i><span>{{ f }}</span></div></sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <sc-for list="{{ plans }}" as="p" hint-placeholder-count="3">
+      <button onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 14px;border-radius:var(--radius-md);background:{{ p.bg }};border:1px solid {{ p.border }};cursor:pointer;text-align:left;">
+        <span style="width:18px;height:18px;flex:none;border-radius:50%;border:1.5px solid {{ p.border }};box-shadow:inset 0 0 0 4px var(--color-surface);background:{{ p.dot }};"></span>
+        <div style="flex:1;display:flex;flex-direction:column;"><span style="font-size:15px;">{{ p.name }}</span><span style="font-size:12px;color:var(--color-neutral-400);">{{ p.sub }}</span></div>
+        <span style="font-size:16px;font-variant-numeric:tabular-nums;">{{ p.price }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <button class="btn btn-primary btn-block" onClick="{{ buyPro }}" style="min-height:50px;font-size:16px;">{{ buyLabel }}</button>
+  <div style="font-size:11px;color:var(--color-neutral-500);text-align:center;text-wrap:pretty;">No advertising. Receipt data is never sold. Cancel anytime in Settings.</div>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ tabBar }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:20;padding:6px 6px 28px;display:flex;background:color-mix(in srgb, var(--color-bg) 86%, transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);">
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right, transparent, var(--color-divider) 48px, var(--color-divider) calc(100% - 48px), transparent);"></div>
+  <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="5"><button onClick="{{ tb.go }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px;background:none;border:0;cursor:pointer;color:{{ tb.color }};position:relative;padding-top:6px;"><span style="position:absolute;top:-6px;width:18px;height:2px;border-radius:1px;background:{{ tb.mark }};box-shadow:0 0 8px {{ tb.mark }};"></span><i class="{{ tb.icon }}" style="font-size:22px;"></i><span style="font-size:10px;">{{ tb.label }}</span></button></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ tabFloat }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:16px;right:16px;bottom:26px;z-index:20;display:flex;gap:10px;align-items:center;">
+  <div style="flex:1;display:flex;height:58px;border-radius:29px;padding:0 6px;background:color-mix(in srgb, var(--color-surface) 82%, transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:var(--shadow-md);">
+    <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="5"><button onClick="{{ tb.go }}" aria-label="{{ tb.label }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:0;cursor:pointer;color:{{ tb.color }};"><i class="{{ tb.icon }}" style="font-size:22px;"></i><span style="width:4px;height:4px;border-radius:2px;background:{{ tb.mark }};box-shadow:0 0 6px {{ tb.mark }};"></span></button></sc-for>
+  </div>
+  <button onClick="{{ goSearch }}" aria-label="Search" style="width:58px;height:58px;flex:none;border-radius:29px;border:1px solid var(--color-accent);background:color-mix(in srgb, var(--color-surface) 82%, transparent);backdrop-filter:blur(18px);color:var(--color-accent);cursor:pointer;box-shadow:var(--shadow-md);display:grid;place-items:center;"><i class="ph ph-magnifying-glass" style="font-size:22px;"></i></button>
+</div>
+</sc-if>
+
+<sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;z-index:40;display:flex;flex-direction:column;background:color-mix(in srgb, var(--color-neutral-900) 65%, transparent);">
+  <div onClick="{{ closeSheet }}" style="flex:1;min-height:80px;"></div>
+  <div style="max-height:80%;overflow-y:auto;background:var(--color-surface);border-radius:var(--radius-lg) var(--radius-lg) 0 0;box-shadow:var(--shadow-lg);padding:10px 20px 44px;display:flex;flex-direction:column;gap:14px;">
+    <div style="align-self:center;width:36px;height:4px;border-radius:2px;background:var(--color-neutral-700);"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;"><h4 style="margin:0;">{{ sheet.title }}</h4><button class="btn btn-secondary btn-icon" onClick="{{ closeSheet }}" style="width:36px;height:36px;"><i class="ph ph-x"></i></button></div>
+    <sc-for list="{{ sheet.rows }}" as="s" hint-placeholder-count="4">
+      <div style="display:flex;flex-direction:column;gap:3px;"><span style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--color-neutral-400);">{{ s.k }}</span><span style="font-size:14px;line-height:1.5;color:var(--color-neutral-200);text-wrap:pretty;">{{ s.v }}</span></div>
+    </sc-for>
+    <sc-if value="{{ prov }}" hint-placeholder-val="{{ false }}"><button class="btn btn-secondary btn-block" onClick="{{ reportFix }}" style="min-height:44px;"><i class="ph ph-camera"></i>Report a correction with a shelf-tag photo</button></sc-if>
+    <sc-if value="{{ meth }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:6px;font-size:14px;"><a href="https://www.eia.gov/petroleum/gasdiesel/" target="_blank">EIA Gasoline and Diesel Fuel Update</a><a href="https://www.eia.gov/opendata/" target="_blank">EIA Open Data API</a></div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:20px;right:20px;bottom:112px;z-index:50;display:flex;justify-content:center;pointer-events:none;"><div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:var(--radius-md);background:var(--color-surface);box-shadow:var(--shadow-md);font-size:13px;"><i class="ph ph-check-circle" style="color:var(--color-accent);font-size:16px;"></i>{{ toast }}</div></div>
+</sc-if>
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;todayLayout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;number&quot;,&quot;lines&quot;,&quot;bars&quot;],&quot;default&quot;:&quot;lines&quot;,&quot;tsType&quot;:&quot;'number'|'lines'|'bars'&quot;,&quot;section&quot;:&quot;Today&quot;},&quot;navStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;tabs5&quot;,&quot;tabs3&quot;,&quot;float&quot;],&quot;default&quot;:&quot;tabs5&quot;,&quot;tsType&quot;:&quot;'tabs5'|'tabs3'|'float'&quot;,&quot;section&quot;:&quot;Navigation&quot;},&quot;initialScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;onb&quot;,&quot;today&quot;,&quot;chart&quot;,&quot;basket&quot;,&quot;item&quot;,&quot;search&quot;,&quot;log&quot;,&quot;insights&quot;,&quot;retailers&quot;,&quot;share&quot;,&quot;paywall&quot;],&quot;default&quot;:&quot;today&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Navigation&quot;},&quot;initialLogMode&quot;:{&quot;editor&quot;:null,&quot;default&quot;:null,&quot;tsType&quot;:&quot;'camera'|'manual'|null&quot;},&quot;embedded&quot;:{&quot;editor&quot;:null,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const N = 449, Y0 = N - 365;
+const TODAY = new Date(2026, 9, 26);
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const dateAt = i => { const d = new Date(TODAY); d.setDate(d.getDate() - (N - 1 - i)); return d; };
+const fmtD = (d, y) => MON[d.getMonth()] + ' ' + d.getDate() + (y ? ', ' + d.getFullYear() : '');
+const interp = (keys, w) => { for (let k = 0; k < keys.length - 1; k++) { const [a, va] = keys[k], [b, vb] = keys[k + 1]; if (w >= a && w <= b) { const t = (w - a) / (b - a), s = t * t * (3 - 2 * t); return va + (vb - va) * s; } } return keys[w < keys[0][0] ? 0 : keys.length - 1][1]; };
+const FK = [[-12,3.49],[0,3.52],[8,3.61],[16,3.88],[22,3.97],[30,3.78],[38,3.58],[46,3.46],[52,3.41]];
+const BK = [[-12,96.1],[0,96.4],[10,97.1],[20,100.2],[26,101.85],[34,101.95],[42,101.7],[52,101.52]];
+const FUEL = [], GAS = [], BASK = [];
+for (let i = 0; i < N; i++) {
+  const w = (i - Y0) / 7;
+  FUEL.push(interp(FK, w) + Math.sin(i * 0.41) * 0.012 + Math.sin(i * 0.13) * 0.018);
+  GAS.push(interp(FK, w) * 0.86 + 0.08 + Math.sin(i * 0.29) * 0.02);
+  BASK.push(interp(BK, Math.floor(w)));
+}
+const REGIONS = {
+  gulf: { name: 'Gulf Coast (PADD 3)', state: 'Texas', abbr: 'TX', level: 1.0, amp: 1.0 },
+  east: { name: 'East Coast (PADD 1)', state: 'New York', abbr: 'NY', level: 1.07, amp: 0.9 },
+  mid: { name: 'Midwest (PADD 2)', state: 'Ohio', abbr: 'OH', level: 1.04, amp: 1.1 },
+  rocky: { name: 'Rocky Mountain (PADD 4)', state: 'Colorado', abbr: 'CO', level: 1.09, amp: 0.8 },
+  west: { name: 'West Coast (PADD 5)', state: 'California', abbr: 'CA', level: 1.27, amp: 0.7 },
+  nat: { name: 'National', state: 'U.S.', abbr: 'US', level: 1.06, amp: 0.95 }
+};
+const zipRegion = z => ({ '0': 'east', '1': 'east', '2': 'east', '3': 'gulf', '4': 'mid', '5': 'mid', '6': 'mid', '7': 'gulf', '8': 'rocky', '9': 'west' })[z[0]] || 'gulf';
+const MEAN = 3.65;
+const regSeries = (base, r) => base.map(v => (MEAN + (v - MEAN) * r.amp) * r.level);
+const WINS = [{ k: 30, l: '30D', label: '30 days' }, { k: 60, l: '60D', label: '60 days' }, { k: 90, l: '90D', label: '90 days' }, { k: 365, l: '1Y', label: '12 months' }];
+const pct = (a, b) => (b - a) / a * 100;
+const sgn = (v, d = 1) => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d);
+const money = v => '$' + v.toFixed(2);
+const smoney = v => (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(2);
+
+function lineModel(W, H, s, e, fuel, bask, frac, lagDays) {
+  const n = e - s + 1, f0 = fuel[Math.max(0, s - lagDays)], b0 = bask[s];
+  const fi = [], bi = [];
+  for (let i = s; i <= e; i++) { fi.push(fuel[Math.max(0, i - lagDays)] / f0 * 100); bi.push(bask[i] / b0 * 100); }
+  let lo = Math.min(...fi, ...bi), hi = Math.max(...fi, ...bi); const pad = (hi - lo) * 0.12 + 0.5; lo -= pad; hi += pad;
+  const X = i => i / (n - 1) * W, Yv = v => H - (v - lo) / (hi - lo) * H;
+  const path = a => a.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Yv(v).toFixed(1)).join('');
+  const gap = path(bi) + fi.slice().reverse().map((v, j) => 'L' + X(n - 1 - j).toFixed(1) + ' ' + Yv(v).toFixed(1)).join('') + 'Z';
+  const k = Math.round((frac == null ? 1 : frac) * (n - 1));
+  const step = (hi - lo) > 12 ? 5 : (hi - lo) > 5 ? 2 : 1, grid = [];
+  for (let g = Math.ceil(lo / step) * step; g <= hi; g += step) grid.push({ y: Yv(g), ty: Yv(g) - 3, label: String(g) });
+  return { fuelPath: path(fi), basketPath: path(bi), gapPath: gap, grid, sx: X(k), fy: Yv(fi[k]), by: Yv(bi[k]),
+    gap: sgn(bi[k] - fi[k]), bIdx: bi[k].toFixed(1), fIdx: fi[k].toFixed(1), idx: s + k,
+    dateLabel: fmtD(dateAt(s + k)), x0: fmtD(dateAt(s)), x1: fmtD(dateAt(e)) };
+}
+function corr(a, b) { const n = a.length, ma = a.reduce((x, y) => x + y) / n, mb = b.reduce((x, y) => x + y) / n; let c = 0, va = 0, vb = 0; for (let i = 0; i < n; i++) { c += (a[i] - ma) * (b[i] - mb); va += (a[i] - ma) ** 2; vb += (b[i] - mb) ** 2; } return c / Math.sqrt(va * vb); }
+const corrAt = lag => { const a = [], b = []; for (let i = Y0; i < N; i++) { a.push(BASK[i]); b.push(FUEL[i - lag * 7]); } return corr(a, b); };
+let BEST = 0; for (let l = 0, m = -2; l <= 12; l++) { const c = corrAt(l); if (c > m) { m = c; BEST = l; } }
+
+const CAT = [
+  ['milk','Whole milk','1 gal','Dairy','Kroger',3.89,'gouge',1],['eggs','Large eggs','12 ct','Dairy','Walmart',3.24,'track',1],
+  ['bread','White bread','20 oz','Bakery','Kroger',2.79,'sticky',1],['chicken','Boneless chicken breast','per lb','Meat','Walmart',4.29,'gouge',1],
+  ['rice','Long-grain rice','5 lb','Dry goods','Target',4.99,'sticky',1],['bananas','Bananas','per lb','Produce','Walmart',0.62,'track',1],
+  ['ketchup','Heinz ketchup','32 oz','Pantry','Target',4.79,'gouge',1],['beef','Ground beef 80/20','per lb','Meat','Kroger',5.99,'sticky',1],
+  ['peas','Frozen peas','12 oz','Frozen','Albertsons',1.89,'gouge',1],['potatoes','Russet potatoes','5 lb','Produce','Kroger',4.49,'track',1],
+  ['cheddar','Cheddar cheese','8 oz','Dairy','Target',2.99,'sticky',1],['towels','Paper towels','6 roll','Household','Amazon',11.99,'gouge',1],
+  ['pb','Peanut butter','16 oz','Pantry','Walmart',2.48,'track',1],['oj','Orange juice','52 oz','Beverages','Albertsons',4.99,'sticky',1],
+  ['soap','Dish soap','19 oz','Household','Target',3.69,'track',1],['pasta','Spaghetti','16 oz','Dry goods','Kroger',1.49,'sticky',1],
+  ['ketchup20','Heinz ketchup','20 oz','Pantry','Walmart',3.12,'sticky',0],['yogurt','Greek yogurt','32 oz','Dairy','Kroger',5.49,'gouge',0],
+  ['coffee','Ground coffee','12 oz','Pantry','Costco',8.99,'track',0],['butter','Salted butter','16 oz','Dairy','Walmart',4.68,'sticky',0],
+  ['apples','Gala apples','3 lb','Produce','Kroger',4.99,'track',0],['pizza','Frozen pizza','pepperoni','Frozen','Target',5.29,'gouge',0]
+].map(([id, name, size, cat, store, price, v, inB]) => ({ id, name, size, cat, store, price, v, inB: !!inB }));
+const VL = { gouge: ['Gouge Gap', 'tag-accent'], sticky: ['Sticky Price', 'tag-outline'], track: ['Tracking Fuel', 'tag-neutral'] };
+const wkFuel = w => FUEL[Y0 + w * 7];
+function ledgerOf(it) {
+  const p = it.price;
+  const L = it.v === 'gouge' ? [[15, .88, .94, 'Fuel-correlated'], [23, .94, 1, 'Fuel-correlated']]
+    : it.v === 'track' ? [[18, .98, 1.07, 'Fuel-correlated'], [42, 1.07, 1, 'Rollback']]
+    : [[18, .9, 1.02, 'Fuel-correlated'], [46, 1.02, 1, 'Partial rollback']];
+  return L.map(([w, a, b, tag]) => ({ w, a: p * a, b: p * b, tag }));
+}
+function itemModel(it) {
+  const L = ledgerOf(it), base = L[0].a, lastRise = L.filter(l => l.b > l.a).pop();
+  const fuelSince = pct(wkFuel(lastRise.w), wkFuel(52));
+  const pr = [], fu = [];
+  for (let w = 0; w <= 52; w++) { let v = base; L.forEach(l => { if (w >= l.w) v = l.b; }); pr.push(v); fu.push(wkFuel(w)); }
+  const W = 362, H = 170, X = w => w / 52 * W;
+  const pl = Math.min(...pr), ph = Math.max(...pr), fl = Math.min(...fu), fh = Math.max(...fu);
+  const yP = v => H - 12 - (v - pl) / ((ph - pl) || 1) * (H - 24), yF = v => H - 12 - (v - fl) / (fh - fl) * (H - 24);
+  let pp = ''; pr.forEach((v, w) => { pp += w ? 'L' + X(w) + ' ' + yP(pr[w - 1]) + 'L' + X(w) + ' ' + yP(v) : 'M0 ' + yP(v); });
+  const unret = p => p - base;
+  return {
+    L, base, fuelSince, spark: pr.filter((_, w) => w % 4 === 0).concat([pr[52]]),
+    chart: { pricePath: pp, fuelPath: fu.map((v, w) => (w ? 'L' : 'M') + X(w).toFixed(1) + ' ' + yF(v).toFixed(1)).join(''),
+      bands: [{ x: X(22), w: X(52) - X(22) }], marks: L.map(l => ({ cx: X(l.w), cy: yP(l.b) })),
+      pHi: money(ph), pLo: money(pl), fHi: money(fh) + ' diesel', fLo: money(fl) + ' diesel' },
+    unret: unret(it.price), chg: pct(base, it.price)
+  };
+}
+const sparkPath = (a, W, H) => { const lo = Math.min(...a), hi = Math.max(...a), r = (hi - lo) || 1; return a.map((v, i) => (i ? 'L' : 'M') + (i / (a.length - 1) * W).toFixed(1) + ' ' + (H - 2 - (v - lo) / r * (H - 4)).toFixed(1)).join(''); };
+const RET = [['Costco','B+',64,212,[78,61,52,40]],['Walmart','C+',47,418,[66,44,31,22]],['Kroger','C',41,396,[62,38,27,19]],['Amazon','C−',36,287,[48,35,22,30]],['Target','D+',29,344,[51,24,18,12]],['Albertsons','D',24,301,[44,20,14,9]]];
+const RCAT = ['Produce','Dry goods','Frozen','Household'];
+const OCR0 = [['Whole milk 1 gal',3.89],['Large eggs 12 ct',3.19],['Bananas 2.1 lb',1.32],['Frozen peas 12 oz',1.89]];
+const HIST0 = [
+  { item: 'Whole milk 1 gal', price: 3.89, store: 'Kroger', date: 'Oct 21', cmp: 'Matches listed price', hi: 0 },
+  { item: 'White bread 20 oz', price: 2.79, store: 'Kroger', date: 'Oct 21', cmp: 'Matches listed price', hi: 0 },
+  { item: 'Heinz ketchup 32 oz', price: 4.99, store: 'Target', date: 'Oct 14', cmp: '$0.20 above listed', hi: 1 },
+  { item: 'Boneless chicken breast', price: 4.29, store: 'Walmart', date: 'Oct 14', cmp: 'Matches listed price', hi: 0 },
+  { item: 'Bananas 2.4 lb', price: 1.49, store: 'Walmart', date: 'Oct 7', cmp: 'Matches listed price', hi: 0 }
+];
+const STORES = ['Kroger','Walmart','Target','Costco','Albertsons','Amazon'];
+const PLANS = [['year','Yearly','$2.08/month, billed yearly','$24.99'],['month','Monthly','Cancel anytime','$3.99'],['life','Lifetime','One payment','$59']];
+const ROOT = ['today','chart','basket','log','insights'];
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const init = p.initialScreen || 'today';
+    const stack = { item: ['basket','item'], search: ['today','search'], share: ['today','share'], paywall: ['insights','paywall'], retailers: ['insights','retailers'] }[init] || [init];
+    this.state = {
+      stack, zip: '77002', zipError: false, win: 90, scrub: null, lag: 0, series: 'diesel', scope: 'region',
+      items: CAT.map(c => ({ ...c, follow: ['milk','chicken','ketchup'].includes(c.id) })), editing: false, base: '1Y',
+      itemId: 'milk', query: init === 'search' ? 'heinz' : '', scanning: false, logMode: p.initialLogMode || null, ocr: 'pending',
+      ocrSel: [1,1,1,1], form: { item: '', price: '', store: 'Kroger' }, errs: {}, history: HIST0,
+      alerts: [1,1,1], tol: 3, retOpen: 'Kroger', aspect: 'story', plan: 'year', isPro: false, sheet: null, toast: ''
+    };
+  }
+  push(s) { this.setState(st => ({ stack: [...st.stack, s], scrub: null, sheet: null })); }
+  flash(msg) { clearTimeout(this._t); this.setState({ toast: msg }); this._t = setTimeout(() => this.setState({ toast: '' }), 2200); }
+  componentWillUnmount() { clearTimeout(this._t); }
+  scrubFrom(e) { const r = e.currentTarget.getBoundingClientRect(); this.setState({ scrub: Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) }); }
+
+  renderVals() {
+    const S = this.state, P = this.props;
+    const layout = P.todayLayout || 'lines', nav = P.navStyle || 'tabs5';
+    const screen = S.stack[S.stack.length - 1];
+    const regKey = zipRegion(S.zip), R = REGIONS[regKey];
+    const fuelR = regSeries(FUEL, R);
+    const win = WINS.find(w => w.k === S.win), s = N - 1 - S.win, e = N - 1;
+    const inB = S.items.filter(i => i.inB);
+    const scale = inB.reduce((a, i) => a + i.price, 0) / CAT.filter(c => c.inB).reduce((a, i) => a + i.price, 0);
+    const bask = BASK.map(v => v * scale);
+    const fP = pct(fuelR[s], fuelR[e]), bP = pct(bask[s], bask[e]), d = bP - fP, ad = Math.abs(d);
+    const severity = ad < 1 ? 'In step' : ad < 3 ? 'Moderate lag' : 'Wide gap';
+    const dir = v => (v < 0 ? 'fell ' : 'rose ') + Math.abs(v).toFixed(1) + '%';
+    const verdict = 'Diesel ' + dir(fP) + ' over ' + win.label + '. Your basket ' + dir(bP) + ' over the same period, a gap of ' + ad.toFixed(1) + ' percentage points.';
+    const mx = Math.max(Math.abs(fP), Math.abs(bP), 0.5);
+    const last7 = fuelR.slice(N - 8);
+    const t = { winLabel: win.label, severity, deltaAbs: (d < 0 ? '−' : '') + ad.toFixed(1), fuelPct: sgn(fP) + '%', basketPct: sgn(bP) + '%',
+      fuelBarW: (Math.abs(fP) / mx * 100) + '%', basketBarW: Math.max(2, Math.abs(bP) / mx * 100) + '%',
+      fuelFrom: money(fuelR[s]), fuelTo: money(fuelR[e]), basketFrom: money(bask[s]), basketTo: money(bask[e]), verdict, spark: sparkPath(last7, 130, 40) };
+    const zero = 62, sc = 34 / mx, bx = v => v < 0 ? [zero + v * sc, -v * sc] : [zero, v * sc];
+    const [fl, fw] = bx(fP), [bl, bw] = bx(bP);
+    const bars = { zero: zero + '%', fLeft: fl + '%', fW: fw + '%', bLeft: bl + '%', bW: Math.max(0.6, bw) + '%', gLeft: Math.min(fl + (fP < 0 ? 0 : fw), bl + (bP < 0 ? 0 : bw)) + '%', gW: Math.abs((fP < 0 ? fl : fl + fw) - (bP < 0 ? bl : bl + bw)) + '%' };
+    const tc = lineModel(362, 230, s, e, fuelR, bask, S.scrub, 0);
+
+    const seriesBase = S.series === 'diesel' ? FUEL : GAS;
+    const scopeR = S.scope === 'nat' ? REGIONS.nat : R;
+    let chSeries = regSeries(seriesBase, scopeR); if (S.scope === 'state') chSeries = chSeries.map(v => v * 0.985);
+    const lm = lineModel(334, 250, s, e, chSeries, bask, S.scrub, S.lag * 7);
+    const ch = { ...lm, scopeName: S.scope === 'nat' ? 'National' : S.scope === 'state' ? R.state : R.name.split(' (')[0],
+      seriesName: S.series === 'diesel' ? 'Diesel' : 'Gasoline', seriesLower: S.series === 'diesel' ? 'diesel' : 'gasoline',
+      bPrice: money(bask[lm.idx]), fPrice: money(chSeries[Math.max(0, lm.idx - S.lag * 7)]) };
+
+    const models = {}; const M = it => models[it.id] || (models[it.id] = itemModel(it));
+    const bS = { '90D': N - 91, '6M': N - 183, '1Y': Y0 }[S.base];
+    const chg = bask[e] - bask[bS], fuelAttr = bask[bS] * 0.12 * pct(fuelR[bS], fuelR[e]) / 100, non = chg - fuelAttr;
+    const tot = Math.abs(fuelAttr) + Math.abs(non) || 1;
+    const bk = { change: smoney(chg), from: money(bask[bS]), to: money(bask[e]), fuel: smoney(fuelAttr), non: smoney(non), fuelW: (Math.abs(fuelAttr) / tot * 100) + '%', nonW: (Math.abs(non) / tot * 100) + '%' };
+    const setItem = (id, f) => this.setState(st => ({ items: st.items.map(i => i.id === id ? f(i) : i) }));
+    const open = id => () => { this.setState({ itemId: id }); this.push('item'); };
+    const star = i => ({ starIcon: i.follow ? 'ph-fill ph-star' : 'ph ph-star', starColor: i.follow ? 'var(--color-accent)' : 'var(--color-neutral-500)' });
+    const basketRows = inB.map(i => { const m = M(i); return { name: i.name + ' · ' + i.size, store: i.store, price: money(i.price), pct: sgn(m.chg) + '%', vLabel: VL[i.v][0], vClass: VL[i.v][1],
+      spark: sparkPath(m.spark, 56, 22), sparkColor: i.v === 'gouge' ? 'var(--color-accent)' : 'var(--color-neutral-400)', ...star(i),
+      open: open(i.id), follow: () => setItem(i.id, x => ({ ...x, follow: !x.follow })), remove: () => { setItem(i.id, x => ({ ...x, inB: false })); this.flash(i.name + ' removed'); } }; });
+    const gougeRows = inB.filter(i => i.v === 'gouge').slice(0, 3).map(i => ({ name: i.name + ' · ' + i.size, store: i.store, price: money(i.price), unreturned: money(M(i).unret), open: open(i.id) }));
+
+    const cur = S.items.find(i => i.id === S.itemId) || S.items[0], cm = M(cur);
+    const vText = { gouge: 'Price rose twice while diesel climbed. Diesel has since fallen ' + Math.abs(cm.fuelSince).toFixed(1) + '% with no price reduction.',
+      sticky: 'Price rose with diesel and was only partly reduced after diesel fell ' + Math.abs(cm.fuelSince).toFixed(1) + '%.',
+      track: 'Price rose with diesel and was reduced again as diesel fell.' }[cur.v];
+    const item = { ...cur, price: money(cur.price), vLabel: VL[cur.v][0], vClass: VL[cur.v][1], verdict: vText, unreturned: money(cm.unret),
+      fuelSince: sgn(cm.fuelSince) + '%', ...star(cur), follow: () => setItem(cur.id, x => ({ ...x, follow: !x.follow })),
+      ledger: cm.L.slice().reverse().map(l => { const dt = dateAt(Y0 + l.w * 7); return { from: money(l.a), to: money(l.b), pct: sgn(pct(l.a, l.b)) + '%', date: fmtD(dt, true), fuel: money(wkFuel(l.w) * R.level), tag: l.tag, tagColor: l.tag === 'Rollback' ? 'var(--color-neutral-300)' : 'var(--color-accent-300)' }; }) };
+
+    const q = S.query.trim().toLowerCase(), isUrl = /https?:|www\.|\.com/.test(q);
+    let res = [];
+    if (isUrl) res = S.items.filter(i => i.id === 'ketchup');
+    else if (q) { const ws = q.split(/\s+/); res = S.items.filter(i => { const h = (i.name + ' ' + i.size + ' ' + i.cat + ' ' + i.store).toLowerCase(); return ws.every(w => h.includes(w) || h.replace(/\s/g, '').includes(w)); }); }
+    const results = res.map(i => ({ name: i.name, size: i.size, store: i.store, price: money(i.price), vLabel: VL[i.v][0], vClass: VL[i.v][1], open: open(i.id),
+      addLabel: i.inB ? 'Added' : 'Add', addIcon: i.inB ? 'ph ph-check' : 'ph ph-plus', addColor: i.inB ? 'var(--color-accent)' : 'var(--color-text)',
+      toggle: () => { setItem(i.id, x => ({ ...x, inB: !x.inB })); if (!i.inB) this.flash(i.name + ' added to basket'); } }));
+
+    const ocrLines = OCR0.map(([n, pr], k) => ({ name: n, price: money(pr), icon: S.ocrSel[k] ? 'ph-fill ph-check-square' : 'ph ph-square', toggle: () => this.setState(st => ({ ocrSel: st.ocrSel.map((v, j) => j === k ? (v ? 0 : 1) : v) })) }));
+    const ocrCount = S.ocrSel.filter(Boolean).length;
+
+    const tabsDef = nav === 'tabs3' ? [['today','Today','ph-gauge'],['basket','Basket','ph-basket'],['search','Search','ph-magnifying-glass'],['insights','Insights','ph-chart-bar']]
+      : [['today','Today','ph-gauge'],['chart','Chart','ph-chart-line-up'],['basket','Basket','ph-basket'],['log','Log','ph-receipt'],['insights','Insights','ph-chart-bar']];
+    const showTabs = S.stack.length === 1 && screen !== 'onb';
+    const tabs = tabsDef.map(([k, l, ic]) => { const on = screen === k; return { label: l, icon: (on ? 'ph-fill ' : 'ph ') + ic, color: on ? 'var(--color-accent)' : 'var(--color-neutral-400)', mark: on ? 'var(--color-accent)' : 'transparent',
+      go: () => k === 'search' && nav === 'tabs3' ? this.push('search') : this.setState({ stack: [k], scrub: null, sheet: null }) }; });
+
+    const cats = [['Produce',71],['Bakery',33],['Meat',24],['Dairy',18],['Dry goods',12],['Frozen',9],['Household',6]].map(([n, v]) => ({ name: n, v: v + '%', w: v + '%' }));
+    const regionRows = ['gulf','east','mid','rocky','west','nat'].map(k => { const rs = regSeries(FUEL, REGIONS[k]); const fp = pct(rs[s], rs[e]); return { name: REGIONS[k].name.split(' (')[0], fuel: 'Diesel ' + sgn(fp) + '%', delta: sgn(bP - fp), color: k === regKey ? 'var(--color-accent-300)' : 'var(--color-text)' }; });
+    const alertsDef = [['Diesel crosses $3.25/gal', R.state + ' retail diesel, weekly'], ['A followed item drops in price', S.items.filter(i => i.follow).length + ' items followed'], ['Delta exceeds tolerance', 'Currently ' + ad.toFixed(1) + ' pts, tolerance ' + S.tol + ' pts']];
+    const alerts = alertsDef.map(([ti, de], k) => { const on = S.alerts[k]; return { title: ti, detail: de, bg: on ? 'var(--color-accent-800)' : 'var(--color-neutral-900)', border: on ? 'var(--color-accent)' : 'var(--color-divider)', knob: on ? 'var(--color-accent-300)' : 'var(--color-neutral-600)', justify: on ? 'flex-end' : 'flex-start',
+      toggle: () => this.setState(st => ({ alerts: st.alerts.map((v, j) => j === k ? (v ? 0 : 1) : v) })) }; });
+
+    const retailers = RET.map(([n, g, r, cnt, cs]) => { const o = S.retOpen === n, good = r >= 45; return { name: n, grade: g, ratio: r + '%', items: cnt, open: o, caret: o ? 'ph ph-caret-up' : 'ph ph-caret-down',
+      gradeColor: good ? 'var(--color-accent-300)' : 'var(--color-neutral-300)', gradeBorder: good ? 'var(--color-accent)' : 'var(--color-neutral-700)',
+      cats: cs.map((v, k) => ({ name: RCAT[k], v: v + '%', w: v + '%' })), toggle: () => this.setState({ retOpen: o ? null : n }) }; });
+
+    const card = { story: { w: '214px', h: '380px', pad: '18px', gap: '12px', num: '64px', body: '12px' }, x: { w: '340px', h: '191px', pad: '14px', gap: '6px', num: '40px', body: '10px' }, square: { w: '300px', h: '300px', pad: '16px', gap: '9px', num: '54px', body: '11px' } }[S.aspect];
+    const sheet = S.sheet === 'meth' ? { title: 'Methodology and sources', rows: [
+        { k: 'Fuel data', v: 'U.S. Energy Information Administration weekly on-highway retail diesel and gasoline, national, PADD region and state series. Weekly values are forward-filled to a daily grid.' },
+        { k: 'Shelf prices', v: 'Listed prices captured daily from Walmart, Amazon, Target, Kroger, Albertsons, Costco and regional chains, per store ZIP where available. Promotional prices are tracked separately.' },
+        { k: 'Basket index', v: 'Your basket is indexed to 100 at the start of the window and weighted by logged purchase frequency. The Delta is basket change minus fuel change, in percentage points.' },
+        { k: 'Verdicts', v: 'Lagged cross-correlation (0–120 days) with an asymmetry test. Gouge Gap: upward pass-through more than twice downward, and fuel down more than 15% since the last increase.' },
+        { k: 'Limitations', v: 'Fuel is one input among labor, packaging and commodity costs. A gap is not proof of intent. Moves under $0.03 or 0.5% are ignored.' }] }
+      : S.sheet === 'prov' ? { title: 'Data provenance', rows: [
+        { k: 'Source', v: cur.store + ' listed price, ' + cur.name + ' ' + cur.size },
+        { k: 'Captured', v: 'Oct 28, 2026 at 04:12 CT · store ZIP ' + S.zip },
+        { k: 'Method', v: 'Retailer structured product feed (JSON-LD). HTML snapshot retained 90 days.' },
+        { k: 'Confidence', v: 'High. Matches 3 prior captures and 2 user receipts.' }] } : { title: '', rows: [] };
+
+    const pick = (k, v) => () => this.setState({ [k]: v, scrub: null });
+    return {
+      wrapMinH: P.embedded ? 'auto' : '100vh', wrapPad: P.embedded ? '0' : '24px', scrollPadB: showTabs ? '110px' : '32px',
+      isOnb: screen === 'onb', isToday: screen === 'today', isChart: screen === 'chart', isBasket: screen === 'basket', isItem: screen === 'item',
+      isSearch: screen === 'search', isLog: screen === 'log', isInsights: screen === 'insights', isRetailers: screen === 'retailers', isShare: screen === 'share', isPaywall: screen === 'paywall',
+      layoutNumber: layout === 'number', layoutLines: layout === 'lines', layoutBars: layout === 'bars', showChartLink: nav === 'tabs3',
+      zip: S.zip, zipError: S.zipError, zipValid: S.zip.length === 5, zipInvalid: false,
+      onZip: ev => this.setState({ zip: ev.target.value.replace(/\D/g, '').slice(0, 5), zipError: false }),
+      finishOnb: () => S.zip.length === 5 ? this.setState({ stack: ['today'] }) : this.setState({ zipError: true }),
+      region: { name: R.name, state: R.state, price: money(fuelR[e]), short: R.abbr + ' ' + S.zip }, todayLabel: fmtD(TODAY, true),
+      winOpts: WINS.map(w => ({ label: w.l, on: S.win === w.k, locked: false, pick: pick('win', w.k) })),
+      t, tc, bars, basketCount: inB.length, gougeRows,
+      onScrub: ev => this.scrubFrom(ev), onScrubEnd: () => this.setState({ scrub: null }),
+      seriesOpts: [['diesel','Diesel'],['gas','Gasoline']].map(([k, l]) => ({ label: l, on: S.series === k, pick: pick('series', k) })),
+      scopeOpts: [['nat','U.S.'],['region','PADD'],['state',R.abbr]].map(([k, l]) => ({ label: l, on: S.scope === k, pick: () => k === 'state' && !S.isPro ? this.push('paywall') : this.setState({ scope: k }) })),
+      ch, lag: S.lag, lagLabel: S.lag ? S.lag + (S.lag === 1 ? ' week' : ' weeks') : 'none', bestLag: BEST, corr: corrAt(S.lag).toFixed(2),
+      onLag: ev => this.setState({ lag: +ev.target.value }),
+      basketRows, bk, editing: S.editing, editLabel: S.editing ? 'Done' : 'Edit', toggleEdit: () => this.setState({ editing: !S.editing }), showLogBtn: nav === 'tabs3',
+      baseOpts: ['90D','6M','1Y'].map(k => ({ label: k, on: S.base === k, pick: () => this.setState({ base: k }) })),
+      item, ic: cm.chart, toggleProv: () => this.setState({ sheet: 'prov' }),
+      query: S.query, onQuery: ev => this.setState({ query: ev.target.value, scanning: false }), scanning: S.scanning, toggleScan: () => this.setState({ scanning: !S.scanning }),
+      simulateScan: () => this.setState({ scanning: false, query: 'heinz ketchup 32' }),
+      showRecent: !q && !S.scanning, urlResolved: isUrl && res.length > 0, results, noResults: !!q && !res.length,
+      recent: ['heinz ketchup','milk','eggs','paper towels','https://www.target.com/p/heinz-ketchup-32oz'].map(c => ({ label: c.startsWith('http') ? 'Paste a link' : c, pick: () => this.setState({ query: c }) })),
+      logBack: S.stack.length > 1, logCamera: S.logMode === 'camera', logManual: S.logMode === 'manual',
+      modeCamera: () => this.setState({ logMode: S.logMode === 'camera' ? null : 'camera', ocr: 'pending', ocrSel: [1,1,1,1] }),
+      modeManual: () => this.setState({ logMode: S.logMode === 'manual' ? null : 'manual', errs: {} }),
+      ocrPending: S.ocr === 'pending', ocrDone: S.ocr === 'done', capture: () => this.setState({ ocr: 'done' }), ocrLines, ocrCount,
+      addOcr: () => { if (!ocrCount) return; const add = OCR0.filter((_, k) => S.ocrSel[k]).map(([n, pr]) => ({ item: n, price: pr, store: 'Kroger', date: 'Oct 28', cmp: n.startsWith('Large eggs') ? '$0.05 below listed' : 'Matches listed price', hi: 0 }));
+        this.setState(st => ({ history: [...add, ...st.history], logMode: null })); this.flash(add.length + ' prices added'); },
+      form: S.form, errs: S.errs, stores: STORES,
+      onFItem: ev => this.setState({ form: { ...S.form, item: ev.target.value } }), onFPrice: ev => this.setState({ form: { ...S.form, price: ev.target.value.replace(/[^\d.]/g, '') } }),
+      onFStore: ev => this.setState({ form: { ...S.form, store: ev.target.value } }),
+      submitLog: () => { const pr = parseFloat(S.form.price), errs = { item: !S.form.item.trim(), price: !(pr > 0) }; if (errs.item || errs.price) return this.setState({ errs });
+        this.setState(st => ({ history: [{ item: S.form.item.trim(), price: pr, store: S.form.store, date: 'Oct 28', cmp: 'No listed price to compare', hi: 0 }, ...st.history], form: { item: '', price: '', store: S.form.store }, errs: {}, logMode: null })); this.flash('Price saved'); },
+      history: S.history.map(h => ({ ...h, price: money(h.price), cmpColor: h.hi ? 'var(--color-accent-300)' : 'var(--color-neutral-400)' })),
+      cats, regionRows, alerts, tol: S.tol, tolDown: () => this.setState({ tol: Math.max(1, S.tol - 1) }), tolUp: () => this.setState({ tol: Math.min(15, S.tol + 1) }),
+      goRetailers: () => this.push('retailers'), toggleMeth: () => this.setState({ sheet: 'meth' }), goPaywall: () => this.push('paywall'), proLabel: S.isPro ? 'Active' : 'Free plan',
+      retailers,
+      aspectOpts: [['story','Story 9:16'],['x','X 16:9'],['square','Square']].map(([k, l]) => ({ label: l, on: S.aspect === k, pick: () => this.setState({ aspect: k }) })), card,
+      saveImage: () => this.flash('Image saved to Photos'), shareImage: () => this.flash('Share sheet opened'),
+      proFeatures: ['Unlimited custom baskets', 'Price history beyond 12 months', 'State and store-level breakdowns', 'Unlimited break alerts', 'CSV and PNG export', 'Home-screen widget'],
+      plans: PLANS.map(([k, n, sub, pr]) => { const on = S.plan === k; return { name: n, sub, price: pr, bg: on ? 'color-mix(in srgb, var(--color-accent) 10%, transparent)' : 'var(--color-surface)', border: on ? 'var(--color-accent)' : 'var(--color-divider)', dot: on ? 'var(--color-accent)' : 'transparent', pick: () => this.setState({ plan: k }) }; }),
+      buyLabel: S.isPro ? 'Pro is active' : 'Start Pro · ' + PLANS.find(p => p[0] === S.plan)[3],
+      buyPro: () => { if (S.isPro) return; this.setState(st => ({ isPro: true, stack: st.stack.slice(0, -1) })); this.flash('Pro unlocked'); },
+      tabBar: showTabs && nav !== 'float', tabFloat: showTabs && nav === 'float', tabs,
+      sheetOpen: !!S.sheet, sheet, meth: S.sheet === 'meth', prov: S.sheet === 'prov', closeSheet: () => this.setState({ sheet: null }),
+      reportFix: () => { this.setState({ sheet: null }); this.flash('Correction form opened'); },
+      hasToast: !!S.toast, toast: S.toast,
+      back: () => this.setState(st => ({ stack: st.stack.length > 1 ? st.stack.slice(0, -1) : st.stack, scrub: null })),
+      goSearch: () => this.push('search'), goShare: () => this.push('share'), goBasket: () => this.setState({ stack: ['basket'] }),
+      goLog: () => this.push('log'), goChart: () => this.push('chart')
+    };
+  }
+}
+</script>
+</body>
+</html>
