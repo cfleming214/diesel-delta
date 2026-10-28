@@ -23,7 +23,15 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
-      <Stack screenOptions={{ headerShown: false, contentStyle: styles.root }} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: styles.root }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="item/[id]" />
+        <Stack.Screen name="search" />
+        <Stack.Screen name="retailers" />
+        <Stack.Screen name="share" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
+      </Stack>
       <ToastHost />
       <StatusBar style="light" />
     </GestureHandlerRootView>
