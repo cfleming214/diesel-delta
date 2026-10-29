@@ -44,6 +44,29 @@ The CI workflow is staged at `ci/github-actions.yml`. Move it to `.github/workfl
 | `src/data` | `DataApi` interface and the fixture implementation ported from the prototype |
 | `src/store` | Zustand stores |
 
+## Backend (Supabase + EIA)
+
+Fuel prices come from the U.S. EIA weekly retail series, ingested into Supabase by the `ingest-eia` Edge Function. Grocery data still comes from bundled fixtures until a price source is chosen.
+
+| Path | Contents |
+|---|---|
+| `supabase/migrations` | Fuel tables, `fuel_series_daily()` (forward-filled daily prices), RLS, and the 30 EIA series |
+| `supabase/functions/ingest-eia` | Weekly ingest (Deno). Shared EIA logic in `supabase/functions/_shared/eia.ts` |
+| `supabase/schedule.sql` | pg_cron job that calls the function Tue/Wed |
+| `src/data/geo` | ZIP→state→PADD and the EIA series used for each state (bundled, works offline) |
+
+Checks: `npm run db:check` (migrations against a scratch Postgres), `npm run functions:check` and `npm run functions:test` (needs [Deno](https://deno.com)).
+
+Going live:
+
+1. Create a Supabase project and get an EIA API key (https://www.eia.gov/opendata/register.php).
+2. Apply the schema: `npx supabase link --project-ref <ref>` then `npx supabase db push`.
+3. Set function secrets: `npx supabase secrets set EIA_API_KEY=<key> INGEST_SECRET=<random string>`.
+4. Deploy: `npx supabase functions deploy ingest-eia`.
+5. Run it once to backfill three years: `curl -X POST -H "x-ingest-secret: <same string>" https://<ref>.supabase.co/functions/v1/ingest-eia`. The response and `ingest_runs` list any series that returned no rows.
+6. Store `project_url` and `ingest_secret` in Vault and run `supabase/schedule.sql` in the SQL editor.
+7. Point the app at it: copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_DATA_SOURCE=supabase` plus the project URL and anon key. For EAS builds, set the same variables in the EAS environment.
+
 ## Kitchen sink
 
 In development builds, open `dieseldelta://dev/kitchen-sink` (or `/dev/kitchen-sink` on web) to see every primitive for side-by-side review against `design/handoff/DieselDeltaApp.dc.html`.
