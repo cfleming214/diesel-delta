@@ -12,7 +12,6 @@
       "supportsTablet": false,
       "bundleIdentifier": "app.dieseldelta",
       "infoPlist": {
-        "NSCameraUsageDescription": "DieselDelta uses the camera to scan product barcodes and grocery receipts. Receipt photos are processed on this device.",
         "NSPhotoLibraryAddUsageDescription": "DieselDelta saves share cards to your photo library.",
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -41,7 +40,16 @@
         }
       ],
       "expo-status-bar",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "DieselDelta uses the camera to scan product barcodes and grocery receipts. Receipt photos are processed on this device.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

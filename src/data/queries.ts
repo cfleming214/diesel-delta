@@ -73,6 +73,10 @@ export function useProvenance(id: string, zip: string | null, enabled: boolean) 
   });
 }
 
+export function useBarcodeLookup() {
+  return (code: string) => api.lookupBarcode(code);
+}
+
 export function useCatalogSearch(query: string) {
   return useQuery({
     queryKey: queryKeys.search(query),
