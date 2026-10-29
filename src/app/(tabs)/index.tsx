@@ -20,7 +20,7 @@ export default function TodayScreen() {
   const zip = usePrefs((s) => s.zip);
   const window = useUi((s) => s.window);
   const setWindow = useUi((s) => s.setWindow);
-  const { model, error, regionName } = useDeltaModel({ window });
+  const { model, error, regionName, basketEmpty } = useDeltaModel({ window });
   const [scrub, setScrub] = useState<number | null>(null);
 
   const indexed = useMemo(
@@ -76,6 +76,12 @@ export default function TodayScreen() {
           onPress={() => router.push('/share')}
         />
       </>
+    );
+  } else if (basketEmpty) {
+    body = (
+      <Text color={colors.neutral[400]}>
+        Your basket is empty. Add the items you buy to see your Delta.
+      </Text>
     );
   } else if (error) {
     body = (

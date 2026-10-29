@@ -28,7 +28,7 @@ export function useDeltaModel({ window, kind = 'diesel', scope = 'padd' }: Optio
   const basketQ = useBasketSeries(ids);
 
   const model = useMemo(() => {
-    if (!fuelQ.data || !basketQ.data) return undefined;
+    if (!fuelQ.data || !basketQ.data || ids.length === 0) return undefined;
     const fuel = fuelQ.data.values;
     const basketValues = basketQ.data.values;
     const { start, end } = windowRange(fuel.length, window);
@@ -46,12 +46,13 @@ export function useDeltaModel({ window, kind = 'diesel', scope = 'padd' }: Optio
       windowLabel: info.label,
       verdict: verdictSentence(delta, info.label, seriesName),
     };
-  }, [fuelQ.data, basketQ.data, window, kind]);
+  }, [fuelQ.data, basketQ.data, window, kind, ids.length]);
 
   return {
     model,
     isLoading: fuelQ.isLoading || basketQ.isLoading,
     error: fuelQ.error ?? basketQ.error,
+    basketEmpty: ids.length === 0,
     region,
     regionName: region ? REGION_NAMES[region] : undefined,
   };
