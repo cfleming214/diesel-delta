@@ -29,6 +29,6 @@ describe('app navigation', () => {
   test('deep links to an item', async () => {
     await renderRouter('./src/app', { initialUrl: '/item/milk' });
     expect(screen).toHavePathname('/item/milk');
-    expect(screen.getByText('milk')).toBeTruthy();
+    expect(await screen.findByText('Whole milk')).toBeTruthy();
   });
 });

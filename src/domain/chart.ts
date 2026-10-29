@@ -61,3 +61,59 @@ export function lagChartGeometry({
     grid: gridValues(lo, hi).map((g) => ({ y: y(g), label: String(g) })),
   };
 }
+
+export type ItemChartInput = {
+  weeklyPrice: readonly number[];
+  weeklyFuel: readonly number[];
+  changeWeeks: readonly number[];
+  fuelFallingWeeks: readonly [number, number];
+  width: number;
+  height: number;
+};
+
+export type ItemChartGeometry = {
+  /** Step line: price holds flat until each change. */
+  pricePath: string;
+  fuelPath: string;
+  band: { x: number; width: number };
+  /** Hollow markers at each price change (the new price). */
+  marks: { x: number; y: number }[];
+  price: { lo: number; hi: number };
+  fuel: { lo: number; hi: number };
+};
+
+/** 12-month item chart: price and fuel on independent axes with a 12pt vertical inset. */
+export function itemChartGeometry({
+  weeklyPrice,
+  weeklyFuel,
+  changeWeeks,
+  fuelFallingWeeks,
+  width,
+  height,
+}: ItemChartInput): ItemChartGeometry {
+  const weeks = weeklyPrice.length - 1;
+  const x = (w: number) => (w / weeks) * width;
+  const pl = Math.min(...weeklyPrice);
+  const ph = Math.max(...weeklyPrice);
+  const fl = Math.min(...weeklyFuel);
+  const fh = Math.max(...weeklyFuel);
+  const yP = (v: number) => height - 12 - ((v - pl) / (ph - pl || 1)) * (height - 24);
+  const yF = (v: number) => height - 12 - ((v - fl) / (fh - fl || 1)) * (height - 24);
+  const f1 = (n: number) => n.toFixed(1);
+
+  let pricePath = `M0 ${f1(yP(weeklyPrice[0]!))}`;
+  for (let w = 1; w <= weeks; w++) {
+    pricePath += `L${f1(x(w))} ${f1(yP(weeklyPrice[w - 1]!))}L${f1(x(w))} ${f1(yP(weeklyPrice[w]!))}`;
+  }
+  const fuelPath = weeklyFuel.map((v, w) => `${w ? 'L' : 'M'}${f1(x(w))} ${f1(yF(v))}`).join('');
+  const [b0, b1] = fuelFallingWeeks;
+
+  return {
+    pricePath,
+    fuelPath,
+    band: { x: x(b0), width: x(b1) - x(b0) },
+    marks: changeWeeks.map((w) => ({ x: x(w), y: yP(weeklyPrice[w]!) })),
+    price: { lo: pl, hi: ph },
+    fuel: { lo: fl, hi: fh },
+  };
+}
