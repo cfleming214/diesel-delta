@@ -14,6 +14,8 @@ type Props<T extends string | number> = {
   height?: number;
   style?: ViewStyle;
   accessibilityLabel?: string;
+  /** Small inline control (12pt labels, 4/9 padding) that sizes to its content. */
+  compact?: boolean;
 };
 
 /** Segmented control. The selected option gets accent text and a 1px inset accent ring. */
@@ -24,6 +26,7 @@ export function Seg<T extends string | number>({
   height = 36,
   style,
   accessibilityLabel,
+  compact = false,
 }: Props<T>) {
   return (
     <View style={[styles.root, style]} accessibilityRole="tablist" aria-label={accessibilityLabel}>
@@ -36,14 +39,18 @@ export function Seg<T extends string | number>({
             accessibilityState={{ selected }}
             onPress={() => onChange(opt.value)}
             style={({ pressed }) => [
-              styles.opt,
-              { minHeight: height },
+              compact ? styles.optCompact : styles.opt,
+              { minHeight: compact ? 0 : height },
               i > 0 && styles.sep,
               selected && styles.selected,
               pressed && !selected && styles.pressed,
             ]}
           >
-            <Text variant="bodySmall" color={selected ? colors.accent : colors.text}>
+            <Text
+              variant="bodySmall"
+              color={selected ? colors.accent : colors.text}
+              style={compact ? styles.compactLabel : undefined}
+            >
               {opt.label}
             </Text>
           </Pressable>
@@ -67,6 +74,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
+  optCompact: { paddingVertical: 4, paddingHorizontal: 9 },
+  compactLabel: { fontSize: 12, lineHeight: 16 },
   sep: { borderLeftWidth: 1, borderLeftColor: colors.divider },
   selected: { boxShadow: `inset 0 0 0 1px ${colors.accent}` },
   pressed: { backgroundColor: alpha(colors.text, 0.07) },
