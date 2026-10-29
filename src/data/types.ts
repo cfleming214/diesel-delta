@@ -88,6 +88,8 @@ export interface DataApi {
   getBasketSeries(itemIds: readonly string[]): Promise<DailySeries>;
   getCatalog(): Promise<CatalogItem[]>;
   searchCatalog(query: string): Promise<{ items: CatalogItem[]; resolvedFromLink: boolean }>;
+  /** Resolves a scanned UPC/EAN to a tracked item, or null if none matches. */
+  lookupBarcode(code: string): Promise<CatalogItem | null>;
   getItem(id: string, region: RegionKey): Promise<ItemDetail>;
   getProvenance(id: string, zip: string): Promise<Provenance>;
   getCategoryPassThrough(region: RegionKey): Promise<CategoryPassThrough[]>;

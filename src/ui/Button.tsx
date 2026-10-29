@@ -18,6 +18,8 @@ type Props = {
   large?: boolean;
   block?: boolean;
   disabled?: boolean;
+  /** Overrides the label and icon colour (e.g. an accent "Added" state on a secondary button). */
+  color?: string;
   style?: ViewStyle;
 };
 
@@ -43,8 +45,10 @@ export function Button({
   large = false,
   block = false,
   disabled = false,
+  color,
   style,
 }: Props) {
+  const tint = color ?? fg[variant];
   return (
     <Pressable
       accessibilityRole="button"
@@ -63,8 +67,8 @@ export function Button({
         style,
       ]}
     >
-      {IconCmp ? <IconCmp size={large ? 20 : 18} color={fg[variant]} /> : null}
-      <Text style={[type.control, large && styles.largeLabel]} color={fg[variant]}>
+      {IconCmp ? <IconCmp size={large ? 20 : 18} color={tint} /> : null}
+      <Text style={[type.control, large && styles.largeLabel]} color={tint}>
         {label}
       </Text>
     </Pressable>

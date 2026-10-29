@@ -83,6 +83,16 @@ export function buildItemDetail(item: CatalogItem, region: RegionKey): ItemDetai
   };
 }
 
+/**
+ * Synthetic barcodes for development only (not real product GTINs). Real scans resolve once the
+ * catalog carries GTINs from retailer feeds.
+ */
+export const FIXTURE_BARCODES: Record<string, string> = {
+  '0000000000017': 'ketchup',
+  '0000000000024': 'milk',
+  '0000000000031': 'eggs',
+};
+
 const LINK = /https?:|www\.|\.com/;
 
 /** Word-AND match over name, size, category and store. Production uses Typesense fuzzy search. */
@@ -135,6 +145,11 @@ export const fixtureApi: DataApi = {
 
   async searchCatalog(query) {
     return matchCatalog(query);
+  },
+
+  async lookupBarcode(code) {
+    const id = FIXTURE_BARCODES[code.replace(/\D/g, '')];
+    return id ? findItem(id) : null;
   },
 
   async getItem(id, region) {
