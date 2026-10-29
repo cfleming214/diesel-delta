@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import {
+  alignSeries,
   computeDelta,
   dateAtIndex,
   verdictSentence,
@@ -30,8 +31,11 @@ export function useDeltaModel({ window, kind = 'diesel', scope = 'padd' }: Optio
 
   const model = useMemo(() => {
     if (!fuelQ.data || !basketQ.data || ids.length === 0) return undefined;
-    const fuel = fuelQ.data.values;
-    const basketValues = basketQ.data.values;
+    // Fuel (EIA) and basket series can end on different days; compare only shared dates.
+    const aligned = alignSeries(fuelQ.data, basketQ.data);
+    if (!aligned || aligned.a.length <= window) return undefined;
+    const fuel = aligned.a;
+    const basketValues = aligned.b;
     const { start, end } = windowRange(fuel.length, window);
     const delta = computeDelta(fuel, basketValues, window);
     const info = windowInfo(window);
@@ -41,8 +45,8 @@ export function useDeltaModel({ window, kind = 'diesel', scope = 'padd' }: Optio
       basket: basketValues,
       start,
       end,
-      startDate: fuelQ.data.startDate,
-      latestDate: dateAtIndex(fuelQ.data.startDate, end),
+      startDate: aligned.startDate,
+      latestDate: dateAtIndex(aligned.startDate, end),
       ...delta,
       windowLabel: info.label,
       verdict: verdictSentence(delta, info.label, seriesName),

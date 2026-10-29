@@ -9,7 +9,7 @@ import { ReorderableList } from '@/components/ReorderableList';
 import { SwipeToRemove } from '@/components/SwipeToRemove';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
 import { fuelArea, useBasketSeries, useFuelSeries, useItems, type ItemDetail } from '@/data';
-import { basketAttribution, baselineIndex } from '@/domain';
+import { alignSeries, basketAttribution, baselineIndex } from '@/domain';
 import { basketIds, usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
 import { useUi } from '@/store/ui';
@@ -33,8 +33,10 @@ export default function BasketScreen() {
 
   const attribution = useMemo(() => {
     if (!fuel.data || !basketSeries.data || ids.length === 0) return null;
-    const values = basketSeries.data.values;
-    return basketAttribution(values, fuel.data.values, baselineIndex(values.length, baseline));
+    const aligned = alignSeries(basketSeries.data, fuel.data);
+    if (!aligned) return null;
+    const start = baselineIndex(aligned.a.length, baseline);
+    return start >= 0 ? basketAttribution(aligned.a, aligned.b, start) : null;
   }, [fuel.data, basketSeries.data, baseline, ids.length]);
 
   const loaded = items.filter((i): i is ItemDetail => i != null);

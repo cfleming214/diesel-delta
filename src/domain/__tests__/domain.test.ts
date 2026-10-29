@@ -1,6 +1,7 @@
 import { describe, expect, test } from '@jest/globals';
 
 import {
+  alignSeries,
   basketAttribution,
   baselineIndex,
   bestLag,
@@ -148,6 +149,35 @@ describe('series', () => {
   test('sparkPath matches the prototype output', () => {
     expect(sparkPath([1, 2, 3, 2], 130, 40)).toBe('M0.0 38.0L43.3 20.0L86.7 2.0L130.0 20.0');
     expect(sparkPath([1], 10, 10)).toBe('');
+  });
+});
+
+describe('alignSeries', () => {
+  test('trims both series to their shared dates', () => {
+    const fuel = { startDate: '2026-10-20', values: [1, 2, 3, 4, 5, 6, 7] }; // 20–26
+    const basket = { startDate: '2026-10-23', values: [10, 11, 12, 13, 14, 15] }; // 23–28
+    expect(alignSeries(fuel, basket)).toEqual({
+      startDate: '2026-10-23',
+      a: [4, 5, 6, 7],
+      b: [10, 11, 12, 13],
+    });
+  });
+  test('handles month boundaries and identical ranges', () => {
+    const a = { startDate: '2026-02-27', values: [1, 2, 3] }; // Feb 27, 28, Mar 1
+    expect(alignSeries(a, { startDate: '2026-03-01', values: [9] })).toEqual({
+      startDate: '2026-03-01',
+      a: [3],
+      b: [9],
+    });
+    expect(alignSeries(a, a)?.a).toEqual([1, 2, 3]);
+  });
+  test('returns null without overlap', () => {
+    expect(
+      alignSeries(
+        { startDate: '2026-01-01', values: [1] },
+        { startDate: '2026-01-02', values: [1] },
+      ),
+    ).toBeNull();
   });
 });
 

@@ -64,3 +64,30 @@ export function sparkPath(values: readonly number[], width: number, height: numb
     })
     .join('');
 }
+
+export type DatedSeries = { startDate: string; values: readonly number[] };
+
+const DAY_MS = 86_400_000;
+const dayNumber = (iso: string) =>
+  Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / DAY_MS;
+const isoFromDayNumber = (n: number) => new Date(n * DAY_MS).toISOString().slice(0, 10);
+
+/**
+ * Trims two daily series to the dates they share, so index i refers to the same day in both.
+ * Returns null when they do not overlap.
+ */
+export function alignSeries(
+  a: DatedSeries,
+  b: DatedSeries,
+): { startDate: string; a: number[]; b: number[] } | null {
+  const a0 = dayNumber(a.startDate);
+  const b0 = dayNumber(b.startDate);
+  const start = Math.max(a0, b0);
+  const end = Math.min(a0 + a.values.length - 1, b0 + b.values.length - 1);
+  if (end < start) return null;
+  return {
+    startDate: isoFromDayNumber(start),
+    a: a.values.slice(start - a0, end - a0 + 1),
+    b: b.values.slice(start - b0, end - b0 + 1),
+  };
+}
