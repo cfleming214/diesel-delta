@@ -30,6 +30,36 @@ describe('prefs', () => {
   });
 });
 
+describe('basket actions', () => {
+  beforeEach(() => usePrefs.getState().reset());
+  const ids = () => basketIds(usePrefs.getState().basket);
+
+  test('add ignores duplicates; remove drops the item', () => {
+    usePrefs.getState().addToBasket('yogurt');
+    usePrefs.getState().addToBasket('yogurt');
+    expect(ids().filter((id) => id === 'yogurt')).toHaveLength(1);
+    expect(ids().at(-1)).toBe('yogurt');
+    usePrefs.getState().removeFromBasket('milk');
+    expect(ids()).not.toContain('milk');
+  });
+
+  test('move reorders and clamps out-of-range targets', () => {
+    usePrefs.getState().moveBasketItem(0, 2);
+    expect(ids().slice(0, 3)).toEqual(['eggs', 'bread', 'milk']);
+    usePrefs.getState().moveBasketItem(2, -5);
+    expect(ids().slice(0, 3)).toEqual(['milk', 'eggs', 'bread']);
+    usePrefs.getState().moveBasketItem(0, 99);
+    expect(ids().at(-1)).toBe('milk');
+  });
+
+  test('toggleFollow', () => {
+    usePrefs.getState().toggleFollow('milk');
+    expect(usePrefs.getState().followed).not.toContain('milk');
+    usePrefs.getState().toggleFollow('milk');
+    expect(usePrefs.getState().followed).toContain('milk');
+  });
+});
+
 describe('ui', () => {
   test('clamps lag to 0–12 whole weeks', () => {
     useUi.getState().setLagWeeks(14);
