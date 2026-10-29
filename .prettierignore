@@ -3,3 +3,4 @@ dist/
 .expo/
 package-lock.json
 *.md
+supabase/functions/

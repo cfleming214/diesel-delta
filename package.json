@@ -13,7 +13,9 @@
     "format:check": "prettier --check .",
     "test": "jest",
     "web": "expo start --web",
-    "db:check": "scripts/check-migrations.sh"
+    "db:check": "scripts/check-migrations.sh",
+    "functions:check": "cd supabase/functions && deno check --node-modules-dir=none --no-lock ingest-eia/index.ts",
+    "functions:test": "cd supabase/functions && deno test --node-modules-dir=none --no-lock && deno fmt --check --single-quote --line-width 100 ."
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
