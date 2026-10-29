@@ -19,7 +19,7 @@ async function openBasket() {
 describe('Basket', () => {
   beforeEach(() => {
     usePrefs.getState().reset();
-    usePrefs.getState().setLocation('77002', 'gulf');
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
     useUi.setState({ basketBaseline: '1Y' });
   });
 

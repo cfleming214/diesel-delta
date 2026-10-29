@@ -13,14 +13,16 @@ import {
   dateAt,
   FUEL,
   GAS,
+  AREA_FIXTURE,
   REGION_ORDER,
   REGIONS,
   regionalize,
   START_DATE,
   weeklyFuel,
   YEAR_START,
-  zipRegion,
 } from './fixtures/series';
+import { AREA_NAMES, PADD_AREA, type FuelArea } from './geo';
+import { describeZip } from './geo/zip';
 import type { CatalogItem, DataApi, ItemDetail, RegionKey } from './types';
 
 const WEEKS = 52;
@@ -28,10 +30,12 @@ const priceSum = (ids: readonly string[]) =>
   CATALOG.filter((c) => ids.includes(c.id)).reduce((sum, c) => sum + c.price, 0);
 const DEFAULT_BASKET_TOTAL = priceSum(DEFAULT_BASKET_IDS);
 
-const publicRegion = (key: RegionKey) => {
-  const { level: _level, amp: _amp, ...region } = REGIONS[key];
-  return region;
-};
+const publicRegion = (key: RegionKey) => ({ key, name: AREA_NAMES[PADD_AREA[key]] });
+
+function fixtureFuel(area: FuelArea, kind: 'diesel' | 'gas') {
+  const [key, factor] = AREA_FIXTURE[area];
+  return regionalize(kind === 'diesel' ? FUEL : GAS, key).map((v) => v * factor);
+}
 
 function findItem(id: string): CatalogItem {
   const item = CATALOG.find((c) => c.id === id);
@@ -112,12 +116,10 @@ export function matchCatalog(query: string): { items: CatalogItem[]; resolvedFro
 
 export const fixtureApi: DataApi = {
   async lookupZip(zip) {
-    if (!/^\d{5}$/.test(zip)) throw new Error('Enter a 5-digit US ZIP code.');
-    const key = zipRegion(zip);
-    const series = regionalize(FUEL, key);
+    const place = describeZip(zip);
+    const series = fixtureFuel(place.dieselSeries.area, 'diesel');
     return {
-      zip,
-      region: publicRegion(key),
+      ...place,
       currentDiesel: series[series.length - 1]!,
       asOf: toISODate(dateAt(series.length - 1)),
     };
@@ -127,11 +129,8 @@ export const fixtureApi: DataApi = {
     return REGION_ORDER.map(publicRegion);
   },
 
-  async getFuelSeries(region, kind, scope) {
-    const base = kind === 'diesel' ? FUEL : GAS;
-    let values = regionalize(base, scope === 'national' ? 'nat' : region);
-    if (scope === 'state') values = values.map((v) => v * 0.985);
-    return { startDate: START_DATE, values };
+  async getFuelSeries(area, kind) {
+    return { startDate: START_DATE, values: fixtureFuel(area, kind) };
   },
 
   async getBasketSeries(itemIds) {

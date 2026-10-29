@@ -9,7 +9,7 @@ jest.mock('expo-haptics', () => ({ selectionAsync: jest.fn(() => Promise.resolve
 
 describe('Today', () => {
   beforeEach(() => {
-    usePrefs.getState().setLocation('77002', 'gulf');
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
     useUi.getState().setWindow(90);
   });
 

@@ -23,7 +23,7 @@ async function adjust(label: string, actionName: 'increment' | 'decrement', time
 describe('Chart explorer', () => {
   beforeEach(() => {
     usePrefs.getState().reset();
-    usePrefs.getState().setLocation('77002', 'gulf');
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
     useUi.setState({ window: 90, lagWeeks: 0, series: 'diesel', scope: 'padd' });
   });
 
@@ -48,20 +48,31 @@ describe('Chart explorer', () => {
     expect(screen.queryByText('+4.0 pts gap')).toBeNull();
   });
 
-  test('state scope is Pro-only and opens the paywall', async () => {
+  test('Texas has no state diesel series, so the scope control offers U.S. and PADD only', async () => {
     await openChart();
-    await act(() => fireEvent.press(screen.getByText('TX')));
+    expect(screen.getByText('PADD')).toBeTruthy();
+    expect(screen.queryByText('TX')).toBeNull();
+    expect(screen.queryByText('Local')).toBeNull();
+  });
+
+  test('the state gasoline series is Pro-only and opens the paywall', async () => {
+    await openChart();
+    await act(() => fireEvent.press(screen.getByText('Gasoline')));
+    await act(async () => fireEvent.press(await screen.findByText('TX')));
     expect(screen).toHavePathname('/paywall');
     expect(useUi.getState().scope).toBe('padd');
   });
 
-  test('Pro users can switch to state scope; gasoline renames the series', async () => {
+  test('Pro users can switch to the Texas gasoline series', async () => {
     usePrefs.getState().unlockPro('year');
     await openChart();
-    await act(() => fireEvent.press(screen.getByText('TX')));
-    expect(screen.getByText('Texas')).toBeTruthy();
     await act(() => fireEvent.press(screen.getByText('Gasoline')));
+    await act(async () => fireEvent.press(await screen.findByText('TX')));
+    expect(await screen.findByText('Texas')).toBeTruthy();
     expect(await screen.findByText(/^Gasoline \$/)).toBeTruthy();
     expect(screen.getByText(/Shifts the gasoline line forward/)).toBeTruthy();
+    // Back to diesel: no Texas series, so the chart falls back to the PADD.
+    await act(() => fireEvent.press(screen.getByText('Diesel')));
+    expect(await screen.findByText('Gulf Coast')).toBeTruthy();
   });
 });

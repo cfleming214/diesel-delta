@@ -5,7 +5,7 @@ import { renderRouter } from 'expo-router/testing-library';
 import { usePrefs } from '@/store/prefs';
 
 describe('app navigation', () => {
-  beforeEach(() => usePrefs.getState().setLocation('77002', 'gulf'));
+  beforeEach(() => usePrefs.getState().setLocation('77002', 'TX', 'gulf'));
 
   test('opens on Today and switches tabs from the tab bar', async () => {
     await renderRouter('./src/app');

@@ -8,7 +8,7 @@ import { BasketDeltaCard } from '@/components/BasketDeltaCard';
 import { ReorderableList } from '@/components/ReorderableList';
 import { SwipeToRemove } from '@/components/SwipeToRemove';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
-import { useBasketSeries, useFuelSeries, useItems, type ItemDetail } from '@/data';
+import { fuelArea, useBasketSeries, useFuelSeries, useItems, type ItemDetail } from '@/data';
 import { basketAttribution, baselineIndex } from '@/domain';
 import { basketIds, usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
@@ -18,6 +18,7 @@ import { Button, Card, IconButton, Screen, ScreenHeader, Text } from '@/ui';
 
 export default function BasketScreen() {
   const region = usePrefs((s) => s.region);
+  const state = usePrefs((s) => s.state);
   const basket = usePrefs((s) => s.basket);
   const followed = usePrefs((s) => s.followed);
   const { removeFromBasket, moveBasketItem, toggleFollow } = usePrefs.getState();
@@ -27,7 +28,7 @@ export default function BasketScreen() {
 
   const ids = useMemo(() => basketIds(basket), [basket]);
   const items = useItems(ids, region);
-  const fuel = useFuelSeries(region);
+  const fuel = useFuelSeries(state ? fuelArea(state, 'diesel', 'padd') : null);
   const basketSeries = useBasketSeries(ids);
 
   const attribution = useMemo(() => {

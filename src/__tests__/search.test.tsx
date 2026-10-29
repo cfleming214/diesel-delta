@@ -25,7 +25,7 @@ async function openSearch() {
 describe('Search', () => {
   beforeEach(() => {
     usePrefs.getState().reset();
-    usePrefs.getState().setLocation('77002', 'gulf');
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
     mockPermission.current = { granted: true, canAskAgain: true };
   });
 

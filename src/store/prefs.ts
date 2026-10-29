@@ -2,7 +2,14 @@ import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import { DEFAULT_BASKET_IDS, DEFAULT_FOLLOWED_IDS, type PlanKey, type RegionKey } from '@/data';
+import {
+  DEFAULT_BASKET_IDS,
+  DEFAULT_FOLLOWED_IDS,
+  regionForState,
+  stateForZip,
+  type PlanKey,
+  type RegionKey,
+} from '@/data';
 
 import { persistStorage } from './storage';
 
@@ -12,6 +19,8 @@ export type AlertPrefs = { dieselCross: boolean; followedDrop: boolean; deltaTol
 
 type Prefs = {
   zip: string | null;
+  /** Two-letter state (or DC) for the ZIP. */
+  state: string | null;
   region: RegionKey | null;
   /** Ordered basket. */
   basket: BasketEntry[];
@@ -25,7 +34,7 @@ type Prefs = {
 };
 
 type Actions = {
-  setLocation: (zip: string, region: RegionKey) => void;
+  setLocation: (zip: string, state: string, region: RegionKey) => void;
   /** Appends an item (no-op if already in the basket). */
   addToBasket: (id: string) => void;
   removeFromBasket: (id: string) => void;
@@ -38,6 +47,7 @@ type Actions = {
 
 export const DEFAULT_PREFS: Prefs = {
   zip: null,
+  state: null,
   region: null,
   basket: DEFAULT_BASKET_IDS.map((id) => ({ id, weight: 1 })),
   followed: DEFAULT_FOLLOWED_IDS,
@@ -53,7 +63,7 @@ export const usePrefs = create<Prefs & Actions>()(
   persist(
     (set) => ({
       ...DEFAULT_PREFS,
-      setLocation: (zip, region) => set({ zip, region }),
+      setLocation: (zip, state, region) => set({ zip, state, region }),
       addToBasket: (id) =>
         set((s) =>
           s.basket.some((b) => b.id === id) ? s : { basket: [...s.basket, { id, weight: 1 }] },
@@ -79,9 +89,26 @@ export const usePrefs = create<Prefs & Actions>()(
       unlockPro: (plan) => set({ isPro: true, plan }),
       reset: () => set(DEFAULT_PREFS),
     }),
-    { name: 'dd.prefs', version: 1, storage: persistStorage },
+    {
+      name: 'dd.prefs',
+      version: 2,
+      storage: persistStorage,
+      migrate: (persisted, version) => migratePrefs(persisted as Partial<Prefs>, version),
+    },
   ),
 );
+
+/**
+ * v1 stored a region from the prototype's first-digit ZIP mapping and no state. v2 derives both
+ * from the real ZIP table; ZIPs outside the 50 states and DC go back through onboarding.
+ */
+export function migratePrefs(persisted: Partial<Prefs>, version: number): Partial<Prefs> {
+  if (version >= 2 || !persisted.zip) return persisted;
+  const state = stateForZip(persisted.zip);
+  return state
+    ? { ...persisted, state, region: regionForState(state) }
+    : { ...persisted, zip: null, state: null, region: null };
+}
 
 /** True once persisted prefs have been read from storage. */
 export function usePrefsHydrated() {

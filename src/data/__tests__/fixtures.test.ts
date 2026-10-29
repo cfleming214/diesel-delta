@@ -46,8 +46,9 @@ describe('golden: Delta for ZIP 77002', () => {
   } as const;
 
   test.each(WINDOWS.map((w) => w.days))('%i-day window', async (days) => {
-    const { region } = await api.lookupZip('77002');
-    const fuel = (await api.getFuelSeries(region.key, 'diesel', 'padd')).values;
+    const { dieselSeries } = await api.lookupZip('77002');
+    expect(dieselSeries).toEqual({ area: 'R30', name: 'Gulf Coast (PADD 3)', level: 'padd' });
+    const fuel = (await api.getFuelSeries(dieselSeries.area, 'diesel')).values;
     const basket = (await api.getBasketSeries(DEFAULT_BASKET_IDS)).values;
     const r = computeDelta(fuel, basket, days);
     expect(r.fuelPct).toBeCloseTo(golden[days].fuelPct, 10);
@@ -78,15 +79,14 @@ describe('golden: Delta for ZIP 77002', () => {
 
   test('regional 90D fuel changes', async () => {
     const golden = {
-      east: -3.8188582737317835,
-      mid: -4.682462521453046,
-      rocky: -3.3891234478489,
-      west: -2.960758036941243,
-      nat: -4.034241271023244,
+      R10: -3.8188582737317835,
+      R20: -4.682462521453046,
+      R40: -3.3891234478489,
+      R50: -2.960758036941243,
+      NUS: -4.034241271023244,
     } as const;
-    for (const [key, expected] of Object.entries(golden)) {
-      const scope = key === 'nat' ? 'national' : 'padd';
-      const fuel = (await api.getFuelSeries(key as keyof typeof golden, 'diesel', scope)).values;
+    for (const [area, expected] of Object.entries(golden)) {
+      const fuel = (await api.getFuelSeries(area as keyof typeof golden, 'diesel')).values;
       expect(computeDelta(fuel, fuel, 90).fuelPct).toBeCloseTo(expected, 10);
     }
   });
@@ -128,9 +128,16 @@ describe('search', () => {
 });
 
 describe('zip lookup', () => {
-  test('maps by first digit and rejects bad input', async () => {
-    expect((await api.lookupZip('77002')).region.name).toBe('Gulf Coast (PADD 3)');
-    expect((await api.lookupZip('94110')).region.state).toBe('California');
+  test('resolves state, PADD and diesel series; rejects bad input', async () => {
+    const tx = await api.lookupZip('77002');
+    expect(tx.state).toEqual({ abbr: 'TX', name: 'Texas' });
+    expect(tx.region).toEqual({ key: 'gulf', name: 'Gulf Coast (PADD 3)' });
+    const ca = await api.lookupZip('94110');
+    expect(ca.region.name).toBe('West Coast (PADD 5)');
+    expect(ca.dieselSeries).toEqual({ area: 'SCA', name: 'California', level: 'state' });
     await expect(api.lookupZip('7700')).rejects.toThrow('Enter a 5-digit US ZIP code.');
+    await expect(api.lookupZip('00901')).rejects.toThrow(
+      'DieselDelta covers ZIP codes in the 50 states and DC.',
+    );
   });
 });
