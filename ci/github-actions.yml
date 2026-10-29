@@ -21,5 +21,10 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm test -- --ci
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: npm run functions:check
+      - run: npm run functions:test
       # Applies supabase/migrations to the runner's Postgres and runs supabase/tests.
       - run: npm run db:check
