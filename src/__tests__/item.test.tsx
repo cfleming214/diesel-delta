@@ -11,7 +11,7 @@ async function openItem(id: string) {
 describe('Item detail', () => {
   beforeEach(() => {
     usePrefs.getState().reset();
-    usePrefs.getState().setLocation('77002', 'gulf');
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
   });
 
   test('Gouge Gap item: header, verdict, stats and ledger', async () => {

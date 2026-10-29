@@ -226,7 +226,7 @@ Port these from the prototype's logic block first, with tests:
 
 Each screen is built against the fixture API first, then switched to live data.
 
-1. **Onboarding:** a digits-only numeric input (max 5, 0.12em tracking). At 5 digits it shows the "FUEL SERIES" card. Continue is pinned above the keyboard (`KeyboardAvoidingView`), with an error message for fewer than 5 digits. Phase 1 uses the prototype's first-digit mapping. Phase 4 uses the real ZIP→PADD/state lookup (a bundled JSON of ~42k ZIPs, or a Supabase RPC).
+1. **Onboarding:** a digits-only numeric input (max 5, 0.12em tracking). At 5 digits it shows the "FUEL SERIES" card. Continue is pinned above the keyboard (`KeyboardAvoidingView`), with an error message for fewer than 5 digits. Phase 1 used the prototype's first-digit mapping. Phase 4 replaced it with a bundled 3-digit-prefix→state table (`src/data/geo`, 10 KB, works offline) and EIA's state→PADD definitions.
 2. **Today (1b):** header with Search and Share icon buttons, then the window segmented control, `DeltaHeader`, `LagChart`, the axis caption, the verdict and "Share this chart".
 3. **Chart:** a scope tag, Series and Scope segmented controls (State is Pro and otherwise opens the paywall), a card with the scrub readout and chart, the window control, and a lag slider (0–12 weeks, via `@react-native-community/slider` or a custom Reanimated slider with an accent thumb). Below it: "Best fit N wks" and the correlation at the current lag.
 4. **Basket:** an Edit/Done button and a + button (to Search), `BasketDeltaCard`, then the list of `BasketItemRow`s. Removing an item shows a toast.
@@ -244,7 +244,7 @@ Each screen is built against the fixture API first, then switched to live data.
 
 **Schema (v1):**
 - `regions`: national, PADD 1–5 and states
-- `zip_region`: zip → padd, state
+- ZIP→state→PADD is resolved on device (`src/data/geo`), so no server table is needed
 - `fuel_prices`: region, series (diesel|gas), week, price
 - `items`: canonical catalog with UPC, brand, size and category
 - `item_prices`: item, store, zip_bucket, observed_at, price, promo flag. Sparse event log.
@@ -257,7 +257,7 @@ Each screen is built against the fixture API first, then switched to live data.
 Row-level security: public read on market data. Write access only to the user's own token and alert rows.
 
 **Edge Functions (scheduled with `pg_cron`):**
-- `ingest-eia`: pulls the EIA API v2 petroleum weekly retail diesel and gasoline series (national, PADD and the state series EIA publishes) and forward-fills to daily.
+- `ingest-eia`: pulls the EIA API v2 petroleum weekly retail diesel and gasoline series and forward-fills to daily. EIA publishes diesel for the U.S., PADDs 1–5, PADD 1A/1B/1C, West Coast except California, and California only; gasoline adds CO, FL, MA, MN, NY, OH, TX and WA. The app's "state" scope uses the finest of these that covers the user (see `localSeries`), and onboarding says when no state series exists.
 - `compute-verdicts`: runs nightly at 04:00 UTC. Computes the lagged cross-correlation and asymmetry test per FEATURES.md, then refreshes the materialized views.
 - `evaluate-alerts`: runs after ingest and verdicts. Evaluates diesel threshold crossings, followed-item drops and delta-over-tolerance, deduplicates per user, respects quiet hours, and sends through the Expo Push API.
 

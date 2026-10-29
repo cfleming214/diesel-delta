@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from '@jest/globals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { DEFAULT_BASKET_IDS } from '@/data';
-import { basketIds, DEFAULT_PREFS, usePrefs } from '@/store/prefs';
+import { basketIds, DEFAULT_PREFS, migratePrefs, usePrefs } from '@/store/prefs';
 import { useUi } from '@/store/ui';
 
 describe('prefs', () => {
@@ -16,7 +16,7 @@ describe('prefs', () => {
   });
 
   test('persists the location to device storage', async () => {
-    usePrefs.getState().setLocation('77002', 'gulf');
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
     await new Promise((r) => setTimeout(r, 0));
     const raw = await AsyncStorage.getItem('dd.prefs');
     expect(JSON.parse(raw!).state).toMatchObject({ zip: '77002', region: 'gulf' });
@@ -27,6 +27,30 @@ describe('prefs', () => {
     expect(usePrefs.getState()).toMatchObject({ isPro: true, plan: 'year' });
     usePrefs.getState().reset();
     expect(usePrefs.getState().isPro).toBe(DEFAULT_PREFS.isPro);
+  });
+});
+
+describe('prefs migration', () => {
+  test('v1 → v2 derives state and the real PADD region from the ZIP', () => {
+    // The prototype mapped any 3xxxx ZIP to the Gulf Coast; Miami is East Coast (PADD 1C).
+    expect(migratePrefs({ zip: '33101', region: 'gulf' }, 1)).toMatchObject({
+      zip: '33101',
+      state: 'FL',
+      region: 'east',
+    });
+  });
+
+  test('unsupported ZIPs go back through onboarding', () => {
+    expect(migratePrefs({ zip: '00901', region: 'east' }, 1)).toMatchObject({
+      zip: null,
+      state: null,
+      region: null,
+    });
+  });
+
+  test('current versions pass through', () => {
+    const v2 = { zip: '77002', state: 'TX', region: 'gulf' as const };
+    expect(migratePrefs(v2, 2)).toBe(v2);
   });
 });
 

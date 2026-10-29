@@ -4,5 +4,18 @@ export * from './fixtures/content';
 export * from './types';
 export { QueryProvider, createQueryClient } from './QueryProvider';
 export * from './queries';
-export { REGION_NAMES, shortRegionName } from './regions';
+export {
+  AREA_NAMES,
+  ALL_SERIES,
+  eiaSeriesId,
+  fuelArea,
+  localSeries,
+  PADD_AREA,
+  regionForState,
+  stateForZip,
+  STATES,
+  type FuelArea,
+  type LocalSeries,
+} from './geo';
+export { ZIP_ERROR, ZIP_UNSUPPORTED } from './geo/zip';
 export { useDeltaModel } from './useDeltaModel';

@@ -4,13 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { LagChart } from '@/components/LagChart';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
-import {
-  REGION_NAMES,
-  shortRegionName,
-  useDeltaModel,
-  type FuelScope,
-  type FuelSeriesKind,
-} from '@/data';
+import { localSeries, useDeltaModel, type FuelScope, type FuelSeriesKind } from '@/data';
 import {
   bestLag,
   correlationAtLag,
@@ -38,27 +32,33 @@ const SERIES_OPTIONS = [
 const lagLabel = (w: number) => (w === 0 ? 'none' : w === 1 ? '1 week' : `${w} weeks`);
 
 export default function ChartScreen() {
-  const region = usePrefs((s) => s.region);
+  const state = usePrefs((s) => s.state);
   const isPro = usePrefs((s) => s.isPro);
-  const { window, lagWeeks, series, scope, setWindow, setLagWeeks, setSeries, setScope } = useUi();
-  const { model } = useDeltaModel({ window, kind: series, scope });
+  const {
+    window,
+    lagWeeks,
+    series,
+    scope: chosenScope,
+    setWindow,
+    setLagWeeks,
+    setSeries,
+    setScope,
+  } = useUi();
+  // The local option exists only where EIA publishes a series finer than the PADD.
+  const local = state ? localSeries(state, series) : null;
+  const scope: FuelScope = chosenScope === 'state' && !local ? 'padd' : chosenScope;
+  const { model, seriesName: areaName } = useDeltaModel({ window, kind: series, scope });
   const [scrub, setScrub] = useState<number | null>(null);
 
-  const names = REGION_NAMES[region ?? 'nat'];
-  const scopeName =
-    scope === 'national'
-      ? 'National'
-      : scope === 'state'
-        ? names.state
-        : shortRegionName(names.name);
+  const scopeName = scope === 'national' ? 'National' : (areaName?.split(' (')[0] ?? '');
   const seriesName = series === 'diesel' ? 'Diesel' : 'Gasoline';
   const lagDays = lagWeeks * 7;
 
-  const scopeOptions = [
+  const scopeOptions: { value: FuelScope; label: string }[] = [
     { value: 'national', label: 'U.S.' },
     { value: 'padd', label: 'PADD' },
-    { value: 'state', label: names.abbr },
-  ] as const;
+    ...(local ? [{ value: 'state' as const, label: local.isState ? state! : 'Local' }] : []),
+  ];
 
   // Fit statistics over the trailing 12 months, with enough lead-in for the largest lag.
   const fit = useMemo(() => {

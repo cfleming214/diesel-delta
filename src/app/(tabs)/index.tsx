@@ -20,7 +20,7 @@ export default function TodayScreen() {
   const zip = usePrefs((s) => s.zip);
   const window = useUi((s) => s.window);
   const setWindow = useUi((s) => s.setWindow);
-  const { model, error, regionName, basketEmpty } = useDeltaModel({ window });
+  const { model, error, state, basketEmpty } = useDeltaModel({ window });
   const [scrub, setScrub] = useState<number | null>(null);
 
   const indexed = useMemo(
@@ -28,9 +28,8 @@ export default function TodayScreen() {
     [model],
   );
 
-  const subtitle = model
-    ? `${regionName?.abbr ?? ''} ${zip ?? ''} · ${formatDate(model.latestDate, true)}`
-    : `${regionName?.abbr ?? ''} ${zip ?? ''}`;
+  const place = `${state ?? ''} ${zip ?? ''}`;
+  const subtitle = model ? `${place} · ${formatDate(model.latestDate, true)}` : place;
 
   let body = null;
   if (model && indexed) {

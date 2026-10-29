@@ -1,7 +1,8 @@
 // Ported from the prototype (design/handoff/DieselDeltaApp.dc.html). Invented but realistic data.
 import { toISODate } from '@/domain';
 
-import type { Region, RegionKey } from '../types';
+import type { FuelArea } from '../geo';
+import type { RegionKey } from '../types';
 
 /** Days of history: 12 months plus 12 weeks of lead-in for lag tests. */
 export const DAYS = 449;
@@ -67,66 +68,41 @@ for (let i = 0; i < DAYS; i++) {
   BASKET.push(interp(BASKET_KEYS, Math.floor(w)));
 }
 
-type RegionFixture = Region & { level: number; amp: number };
-
-export const REGIONS: Record<RegionKey, RegionFixture> = {
-  gulf: {
-    key: 'gulf',
-    name: 'Gulf Coast (PADD 3)',
-    state: 'Texas',
-    abbr: 'TX',
-    level: 1.0,
-    amp: 1.0,
-  },
-  east: {
-    key: 'east',
-    name: 'East Coast (PADD 1)',
-    state: 'New York',
-    abbr: 'NY',
-    level: 1.07,
-    amp: 0.9,
-  },
-  mid: { key: 'mid', name: 'Midwest (PADD 2)', state: 'Ohio', abbr: 'OH', level: 1.04, amp: 1.1 },
-  rocky: {
-    key: 'rocky',
-    name: 'Rocky Mountain (PADD 4)',
-    state: 'Colorado',
-    abbr: 'CO',
-    level: 1.09,
-    amp: 0.8,
-  },
-  west: {
-    key: 'west',
-    name: 'West Coast (PADD 5)',
-    state: 'California',
-    abbr: 'CA',
-    level: 1.27,
-    amp: 0.7,
-  },
-  nat: { key: 'nat', name: 'National', state: 'U.S.', abbr: 'US', level: 1.06, amp: 0.95 },
+/** Price level and volatility of each region relative to the national-shape fixture series. */
+export const REGIONS: Record<RegionKey, { level: number; amp: number }> = {
+  gulf: { level: 1.0, amp: 1.0 },
+  east: { level: 1.07, amp: 0.9 },
+  mid: { level: 1.04, amp: 1.1 },
+  rocky: { level: 1.09, amp: 0.8 },
+  west: { level: 1.27, amp: 0.7 },
+  nat: { level: 1.06, amp: 0.95 },
 };
 
 /** Region order used by the Insights table. */
 export const REGION_ORDER: RegionKey[] = ['gulf', 'east', 'mid', 'rocky', 'west', 'nat'];
 
-/**
- * Prototype ZIP→region mapping by first digit. Production uses the real ZIP→PADD/state table.
- */
-export function zipRegion(zip: string): RegionKey {
-  const map: Record<string, RegionKey> = {
-    '0': 'east',
-    '1': 'east',
-    '2': 'east',
-    '3': 'gulf',
-    '4': 'mid',
-    '5': 'mid',
-    '6': 'mid',
-    '7': 'gulf',
-    '8': 'rocky',
-    '9': 'west',
-  };
-  return map[zip[0] ?? ''] ?? 'gulf';
-}
+/** Fixture stand-in for each EIA area: its region's series times a small level offset. */
+export const AREA_FIXTURE: Record<FuelArea, [RegionKey, number]> = {
+  NUS: ['nat', 1],
+  R10: ['east', 1],
+  R1X: ['east', 1.02],
+  R1Y: ['east', 1.0],
+  R1Z: ['east', 0.975],
+  R20: ['mid', 1],
+  R30: ['gulf', 1],
+  R40: ['rocky', 1],
+  R50: ['west', 1],
+  R5XCA: ['west', 0.94],
+  SCA: ['west', 1.04],
+  SCO: ['rocky', 0.985],
+  SFL: ['east', 0.985],
+  SMA: ['east', 1.01],
+  SMN: ['mid', 0.985],
+  SNY: ['east', 1.02],
+  SOH: ['mid', 0.98],
+  STX: ['gulf', 0.985],
+  SWA: ['west', 1.02],
+};
 
 const MEAN = 3.65;
 

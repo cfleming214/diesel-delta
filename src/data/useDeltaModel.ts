@@ -10,7 +10,7 @@ import {
 } from '@/domain';
 import { basketIds, usePrefs } from '@/store/prefs';
 
-import { REGION_NAMES } from './regions';
+import { AREA_NAMES, fuelArea } from './geo';
 import { useBasketSeries, useFuelSeries } from './queries';
 import type { FuelScope, FuelSeriesKind } from './types';
 
@@ -21,10 +21,11 @@ type Options = { window: WindowDays; kind?: FuelSeriesKind; scope?: FuelScope };
  * Returns `model: undefined` until both series have loaded.
  */
 export function useDeltaModel({ window, kind = 'diesel', scope = 'padd' }: Options) {
-  const region = usePrefs((s) => s.region);
+  const state = usePrefs((s) => s.state);
   const basket = usePrefs((s) => s.basket);
+  const area = state ? fuelArea(state, kind, scope) : null;
   const ids = useMemo(() => basketIds(basket), [basket]);
-  const fuelQ = useFuelSeries(region, kind, scope);
+  const fuelQ = useFuelSeries(area, kind);
   const basketQ = useBasketSeries(ids);
 
   const model = useMemo(() => {
@@ -53,7 +54,8 @@ export function useDeltaModel({ window, kind = 'diesel', scope = 'padd' }: Optio
     isLoading: fuelQ.isLoading || basketQ.isLoading,
     error: fuelQ.error ?? basketQ.error,
     basketEmpty: ids.length === 0,
-    region,
-    regionName: region ? REGION_NAMES[region] : undefined,
+    state,
+    area,
+    seriesName: area ? AREA_NAMES[area] : undefined,
   };
 }

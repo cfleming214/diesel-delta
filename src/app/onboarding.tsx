@@ -4,13 +4,18 @@ import { GasPump, MapPin } from 'phosphor-react-native';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
-import { api, queryKeys, useZipLookup } from '@/data';
+import { api, queryKeys, useZipLookup, ZIP_ERROR, type ZipLookup } from '@/data';
 import { formatDate, fromISODate, money } from '@/domain';
 import { usePrefs } from '@/store/prefs';
 import { alpha, colors, em, layout } from '@/theme';
 import { Button, Card, Input, Kicker, Screen, Text } from '@/ui';
 
-const ZIP_ERROR = 'Enter a 5-digit US ZIP code.';
+/** Which EIA diesel series the ZIP uses. EIA publishes state-level diesel only for California. */
+function seriesLine(found: ZipLookup) {
+  const s = found.dieselSeries;
+  if (s.level === 'state') return `State series: ${s.name} retail diesel`;
+  return `${found.state.name} has no state diesel series; using ${s.name}`;
+}
 
 export default function OnboardingScreen() {
   const [zip, setZip] = useState('');
@@ -24,15 +29,24 @@ export default function OnboardingScreen() {
       setError(true);
       return;
     }
-    const result = await queryClient.fetchQuery({
-      queryKey: queryKeys.zip(zip),
-      queryFn: () => api.lookupZip(zip),
-    });
-    setLocation(zip, result.region.key);
+    let result;
+    try {
+      result = await queryClient.fetchQuery({
+        queryKey: queryKeys.zip(zip),
+        queryFn: () => api.lookupZip(zip),
+        retry: false,
+      });
+    } catch {
+      setError(true);
+      return;
+    }
+    setLocation(zip, result.state.abbr, result.region.key);
     router.replace('/');
   };
 
   const found = zip.length === 5 ? lookup.data : undefined;
+  // Valid-looking ZIPs outside the 50 states and DC (territories, military) explain themselves.
+  const lookupError = zip.length === 5 && lookup.error ? lookup.error.message : null;
 
   return (
     <KeyboardAvoidingView
@@ -81,9 +95,9 @@ export default function OnboardingScreen() {
             returnKeyType="done"
             onSubmitEditing={onContinue}
           />
-          {error ? (
+          {error || lookupError ? (
             <Text variant="caption" color={colors.accentRamp[300]} accessibilityRole="alert">
-              {ZIP_ERROR}
+              {lookupError ?? ZIP_ERROR}
             </Text>
           ) : null}
         </View>
@@ -98,7 +112,7 @@ export default function OnboardingScreen() {
                   {found.region.name}
                 </Text>
                 <Text variant="bodySmall" color={colors.neutral[400]}>
-                  {`State series: ${found.region.state} retail diesel`}
+                  {seriesLine(found)}
                 </Text>
               </View>
             </View>

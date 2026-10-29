@@ -1,15 +1,11 @@
 import type { LedgerTag, Verdict } from '@/domain';
 
+import type { FuelArea } from './geo';
+
 export type RegionKey = 'east' | 'mid' | 'gulf' | 'rocky' | 'west' | 'nat';
 
-export type Region = {
-  key: RegionKey;
-  /** e.g. "Gulf Coast (PADD 3)" */
-  name: string;
-  /** State whose retail series is used at state scope. */
-  state: string;
-  abbr: string;
-};
+/** A PADD region (or the U.S.), e.g. { key: 'gulf', name: 'Gulf Coast (PADD 3)' }. */
+export type Region = { key: RegionKey; name: string };
 
 export type FuelSeriesKind = 'diesel' | 'gas';
 export type FuelScope = 'national' | 'padd' | 'state';
@@ -74,7 +70,10 @@ export type RetailerScore = {
 
 export type ZipLookup = {
   zip: string;
+  state: { abbr: string; name: string };
   region: Region;
+  /** The diesel series used for this ZIP: the state's own, a PADD sub-region, or the PADD. */
+  dieselSeries: { area: FuelArea; name: string; level: 'state' | 'subregion' | 'padd' };
   currentDiesel: number;
   /** ISO date of the latest fuel observation. */
   asOf: string;
@@ -83,7 +82,7 @@ export type ZipLookup = {
 export interface DataApi {
   lookupZip(zip: string): Promise<ZipLookup>;
   getRegions(): Promise<Region[]>;
-  getFuelSeries(region: RegionKey, kind: FuelSeriesKind, scope: FuelScope): Promise<DailySeries>;
+  getFuelSeries(area: FuelArea, kind: FuelSeriesKind): Promise<DailySeries>;
   /** Basket value series for the given items (equal purchase weights for now). */
   getBasketSeries(itemIds: readonly string[]): Promise<DailySeries>;
   getCatalog(): Promise<CatalogItem[]>;

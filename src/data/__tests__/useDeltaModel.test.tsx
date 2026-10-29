@@ -21,7 +21,7 @@ describe('useDeltaModel', () => {
     });
     expect(result.current.model).toBeUndefined();
 
-    usePrefs.getState().setLocation('77002', 'gulf');
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
     await rerender({});
     await waitFor(() => expect(result.current.model).toBeDefined());
     const m = result.current.model!;
@@ -31,6 +31,7 @@ describe('useDeltaModel', () => {
     expect(m.verdict).toBe(
       'Diesel fell 4.2% over 90 days. Your basket fell 0.3% over the same period, a gap of 4.0 percentage points.',
     );
-    expect(result.current.regionName?.abbr).toBe('TX');
+    expect(result.current.state).toBe('TX');
+    expect(result.current.seriesName).toBe('Gulf Coast (PADD 3)');
   });
 });
