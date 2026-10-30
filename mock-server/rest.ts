@@ -173,6 +173,18 @@ function filtersOf(params: URLSearchParams) {
 
 const keyOf = (r: Row, cols: string[]) => JSON.stringify(cols.map((c) => r[c] ?? null));
 
+/** Identity sequences per table, like a Postgres identity column (scanning once to start). */
+const sequences = new WeakMap<TableDef, number>();
+function nextId(def: TableDef) {
+  // Rows appended by other code paths (the ingest-eia mock writes ingest_runs directly) count too.
+  const last = Math.max(
+    sequences.get(def) ?? def.rows.reduce((m, r) => Math.max(m, Number(r.id ?? 0)), 0),
+    Number(def.rows.at(-1)?.id ?? 0),
+  );
+  sequences.set(def, last + 1);
+  return last + 1;
+}
+
 /** Natural-key indexes per table and conflict key, kept across requests (like a unique index). */
 const indexes = new WeakMap<TableDef, Map<string, Map<string, Row>>>();
 function indexFor(def: TableDef, cols: string[]) {
@@ -262,7 +274,7 @@ export function handleRest(tables: Record<string, TableDef>, req: RestRequest): 
       }
       const row: Row = { ...def.defaults?.(), ...raw };
       if (def.identity && row.id === undefined) {
-        row.id = def.rows.reduce((m, r) => Math.max(m, Number(r.id ?? 0)), 0) + 1;
+        row.id = nextId(def);
       }
       def.rows.push(row);
       index?.set(keyOf(row, conflict!), row);

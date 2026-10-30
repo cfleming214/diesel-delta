@@ -93,7 +93,7 @@ export function createMockBackend(opts: MockOptions = {}) {
     latestPeriod: async () => store.latestPeriod(),
     upsertPrices: async (rows) => store.upsertPrices(rows),
     startRun: async () => {
-      const id = store.runs.length + 1;
+      const id = store.runs.reduce((m, r) => Math.max(m, r.id), 0) + 1;
       store.runs.push({
         id,
         job: 'ingest-eia',
@@ -106,12 +106,15 @@ export function createMockBackend(opts: MockOptions = {}) {
       return id;
     },
     finishRun: async (id, status, rows, detail) => {
-      Object.assign(store.runs[id - 1]!, {
-        status,
-        rows_upserted: rows,
-        detail,
-        finished_at: new Date().toISOString(),
-      });
+      Object.assign(
+        store.runs.find((r) => r.id === id)!,
+        {
+          status,
+          rows_upserted: rows,
+          detail,
+          finished_at: new Date().toISOString(),
+        },
+      );
     },
   };
   const ingest = createHandler({ db, eiaApiKey: 'mock', ingestSecret, fetchJson: eiaResponse });

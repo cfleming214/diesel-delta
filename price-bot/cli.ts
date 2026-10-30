@@ -2,7 +2,7 @@
 //
 //   npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,...] [--discover] [--dry-run]
 //   npm run bot -- simulate --days 30 [--end 2026-10-30]
-//   npm run bot -- report [--days 30] [--end 2026-10-30] [--out dir] [--no-pdf]
+//   npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]   (30-day and 1-year changes)
 //
 // Targets SUPABASE_URL with SUPABASE_SERVICE_ROLE_KEY; both default to the local mock server
 // (npm run mock:server). --dry-run starts an in-process mock server instead, so nothing outside
@@ -131,6 +131,8 @@ async function main() {
     contactUrl,
     rawDir: process.env.BOT_RAW_DIR ?? join(__dirname, '.data', 'raw'),
   });
+  /** The HTTP client whose counters the summary reports. */
+  let counted = http;
   const adapters = buildAdapters(process.env.MOCK_RETAIL_URL ?? url, values.sources?.split(','));
   const items = loadCatalog();
   const workers = values.workers ? Number(values.workers) : undefined;
@@ -161,6 +163,7 @@ async function main() {
         userAgent: userAgent(contactUrl),
         isEnabled: (id) => db.isEnabled(id),
       });
+      counted = simHttp;
       const carry: Carry = new Map();
       for (let i = days - 1; i >= 0; i--) {
         const s = await runDay({
@@ -177,10 +180,9 @@ async function main() {
       }
     } else if (command === 'report') {
       const end = values.end ?? today();
-      const from = addDays(end, -(Number(values.days ?? 30) - 1));
-      const model = buildReport(await loadReportData(db, items, from, end));
+      const model = buildReport(await loadReportData(db, items, end));
       if (model.totals.observations === 0) {
-        throw new Error(`no prices collected between ${from} and ${end}`);
+        throw new Error(`no prices collected in the 30 days to ${end}`);
       }
       const out = values.out ?? join(__dirname, '.data', 'reports');
       await mkdir(out, { recursive: true });
@@ -197,7 +199,7 @@ async function main() {
       throw new Error(`unknown command "${command}" (use run, simulate or report)`);
     }
     console.log(
-      `requests ${http.counts.requests}, retries ${http.counts.retries}, raw responses purged ${await raw.purge()}`,
+      `requests ${counted.counts.requests}, retries ${counted.counts.retries}, raw responses purged ${await raw.purge()}`,
     );
   } finally {
     await mock?.stop();
