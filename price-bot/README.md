@@ -25,7 +25,7 @@ Retailer GTINs and SKUs are not in the catalog. They are matched per retailer, r
 ```sh
 npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,mock-walmart] [--discover] [--workers 4] [--dry-run]
 npm run bot -- simulate --days 30 [--end 2026-10-30]
-npm run bot -- report [--days 30] [--end 2026-10-30] [--out dir] [--no-pdf]
+npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]
 ```
 
 | Setting | Default | Meaning |
@@ -66,24 +66,27 @@ npm run bot -- report [--days 30] [--end 2026-10-30] [--out dir] [--no-pdf]
 
 ## Printable report
 
-`npm run bot -- report` reads what the bot collected for a period (default: the 30 days ending today) and writes `price-report-<end>.html` and `.pdf` (US Letter, through Chromium) to `price-bot/.data/reports/`.
+`npm run bot -- report` writes `price-report-<end>.html` and `.pdf` (US Letter, through Chromium) to `price-bot/.data/reports/`. It compares prices on the end day (default today) with 30 days and 1 year earlier.
+
+National prices are the median across a retailer's sampled stores. They come from `item_prices_on()` and `basket_daily()`, so a year of raw rows is never downloaded. Only the last 30 days of observations are read, for store-level detail.
 
 It contains:
-- **Summary:** a written summary, plus tiles for prices collected, coverage, held prices, each retailer's basket and U.S. diesel.
-- **Basket index chart:** the default-basket items every retailer carries, priced at the median across stores and indexed to 100, with a weekly table.
-- **Retailers:** a scorecard and the basket cost by region.
-- **Categories:** average change by category.
-- **Biggest movers:** the largest increases and decreases.
-- **Shrinkflation:** package-size reductions.
-- **Data quality:** held prices by reason, and the daily runs.
-- **Appendix:** a price table for all 150 items, with the cheapest retailer in bold.
+- **Summary:** a written summary, plus tiles with each retailer's basket and U.S. diesel, each showing 30-day and 1-year change.
+- **Changes at a glance:** a table of the baskets, the average item at each retailer and diesel, each now, 30 days ago and 1 year ago.
+- **Basket index charts:** one over the past year (with a monthly cost table) and one over the last 30 days. The basket is the default-basket items every retailer carries.
+- **Retailers:** a scorecard with 30-day and 1-year basket change, and the basket cost by region.
+- **Categories:** 30-day and 1-year change by category.
+- **Biggest movers:** the largest rises and falls over 30 days and over the year.
+- **Shrinkflation:** package-size reductions over the past year.
+- **Data quality:** held prices and the daily runs for the last 30 days, plus a summary for the year.
+- **Appendix:** a price table for all 150 items, grouped by category, with 30-day and 1-year change.
 
-A report built from mock sources carries a "Simulated data" banner.
+With less than a year of history, the 1-year figures show "—" and the report says when they will be available. A report built from mock sources carries a "Simulated data" banner.
 
-To produce one locally:
+To produce one locally with a simulated year (about 3 minutes):
 
 ```sh
-npm run mock:server                          # terminal 1
-npm run bot -- simulate --days 30 --end 2026-10-30
-npm run bot -- report --days 30 --end 2026-10-30
+NODE_OPTIONS=--max-old-space-size=8192 npm run mock:server     # terminal 1
+npm run bot -- simulate --days 365 --end 2026-10-30
+npm run bot -- report --end 2026-10-30
 ```
