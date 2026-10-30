@@ -309,6 +309,11 @@ Each phase ends with a TestFlight build from EAS.
 > live services are connected: OCR, purchases (RevenueCat), push delivery, EIA and Supabase. The mock
 > backend (Phase 7) speaks the same HTTP API as Supabase (`/rest/v1/...`, `/functions/v1/...`), so the
 > app's Supabase data source runs against it unchanged. Going live is configuration, not code.
+>
+> **Status (Oct 30, 2026):** Phases 0–11 are built and merged. For fuel prices, going live is
+> configuration. Grocery prices, OCR, purchases, server push and short links still need real
+> providers behind their interfaces; `docs/launch/GO_LIVE.md` lists each one. Grocery data is a
+> launch blocker.
 
 ### Phase 5: Log, Insights, Retailers
 - Receipt log: camera capture → `OcrProvider` (mock returns sample lines; ML Kit later) → line parser → checkbox list → history; manual form with validation; history persisted on device

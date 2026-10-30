@@ -123,6 +123,10 @@ Metrics are computed by `supabase/functions/_shared/metrics.ts`, shared by the m
 
 `track()` (`src/lib/telemetry.ts`) records anonymous product events (names in `src/domain/events.ts`) and sends them in batches to the `app_events` table when a backend is configured; otherwise it does nothing. Each event carries a random install ID (not a device or advertising ID), a per-launch session ID, platform and app version. Props never include ZIP codes, search text or receipt contents; location is at most a state. The table is insert-only for clients.
 
+## Launch
+
+`docs/launch/` holds the go-live checklist (`GO_LIVE.md`: every mocked service and how to replace it, plus Supabase, EAS and store steps), the store listing, the privacy label answers and the App Review notes. Build profiles publish EAS Update channels `development`, `preview` and `production` once `expo-updates` is configured.
+
 ## Kitchen sink
 
 In development builds, open `dieseldelta://dev/kitchen-sink` (or `/dev/kitchen-sink` on web) to see every primitive for side-by-side review against `design/handoff/DieselDeltaApp.dc.html`.
