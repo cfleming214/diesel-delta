@@ -1,6 +1,8 @@
 // Supabase-compatible mock backend: the subset of PostgREST and Edge Functions the app uses.
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+import { EVENT_NAMES as APP_EVENT_NAMES } from '@/domain/events';
+
 import { createHandler, type IngestDb } from '../supabase/functions/ingest-eia/handler.ts';
 import { eiaResponse } from './eiaMock';
 import { createMetrics, type Metrics } from './metrics';
@@ -16,28 +18,8 @@ export type MockOptions = {
   random?: () => number;
 };
 
-/** Event names the app may send (mirrors the app_events check constraint). */
-export const EVENT_NAMES = new Set([
-  'app_open',
-  'screen_view',
-  'onboarding_complete',
-  'window_change',
-  'scrub',
-  'basket_add',
-  'basket_remove',
-  'basket_reorder',
-  'item_view',
-  'search',
-  'barcode_scan',
-  'receipt_logged',
-  'share',
-  'paywall_view',
-  'purchase',
-  'restore',
-  'alert_toggle',
-  'alert_delivered',
-  'error',
-]);
+/** Event names the app may send (shared with the app and the app_events check constraint). */
+export const EVENT_NAMES = new Set<string>(APP_EVENT_NAMES);
 
 const MAX_EVENTS_PER_REQUEST = 100;
 

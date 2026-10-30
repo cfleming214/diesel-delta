@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { Check } from 'phosphor-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { BackButton } from '@/components/BackButton';
@@ -11,6 +11,7 @@ import { usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
 import { alpha, colors, em, fonts, radius } from '@/theme';
 import { Button, Kicker, Screen, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 export default function PaywallScreen() {
   const isPro = usePrefs((s) => s.isPro);
@@ -19,6 +20,7 @@ export default function PaywallScreen() {
   const [busy, setBusy] = useState<'buy' | 'restore' | null>(null);
   const offerings = useQuery({ queryKey: ['offerings'], queryFn: () => purchases.getOfferings() });
   const selected = offerings.data?.find((o) => o.key === plan);
+  useEffect(() => track('paywall_view', { pro: isPro }), [isPro]);
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -28,6 +30,7 @@ export default function PaywallScreen() {
     try {
       const result = await purchases.purchase(plan);
       unlockPro(result.plan);
+      track('purchase', { plan: result.plan });
       close();
       toast('Pro unlocked');
     } catch (e) {
@@ -42,6 +45,7 @@ export default function PaywallScreen() {
     setBusy('restore');
     try {
       const { plan: owned } = await purchases.restore();
+      track('restore', { found: owned != null });
       if (owned) {
         unlockPro(owned);
         close();

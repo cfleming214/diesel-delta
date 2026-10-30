@@ -23,3 +23,6 @@ jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: async () => ({ granted: false, canAskAgain: true }),
   scheduleNotificationAsync: async () => 'mock-notification',
 }));
+
+// expo-crypto's automock returns undefined; use Node's implementation.
+jest.mock('expo-crypto', () => ({ randomUUID: () => require('crypto').randomUUID() }));

@@ -4,6 +4,7 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { ALL_SERIES, AREA_NAMES, eiaSeriesId } from '@/data';
+import { EVENT_NAMES } from '@/domain';
 
 const SEED = join(__dirname, '../../../supabase/migrations/20261029000100_fuel_series_seed.sql');
 
@@ -20,5 +21,17 @@ describe('fuel_series seed migration', () => {
         name: AREA_NAMES[area],
       })),
     );
+  });
+});
+
+describe('app_events migration', () => {
+  test('its event-name check matches EVENT_NAMES', () => {
+    const sql = readFileSync(
+      join(__dirname, '../../../supabase/migrations/20261030000000_app_events.sql'),
+      'utf8',
+    );
+    const list = /name in \(([^)]*)\)/s.exec(sql)![1]!;
+    const names = [...list.matchAll(/'([a-z_]+)'/g)].map((m) => m[1]);
+    expect(names).toEqual([...EVENT_NAMES]);
   });
 });

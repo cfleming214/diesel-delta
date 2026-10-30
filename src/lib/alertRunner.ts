@@ -10,6 +10,7 @@ import { basketIds, usePrefs } from '@/store/prefs';
 import { useAlertState } from '@/store/alertState';
 
 import { push, type PushProvider } from './push';
+import { track } from './telemetry';
 
 /** Window used for the Delta tolerance alert (the app's default headline window). */
 const ALERT_WINDOW = 90;
@@ -49,7 +50,10 @@ export async function runAlerts(provider: PushProvider = push): Promise<AlertEve
     itemNames: Object.fromEntries(items.flatMap((i) => (i ? [[i.id, i.name]] : []))),
   });
   if (events.length > 0 && (await provider.permission()) === 'granted') {
-    for (const e of events) await provider.deliver(e);
+    for (const e of events) {
+      await provider.deliver(e);
+      track('alert_delivered', { kind: e.kind });
+    }
   }
   useAlertState.getState().save(current);
   return events;

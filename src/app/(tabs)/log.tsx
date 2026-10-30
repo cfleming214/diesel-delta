@@ -18,6 +18,7 @@ import { useReceipts } from '@/store/receipts';
 import { toast } from '@/store/toast';
 import { alpha, colors } from '@/theme';
 import { Button, Card, Input, Screen, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 type Mode = 'camera' | 'manual' | null;
 
@@ -45,6 +46,11 @@ export default function LogScreen() {
       }),
     );
     setMode(null);
+    track('receipt_logged', {
+      source: 'scan',
+      lines: selected.length,
+      store_known: receipt.store != null,
+    });
     toast(`${selected.length} ${selected.length === 1 ? 'price' : 'prices'} added`);
   };
 
@@ -84,6 +90,7 @@ export default function LogScreen() {
           onSave={(entry) => {
             add([entry]);
             setMode(null);
+            track('receipt_logged', { source: 'manual', lines: 1, store_known: true });
             toast('Price saved');
           }}
         />

@@ -15,6 +15,7 @@ import { toast } from '@/store/toast';
 import { useUi } from '@/store/ui';
 import { colors } from '@/theme';
 import { Button, Card, IconButton, Screen, ScreenHeader, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 export default function BasketScreen() {
   const region = usePrefs((s) => s.region);
@@ -43,6 +44,7 @@ export default function BasketScreen() {
   const open = (id: string) => router.push({ pathname: '/item/[id]', params: { id } });
   const remove = (item: ItemDetail) => {
     removeFromBasket(item.id);
+    track('basket_remove', { item: item.id, mode: editing ? 'edit' : 'swipe' });
     toast(`${item.name} removed`);
   };
 
@@ -101,7 +103,10 @@ export default function BasketScreen() {
           keyOf={(i) => i.id}
           labelOf={(i) => i.name}
           rowHeight={BASKET_ROW_HEIGHT}
-          onMove={moveBasketItem}
+          onMove={(from, to) => {
+            moveBasketItem(from, to);
+            track('basket_reorder', { from, to });
+          }}
           renderRow={(item) => row(item, true)}
         />
       ) : (

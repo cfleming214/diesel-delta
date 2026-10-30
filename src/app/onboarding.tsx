@@ -9,6 +9,7 @@ import { formatDate, fromISODate, money } from '@/domain';
 import { usePrefs } from '@/store/prefs';
 import { alpha, colors, em, layout } from '@/theme';
 import { Button, Card, Input, Kicker, Screen, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 /** Which EIA diesel series the ZIP uses. EIA publishes state-level diesel only for California. */
 function seriesLine(found: ZipLookup) {
@@ -41,6 +42,11 @@ export default function OnboardingScreen() {
       return;
     }
     setLocation(zip, result.state.abbr, result.region.key);
+    track('onboarding_complete', {
+      state: result.state.abbr,
+      region: result.region.key,
+      series_level: result.dieselSeries.level,
+    });
     router.replace('/');
   };
 
