@@ -15,7 +15,10 @@
     "web": "expo start --web",
     "db:check": "scripts/check-migrations.sh",
     "functions:check": "cd supabase/functions && deno check --node-modules-dir=none --no-lock ingest-eia/index.ts",
-    "functions:test": "cd supabase/functions && deno test --node-modules-dir=none --no-lock && deno fmt --check --single-quote --line-width 100 ."
+    "functions:test": "cd supabase/functions && deno test --node-modules-dir=none --no-lock && deno fmt --check --single-quote --line-width 100 .",
+    "mock:server": "tsx --tsconfig mock-server/tsconfig.json mock-server/index.ts",
+    "mock:test": "tsx --tsconfig mock-server/tsconfig.json --test mock-server/*.test.ts",
+    "mock:typecheck": "tsc -p mock-server/tsconfig.json"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -68,6 +71,7 @@
     "jest-expo": "^58.0.13",
     "prettier": "^3.9.10",
     "test-renderer": "^1.3.1",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   }
 }

@@ -67,6 +67,17 @@ Going live:
 6. Store `project_url` and `ingest_secret` in Vault and run `supabase/schedule.sql` in the SQL editor.
 7. Point the app at it: copy `.env.example` to `.env.local` and set `EXPO_PUBLIC_DATA_SOURCE=supabase` plus the project URL and anon key. For EAS builds, set the same variables in the EAS environment.
 
+## Mock backend
+
+`npm run mock:server` starts a local backend on http://localhost:54321 that speaks the same API as Supabase (the `fuel_series_daily` RPC, `app_events` inserts, the `ingest-eia` function run through the production handler against a mock EIA feed). Point the app at it to exercise the live data path with no accounts:
+
+```sh
+EXPO_PUBLIC_DATA_SOURCE=supabase EXPO_PUBLIC_SUPABASE_URL=http://localhost:54321 \
+EXPO_PUBLIC_SUPABASE_ANON_KEY=mock-anon-key npm start
+```
+
+On a phone, use your computer's LAN address instead of `localhost`. `MOCK_LATENCY_MS`, `MOCK_JITTER_MS` and `MOCK_ERROR_RATE` simulate slow or failing networks. Tests: `npm run mock:test`.
+
 ## Kitchen sink
 
 In development builds, open `dieseldelta://dev/kitchen-sink` (or `/dev/kitchen-sink` on web) to see every primitive for side-by-side review against `design/handoff/DieselDeltaApp.dc.html`.
