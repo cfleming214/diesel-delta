@@ -93,6 +93,45 @@ describe('mock backend', () => {
     );
   });
 
+  test('admin metrics require the token and summarise recorded traffic', async () => {
+    assert.equal((await fetch(`${base}/admin/api/metrics`)).status, 401);
+    assert.equal((await fetch(`${base}/admin/api/metrics?token=wrong`)).status, 401);
+    const res = await fetch(`${base}/admin/api/metrics`, {
+      headers: { 'x-admin-token': backend.adminToken },
+    });
+    assert.equal(res.status, 200);
+    const snap = (await res.json()) as {
+      kpis: { active24h: number };
+      funnel: { step: string; installs: number }[];
+      routes: { route: string }[];
+    };
+    assert.equal(snap.kpis.active24h, 1);
+    assert.equal(snap.funnel[0]!.step, 'app_open');
+    assert.equal(snap.funnel[0]!.installs, 1);
+    assert.ok(snap.routes.some((r) => r.route === 'POST /rest/v1/app_events'));
+    // Admin traffic is not counted as app traffic.
+    assert.ok(!snap.routes.some((r) => r.route.includes('/admin')));
+    assert.equal(
+      (await fetch(`${base}/admin`)).headers.get('content-type'),
+      'text/html; charset=utf-8',
+    );
+  });
+
+  test('admin stream pushes a snapshot as the first SSE frame', async () => {
+    const ctrl = new AbortController();
+    const res = await fetch(`${base}/admin/api/stream?token=${backend.adminToken}`, {
+      signal: ctrl.signal,
+    });
+    assert.equal(res.headers.get('content-type'), 'text/event-stream');
+    const reader = res.body!.getReader();
+    let text = '';
+    while (!text.includes('\n\n')) text += new TextDecoder().decode((await reader.read()).value);
+    ctrl.abort();
+    assert.ok(text.startsWith('data: '));
+    const snap = JSON.parse(text.slice(6, text.indexOf('\n\n'))) as { kpis: object };
+    assert.ok(snap.kpis);
+  });
+
   test('error injection fails data routes but not health', async () => {
     const flaky = createMockBackend({ errorRate: 1 });
     const s = createServer((req, res) => void flaky.handle(req, res));

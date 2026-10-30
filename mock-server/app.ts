@@ -1,8 +1,11 @@
 // Supabase-compatible mock backend: the subset of PostgREST and Edge Functions the app uses.
+import { readFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
+import { join } from 'node:path';
 
 import { EVENT_NAMES as APP_EVENT_NAMES } from '@/domain/events';
 
+import { computeMetrics } from '../supabase/functions/_shared/metrics.ts';
 import { createHandler, type IngestDb } from '../supabase/functions/ingest-eia/handler.ts';
 import { eiaResponse } from './eiaMock';
 import { createMetrics, type Metrics } from './metrics';
@@ -15,6 +18,10 @@ export type MockOptions = {
   /** Fraction of data requests (0–1) that fail with 503, for resilience testing. */
   errorRate?: number;
   ingestSecret?: string;
+  /** Token for the admin dashboard API (header x-admin-token or ?token=). */
+  adminToken?: string;
+  /** How often the live stream pushes a snapshot. */
+  streamIntervalMs?: number;
   random?: () => number;
 };
 
@@ -57,6 +64,11 @@ export function createMockBackend(opts: MockOptions = {}) {
   const metrics: Metrics = createMetrics();
   const random = opts.random ?? Math.random;
   const ingestSecret = opts.ingestSecret ?? 'mock-ingest-secret';
+  const adminToken = opts.adminToken ?? 'mock-admin';
+  const streamMs = opts.streamIntervalMs ?? 2000;
+
+  const snapshot = () =>
+    computeMetrics({ events: store.events, requests: metrics.requests, runs: store.runs });
 
   const db: IngestDb = {
     listSeries: async () => store.series,
@@ -112,6 +124,32 @@ export function createMockBackend(opts: MockOptions = {}) {
       return 204;
     }
     if (path === '/health') return (send(res, 200, { ok: true, prices: store.priceCount() }), 200);
+
+    if (req.method === 'GET' && (path === '/admin' || path === '/admin/')) {
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      res.end(readFileSync(join(__dirname, 'admin', 'index.html')));
+      return 200;
+    }
+    if (path.startsWith('/admin/api/')) {
+      const token = req.headers['x-admin-token'] ?? url.searchParams.get('token');
+      if (token !== adminToken) return (send(res, 401, { message: 'admin token required' }), 401);
+      if (req.method === 'GET' && path === '/admin/api/metrics') {
+        return (send(res, 200, snapshot()), 200);
+      }
+      if (req.method === 'GET' && path === '/admin/api/stream') {
+        res.writeHead(200, {
+          ...CORS,
+          'content-type': 'text/event-stream',
+          'cache-control': 'no-cache',
+          connection: 'keep-alive',
+        });
+        const push = () => res.write(`data: ${JSON.stringify(snapshot())}\n\n`);
+        push();
+        const timer = setInterval(push, streamMs);
+        req.on('close', () => clearInterval(timer));
+        return 200;
+      }
+    }
 
     // Simulated network + database time, and injected failures, on data routes only.
     if (path.startsWith('/rest/') || path.startsWith('/functions/')) {
@@ -177,7 +215,7 @@ export function createMockBackend(opts: MockOptions = {}) {
       status = e instanceof SyntaxError ? 400 : 500;
       if (!res.headersSent) send(res, status, { message: (e as Error).message });
     } finally {
-      if (req.method !== 'OPTIONS') {
+      if (req.method !== 'OPTIONS' && !path.startsWith('/admin') && path !== '/health') {
         metrics.record({
           at: Date.now(),
           route: `${req.method} ${path}`,
@@ -188,7 +226,7 @@ export function createMockBackend(opts: MockOptions = {}) {
     }
   }
 
-  return { handle, store, metrics, runIngest, ingestSecret };
+  return { handle, store, metrics, runIngest, ingestSecret, adminToken, snapshot };
 }
 
 export type MockBackend = ReturnType<typeof createMockBackend>;
