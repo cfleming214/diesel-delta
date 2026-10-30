@@ -212,4 +212,44 @@ describe('PostgREST subset for the price bot', () => {
     assert.equal(finished.error, null);
     assert.equal(backend.store.runs.find((r) => r.id === runId)?.status, 'succeeded');
   });
+
+  test('item_prices_on and basket_daily match the SQL functions', async () => {
+    const db = service();
+    const row = (item_id: string, store_id: number, day: string, regular_price: number) => ({
+      item_id,
+      retailer_id: 'walmart',
+      store_id,
+      day,
+      source_id: 'mock-walmart',
+      regular_price,
+    });
+    await db
+      .from('price_observations')
+      .insert([
+        row('milk', 1, '2026-09-01', 3.0),
+        row('milk', 2, '2026-09-01', 3.2),
+        row('milk', 3, '2026-09-01', 3.9),
+        row('milk', 1, '2026-09-02', 3.1),
+        row('milk', 2, '2026-09-02', 3.3),
+        row('ketchup', 1, '2026-09-01', 4.0),
+        row('ketchup', 1, '2026-09-02', 4.2),
+      ]);
+    const on = await anon().rpc('item_prices_on', { p_days: ['2026-09-01', '2026-09-02'] });
+    assert.deepEqual(on.data, [
+      { day: '2026-09-01', item_id: 'ketchup', retailer_id: 'walmart', price: 4, stores: 1 },
+      { day: '2026-09-01', item_id: 'milk', retailer_id: 'walmart', price: 3.2, stores: 3 },
+      { day: '2026-09-02', item_id: 'ketchup', retailer_id: 'walmart', price: 4.2, stores: 1 },
+      { day: '2026-09-02', item_id: 'milk', retailer_id: 'walmart', price: 3.2, stores: 2 },
+    ]);
+    const basket = await anon().rpc('basket_daily', {
+      p_from: '2026-09-01',
+      p_to: '2026-09-02',
+      p_items: ['milk', 'ketchup'],
+      p_retailer: 'walmart',
+    });
+    assert.deepEqual(basket.data, [
+      { day: '2026-09-01', cost: 7.2, items: 2 },
+      { day: '2026-09-02', cost: 7.4, items: 2 },
+    ]);
+  });
 });
