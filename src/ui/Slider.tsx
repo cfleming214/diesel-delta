@@ -72,7 +72,10 @@ export function Slider({
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel={accessibilityLabel}
-        accessibilityValue={{ min, max, now: value, text: accessibilityValueText }}
+        aria-valuemin={min}
+        aria-valuemax={max}
+        aria-valuenow={value}
+        aria-valuetext={accessibilityValueText}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(e) => {
           const next = value + (e.nativeEvent.actionName === 'increment' ? 1 : -1);

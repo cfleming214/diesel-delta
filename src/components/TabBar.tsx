@@ -25,7 +25,10 @@ type Props = Pick<BottomTabBarProps, 'state' | 'emitter' | 'navigateToTab' | 'in
  */
 export function TabBar({ state, emitter, navigateToTab, insets }: Props) {
   return (
-    <View style={[styles.bar, { paddingBottom: insets.bottom > 0 ? 28 : 10 }]}>
+    <View
+      accessibilityRole="tablist"
+      style={[styles.bar, { paddingBottom: insets.bottom > 0 ? 28 : 10 }]}
+    >
       <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
       <View style={[StyleSheet.absoluteFill, styles.tint]} />
       <FadeRule style={styles.rule} />

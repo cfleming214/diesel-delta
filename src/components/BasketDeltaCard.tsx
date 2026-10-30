@@ -36,6 +36,7 @@ export function BasketDeltaCard({ attribution: a, baseline, onBaselineChange }: 
       </View>
       <View
         style={styles.bar}
+        accessibilityRole="image"
         accessibilityLabel={`${Math.round(a.fuelShare * 100)}% fuel-attributable`}
       >
         <View style={[styles.fuel, { flex: a.fuelShare }]} />
