@@ -19,3 +19,46 @@ The separate service that collects daily prices for the canonical catalog. The d
 | `in_default_basket` | `1` for the app's default basket. |
 
 Retailer GTINs and SKUs are not in the catalog. They are matched per retailer, reviewed, and stored in `item_identifiers`.
+
+## Running
+
+```sh
+npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,mock-walmart] [--discover] [--workers 4] [--dry-run]
+npm run bot -- simulate --days 30 [--end 2026-10-30]
+```
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | The local mock server (`npm run mock:server`) | Where the bot writes. It needs the service role. |
+| `BOT_CONTACT_URL` | `https://dd.app/bot` | Sent in the User-Agent (`DieselDeltaPriceBot/0.1 (+url)`). Point it at a real page that explains the bot before any live source runs. |
+| `BOT_RAW_DIR` | `price-bot/.data/raw` | Raw responses, purged after 90 days. Production should use object storage. |
+| `MOCK_RETAIL_URL` | `SUPABASE_URL` | Where the simulated retailers live. |
+
+- **`--dry-run`:** starts a mock server inside the process, so nothing outside it is touched.
+- **`simulate`:** replays past days and refuses any source that isn't a mock retailer.
+- **What runs:** a source runs only if it has an adapter and its `sources.enabled` flag is on. Page sources also need `legal_approved_at`.
+
+## How a run works
+
+`pipeline.ts`, one run per day:
+
+1. **Sync:** syncs the catalog to `items`, and each retailer's sampled stores to `stores`.
+2. **Discover:** on a retailer's first run, or with `--discover`, it matches the retailer's listings to catalog items (`match.ts`).
+   - At ≥ 0.9 confidence the match is approved.
+   - Between 0.6 and 0.9 it waits for review.
+   - Below 0.6 it's dropped.
+   - Human decisions on existing identifiers are never overwritten.
+3. **Queue:** queues one fetch per batch of up to 50 approved SKUs per store (or online) in `price_tasks`.
+4. **Fetch:** workers claim tasks with `claim_price_tasks`. Every request goes through `http.ts` (PoliteHttp), which handles:
+   - the User-Agent and robots.txt;
+   - a minimum interval per host;
+   - backoff on 429 and 5xx;
+   - the kill switch, re-read every 5 s;
+   - raw-response capture.
+
+   A 401, a 403 or a challenge page disables the source instead of retrying.
+5. **Normalize and validate** (`normalize.ts`):
+   - It works out unit prices and keeps promo prices separate.
+   - It holds out-of-band prices (a misplaced decimal) and moves over 40% for review in `review_queue`.
+   - A package size change on the same SKU is published and recorded in `price_events` as `size_change`.
+6. **Load:** upserts `price_observations`, one row per item × retailer × store × day × source, so re-running a day updates it. The run summary goes in `ingest_runs`.

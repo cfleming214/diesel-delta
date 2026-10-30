@@ -110,6 +110,17 @@ To target a live project, pass `--url https://<ref>.supabase.co --key <anon key>
 
 **Browser users:** `npm run load:browsers -- --users 5` runs concurrent Chromium users through onboarding, Today, Chart and Basket against the e2e web build and its mock. It times each step against a p95 limit (`--p95-ms`, default 3000). The browsers share the machine running them, so keep `--users` near its core count.
 
+## Price bot
+
+`price-bot/` is a separate service that collects daily grocery prices for the 150-item catalog (`price-bot/catalog/items.csv`). Its design is in `PRICE_BOT_PLAN.md`, and `price-bot/README.md` covers usage. Today it runs against the mock server's simulated Kroger, Walmart and Amazon. The real adapters arrive in P3 and P4.
+
+```sh
+npm run bot -- run --dry-run                # one day against an in-process mock; touches nothing else
+npm run mock:server                         # or: a standing mock in one terminal…
+npm run bot -- simulate --days 30           # …then replay 30 days into it
+npm run bot:test
+```
+
 ## Admin dashboard
 
 A live metrics dashboard for operators: active installs, events and API requests per minute, API latency (p50/p95), the activation funnel (open → ZIP → basket → share → Pro), installs by region, screen views, per-route latency and errors, EIA ingest runs and a feed of recent events. Every chart has a hover tooltip and a data table.

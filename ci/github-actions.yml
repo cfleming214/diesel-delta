@@ -23,6 +23,8 @@ jobs:
       - run: npm test -- --ci
       - run: npm run mock:typecheck
       - run: npm run mock:test
+      - run: npm run bot:typecheck
+      - run: npm run bot:test
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
