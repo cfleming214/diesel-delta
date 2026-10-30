@@ -1,0 +1,151 @@
+id,name,category,size_qty,size_unit,priced_by,size_tolerance,brand_policy,brand,ref_price,bls_series_id,in_default_basket
+milk,Whole milk,Dairy,1,gal,package,0.05,cheapest_comparable,,3.89,APU0000709112,1
+milk2,2% milk,Dairy,1,gal,package,0.05,cheapest_comparable,,3.79,,0
+milk_skim,Skim milk,Dairy,1,gal,package,0.05,cheapest_comparable,,3.69,,0
+eggs,Large eggs,Dairy,12,ct,package,0,cheapest_comparable,,3.24,APU0000708111,1
+eggs18,Large eggs,Dairy,18,ct,package,0,cheapest_comparable,,4.79,,0
+butter,Salted butter,Dairy,16,oz,package,0.1,cheapest_comparable,,4.68,APU0000FS1101,0
+butter_unsalted,Unsalted butter,Dairy,16,oz,package,0.1,cheapest_comparable,,4.68,,0
+cheddar,Cheddar cheese block,Dairy,8,oz,package,0.1,cheapest_comparable,,2.99,APU0000710212,1
+mozzarella,Shredded mozzarella,Dairy,8,oz,package,0.1,cheapest_comparable,,2.99,,0
+american_cheese,American cheese singles,Dairy,12,oz,package,0.15,cheapest_comparable,,3.49,,0
+cream_cheese,Cream cheese,Dairy,8,oz,package,0.1,cheapest_comparable,,2.49,,0
+cottage_cheese,Cottage cheese,Dairy,16,oz,package,0.1,cheapest_comparable,,3.29,,0
+yogurt,Greek yogurt,Dairy,32,oz,package,0.1,cheapest_comparable,,5.49,,0
+yogurt_plain,Plain yogurt,Dairy,32,oz,package,0.1,cheapest_comparable,,3.29,,0
+sour_cream,Sour cream,Dairy,16,oz,package,0.1,cheapest_comparable,,2.49,,0
+half_half,Half-and-half,Dairy,32,fl_oz,package,0.1,cheapest_comparable,,3.99,,0
+heavy_cream,Heavy cream,Dairy,16,fl_oz,package,0.1,cheapest_comparable,,4.29,,0
+oat_milk,Oat milk,Dairy,64,fl_oz,package,0.1,cheapest_comparable,,4.49,,0
+chicken,Boneless chicken breast,Meat,1,lb,lb,0,cheapest_comparable,,4.29,APU0000FF1101,1
+chicken_thighs,Chicken thighs,Meat,1,lb,lb,0,cheapest_comparable,,2.99,,0
+chicken_whole,Whole chicken,Meat,1,lb,lb,0,cheapest_comparable,,1.99,APU0000706111,0
+ground_turkey,Ground turkey,Meat,16,oz,package,0.1,cheapest_comparable,,5.49,,0
+beef,Ground beef 80/20,Meat,1,lb,lb,0,cheapest_comparable,,5.99,APU0000703112,1
+beef_lean,Ground beef 93/7,Meat,1,lb,lb,0,cheapest_comparable,,7.49,,0
+chuck_roast,Chuck roast,Meat,1,lb,lb,0,cheapest_comparable,,7.99,,0
+sirloin,Sirloin steak,Meat,1,lb,lb,0,cheapest_comparable,,10.99,,0
+pork_chops,Pork chops,Meat,1,lb,lb,0,cheapest_comparable,,4.49,,0
+bacon,Bacon,Meat,16,oz,package,0.1,cheapest_comparable,,6.99,APU0000704111,0
+sausage,Breakfast sausage,Meat,16,oz,package,0.1,cheapest_comparable,,4.49,,0
+deli_ham,Deli ham,Meat,16,oz,package,0.1,cheapest_comparable,,6.99,,0
+deli_turkey,Deli turkey,Meat,16,oz,package,0.1,cheapest_comparable,,7.49,,0
+hot_dogs,Hot dogs,Meat,16,oz,package,0.1,cheapest_comparable,,3.99,,0
+salmon,Salmon fillet,Meat,1,lb,lb,0,cheapest_comparable,,10.99,,0
+shrimp,Frozen shrimp,Meat,2,lb,package,0.1,cheapest_comparable,,15.99,,0
+bananas,Bananas,Produce,1,lb,lb,0,cheapest_comparable,,0.62,APU0000711211,1
+apples,Gala apples,Produce,3,lb,package,0.1,cheapest_comparable,,4.99,,0
+oranges,Navel oranges,Produce,1,lb,lb,0,cheapest_comparable,,1.49,APU0000711311,0
+lemons,Lemons,Produce,1,each,each,0,cheapest_comparable,,0.69,,0
+strawberries,Strawberries,Produce,1,lb,package,0.1,cheapest_comparable,,3.99,,0
+grapes,Grapes,Produce,1,lb,lb,0,cheapest_comparable,,2.99,,0
+avocados,Avocados,Produce,1,each,each,0,cheapest_comparable,,1.25,,0
+potatoes,Russet potatoes,Produce,5,lb,package,0.1,cheapest_comparable,,4.49,,1
+sweet_potatoes,Sweet potatoes,Produce,1,lb,lb,0,cheapest_comparable,,1.29,,0
+onions,Yellow onions,Produce,3,lb,package,0.1,cheapest_comparable,,3.49,,0
+carrots,Carrots,Produce,2,lb,package,0.1,cheapest_comparable,,2.29,,0
+garlic,Garlic,Produce,3,ct,package,0,cheapest_comparable,,1.99,,0
+celery,Celery,Produce,1,each,each,0,cheapest_comparable,,1.99,,0
+lettuce,Iceberg lettuce,Produce,1,each,each,0,cheapest_comparable,,1.79,,0
+romaine,Romaine hearts,Produce,3,ct,package,0,cheapest_comparable,,3.49,,0
+tomatoes,Tomatoes,Produce,1,lb,lb,0,cheapest_comparable,,1.99,APU0000712311,0
+bell_pepper,Green bell pepper,Produce,1,each,each,0,cheapest_comparable,,0.89,,0
+broccoli,Broccoli crowns,Produce,1,lb,lb,0,cheapest_comparable,,1.99,,0
+spinach,Baby spinach,Produce,5,oz,package,0.1,cheapest_comparable,,2.99,,0
+cucumber,Cucumber,Produce,1,each,each,0,cheapest_comparable,,0.79,,0
+bread,White bread,Bakery,20,oz,package,0.1,cheapest_comparable,,2.79,APU0000702111,1
+bread_wheat,Wheat bread,Bakery,20,oz,package,0.1,cheapest_comparable,,3.29,,0
+buns_hamburger,Hamburger buns,Bakery,8,ct,package,0,cheapest_comparable,,2.49,,0
+buns_hotdog,Hot dog buns,Bakery,8,ct,package,0,cheapest_comparable,,2.49,,0
+dinner_rolls,Dinner rolls,Bakery,12,ct,package,0,cheapest_comparable,,3.29,,0
+bagels,Bagels,Bakery,6,ct,package,0,cheapest_comparable,,3.49,,0
+english_muffins,English muffins,Bakery,6,ct,package,0,cheapest_comparable,,2.99,,0
+tortillas_flour,Flour tortillas,Bakery,10,ct,package,0,cheapest_comparable,,2.99,,0
+tortillas_corn,Corn tortillas,Bakery,30,ct,package,0.1,cheapest_comparable,,2.49,,0
+muffins,Bakery muffins,Bakery,4,ct,package,0,cheapest_comparable,,4.99,,0
+rice,Long-grain rice,Pantry,5,lb,package,0.1,cheapest_comparable,,4.99,APU0000701312,1
+pasta,Spaghetti,Pantry,16,oz,package,0.1,cheapest_comparable,,1.49,APU0000701322,1
+penne,Penne,Pantry,16,oz,package,0.1,cheapest_comparable,,1.49,,0
+mac_cheese,Macaroni and cheese,Pantry,7.25,oz,package,0.1,cheapest_comparable,,1.29,,0
+black_beans_dry,Dried black beans,Pantry,1,lb,package,0.1,cheapest_comparable,,1.69,,0
+flour,All-purpose flour,Pantry,5,lb,package,0.1,cheapest_comparable,,3.49,APU0000701111,0
+sugar,Granulated sugar,Pantry,4,lb,package,0.1,cheapest_comparable,,3.99,APU0000715211,0
+brown_sugar,Brown sugar,Pantry,2,lb,package,0.1,cheapest_comparable,,2.79,,0
+salt,Table salt,Pantry,26,oz,package,0.1,cheapest_comparable,,1.29,,0
+veg_oil,Vegetable oil,Pantry,48,fl_oz,package,0.1,cheapest_comparable,,4.49,,0
+olive_oil,Olive oil,Pantry,17,fl_oz,package,0.1,cheapest_comparable,,8.99,,0
+coffee,Ground coffee,Pantry,12,oz,package,0.1,cheapest_comparable,,8.99,APU0000717311,0
+tea,Black tea bags,Pantry,100,ct,package,0,cheapest_comparable,,4.49,,0
+cereal,Toasted oat cereal,Pantry,18,oz,package,0.15,cheapest_comparable,,4.99,,0
+oatmeal,Old-fashioned oats,Pantry,42,oz,package,0.1,cheapest_comparable,,4.99,,0
+pancake_mix,Pancake mix,Pantry,32,oz,package,0.1,cheapest_comparable,,3.49,,0
+pb,Peanut butter,Pantry,16,oz,package,0.1,cheapest_comparable,,2.48,,1
+jelly,Grape jelly,Pantry,30,oz,package,0.1,cheapest_comparable,,3.29,,0
+honey,Honey,Pantry,12,oz,package,0.1,cheapest_comparable,,4.99,,0
+ketchup,Heinz ketchup,Pantry,32,oz,package,0.05,national,Heinz,4.79,,1
+ketchup20,Heinz ketchup,Pantry,20,oz,package,0.05,national,Heinz,3.12,,0
+mustard,Yellow mustard,Pantry,14,oz,package,0.1,cheapest_comparable,,1.49,,0
+mayo,Mayonnaise,Pantry,30,fl_oz,package,0.1,cheapest_comparable,,5.49,,0
+pasta_sauce,Pasta sauce,Pantry,24,oz,package,0.1,cheapest_comparable,,2.99,,0
+tuna,Canned tuna,Canned,5,oz,package,0.1,cheapest_comparable,,1.29,,0
+soup_chicken,Chicken noodle soup,Canned,10.75,oz,package,0.1,cheapest_comparable,,1.49,,0
+soup_tomato,Tomato soup,Canned,10.75,oz,package,0.1,cheapest_comparable,,1.29,,0
+broth,Chicken broth,Canned,32,fl_oz,package,0.1,cheapest_comparable,,2.49,,0
+diced_tomatoes,Diced tomatoes,Canned,14.5,oz,package,0.1,cheapest_comparable,,1.19,,0
+tomato_paste,Tomato paste,Canned,6,oz,package,0.1,cheapest_comparable,,0.89,,0
+black_beans,Canned black beans,Canned,15,oz,package,0.1,cheapest_comparable,,1.09,,0
+kidney_beans,Canned kidney beans,Canned,15,oz,package,0.1,cheapest_comparable,,1.09,,0
+baked_beans,Baked beans,Canned,28,oz,package,0.1,cheapest_comparable,,2.79,,0
+corn,Canned corn,Canned,15,oz,package,0.1,cheapest_comparable,,0.99,,0
+green_beans,Canned green beans,Canned,14.5,oz,package,0.1,cheapest_comparable,,0.99,,0
+peaches,Canned peaches,Canned,15,oz,package,0.1,cheapest_comparable,,1.79,,0
+peas,Frozen peas,Frozen,12,oz,package,0.1,cheapest_comparable,,1.89,,1
+mixed_veg,Frozen mixed vegetables,Frozen,12,oz,package,0.1,cheapest_comparable,,1.89,,0
+broccoli_frozen,Frozen broccoli florets,Frozen,12,oz,package,0.1,cheapest_comparable,,1.99,,0
+berries_frozen,Frozen mixed berries,Frozen,16,oz,package,0.1,cheapest_comparable,,4.49,,0
+fries,Frozen french fries,Frozen,32,oz,package,0.1,cheapest_comparable,,3.99,,0
+pizza,Frozen pepperoni pizza,Frozen,1,each,package,0,cheapest_comparable,,5.29,,0
+nuggets,Frozen chicken nuggets,Frozen,2,lb,package,0.1,cheapest_comparable,,8.99,,0
+fish_sticks,Frozen fish sticks,Frozen,24,oz,package,0.15,cheapest_comparable,,6.99,,0
+burritos,Frozen burritos,Frozen,8,ct,package,0,cheapest_comparable,,7.99,,0
+entree,Frozen single-serve entrée,Frozen,1,each,package,0,cheapest_comparable,,3.49,,0
+waffles,Frozen waffles,Frozen,10,ct,package,0,cheapest_comparable,,2.99,,0
+ice_cream,Ice cream,Frozen,48,fl_oz,package,0.1,cheapest_comparable,,4.99,,0
+oj,Orange juice,Beverages,52,fl_oz,package,0.1,cheapest_comparable,,4.99,,1
+apple_juice,Apple juice,Beverages,64,fl_oz,package,0.1,cheapest_comparable,,3.49,,0
+cranberry_juice,Cranberry juice cocktail,Beverages,64,fl_oz,package,0.1,cheapest_comparable,,3.99,,0
+lemonade,Lemonade,Beverages,52,fl_oz,package,0.1,cheapest_comparable,,2.99,,0
+cola12,Coca-Cola 12-pack,Beverages,12,ct,package,0,national,Coca-Cola,8.99,,0
+cola2l,Coca-Cola 2 L,Beverages,2,l,package,0,national,Coca-Cola,2.99,,0
+sports_drink,Sports drink 8-pack,Beverages,8,ct,package,0,cheapest_comparable,,6.99,,0
+energy_drink,Energy drink 4-pack,Beverages,4,ct,package,0,cheapest_comparable,,8.99,,0
+water24,Bottled water 24-pack,Beverages,24,ct,package,0,cheapest_comparable,,4.99,,0
+sparkling_water,Sparkling water 8-pack,Beverages,8,ct,package,0,cheapest_comparable,,4.49,,0
+iced_tea,Iced tea,Beverages,1,gal,package,0.05,cheapest_comparable,,3.49,,0
+coffee_pods,Coffee pods,Beverages,12,ct,package,0,cheapest_comparable,,8.99,,0
+chips,Potato chips,Snacks,8,oz,package,0.15,cheapest_comparable,,4.29,,0
+tortilla_chips,Tortilla chips,Snacks,13,oz,package,0.15,cheapest_comparable,,3.99,,0
+pretzels,Pretzels,Snacks,16,oz,package,0.1,cheapest_comparable,,3.49,,0
+cookies,Sandwich cookies,Snacks,13,oz,package,0.15,cheapest_comparable,,4.29,,0
+saltines,Saltine crackers,Snacks,16,oz,package,0.1,cheapest_comparable,,2.99,,0
+popcorn,Microwave popcorn,Snacks,3,ct,package,0,cheapest_comparable,,3.49,,0
+granola_bars,Granola bars,Snacks,6,ct,package,0,cheapest_comparable,,3.49,,0
+salsa,Salsa,Snacks,16,oz,package,0.1,cheapest_comparable,,3.29,,0
+towels,Paper towels,Household,6,roll,package,0,cheapest_comparable,,11.99,,1
+toilet_paper,Toilet paper,Household,12,roll,package,0,cheapest_comparable,,12.99,,0
+trash_bags,Trash bags 13 gal,Household,40,ct,package,0.1,cheapest_comparable,,8.99,,0
+foil,Aluminum foil,Household,75,sq_ft,package,0.1,cheapest_comparable,,5.49,,0
+zip_bags,Gallon zip bags,Household,30,ct,package,0.2,cheapest_comparable,,4.49,,0
+soap,Dish soap,Household,19,fl_oz,package,0.1,cheapest_comparable,,3.69,,1
+detergent,Laundry detergent,Household,92,fl_oz,package,0.1,cheapest_comparable,,12.99,,0
+dishwasher_pods,Dishwasher pods,Household,40,ct,package,0.2,cheapest_comparable,,11.99,,0
+cleaner,All-purpose cleaner,Household,32,fl_oz,package,0.1,cheapest_comparable,,3.99,,0
+sponges,Sponges,Household,3,ct,package,0,cheapest_comparable,,2.99,,0
+toothpaste,Toothpaste,Personal care,4,oz,package,0.15,cheapest_comparable,,3.49,,0
+bar_soap,Bar soap,Personal care,6,ct,package,0,cheapest_comparable,,5.99,,0
+shampoo,Shampoo,Personal care,12,fl_oz,package,0.15,cheapest_comparable,,5.49,,0
+deodorant,Deodorant,Personal care,2.6,oz,package,0.15,cheapest_comparable,,4.99,,0
+body_wash,Body wash,Personal care,18,fl_oz,package,0.15,cheapest_comparable,,6.49,,0
+diapers,Diapers size 3,Personal care,31,ct,package,0.2,cheapest_comparable,,9.99,,0
+wipes,Baby wipes,Personal care,72,ct,package,0.2,cheapest_comparable,,3.49,,0
+ibuprofen,Ibuprofen 200 mg,Personal care,100,ct,package,0,cheapest_comparable,,6.99,,0
