@@ -2,10 +2,12 @@
 //
 //   npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,...] [--discover] [--dry-run]
 //   npm run bot -- simulate --days 30 [--end 2026-10-30]
+//   npm run bot -- report [--days 30] [--end 2026-10-30] [--out dir] [--no-pdf]
 //
 // Targets SUPABASE_URL with SUPABASE_SERVICE_ROLE_KEY; both default to the local mock server
 // (npm run mock:server). --dry-run starts an in-process mock server instead, so nothing outside
 // this process is touched. `simulate` replays past days against the mock retailers only.
+import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';
@@ -19,6 +21,7 @@ import { type BotDb, createBotDb } from './db';
 import { createPoliteHttp } from './http';
 import { runDay, type RunSummary } from './pipeline';
 import { fileRawStore } from './raw';
+import { buildReport, loadReportData, renderReport, writePdf } from './report';
 
 const MOCK_URL = 'http://localhost:54321';
 const MOCK_SERVICE_KEY = 'mock-service-role-key';
@@ -107,6 +110,8 @@ async function main() {
       discover: { type: 'boolean', default: false },
       'dry-run': { type: 'boolean', default: false },
       workers: { type: 'string' },
+      out: { type: 'string' },
+      'no-pdf': { type: 'boolean', default: false },
     },
   });
   const command = positionals[0] ?? 'run';
@@ -156,8 +161,26 @@ async function main() {
         });
         console.log(formatSummary(s));
       }
+    } else if (command === 'report') {
+      const end = values.end ?? today();
+      const from = addDays(end, -(Number(values.days ?? 30) - 1));
+      const model = buildReport(await loadReportData(db, items, from, end));
+      if (model.totals.observations === 0) {
+        throw new Error(`no prices collected between ${from} and ${end}`);
+      }
+      const out = values.out ?? join(__dirname, '.data', 'reports');
+      await mkdir(out, { recursive: true });
+      const base = join(out, `price-report-${end}`);
+      const html = renderReport(model);
+      await writeFile(`${base}.html`, html);
+      console.log(`wrote ${base}.html`);
+      if (!values['no-pdf']) {
+        await writePdf(html, `${base}.pdf`);
+        console.log(`wrote ${base}.pdf`);
+      }
+      return;
     } else {
-      throw new Error(`unknown command "${command}" (use run or simulate)`);
+      throw new Error(`unknown command "${command}" (use run, simulate or report)`);
     }
     console.log(
       `requests ${http.counts.requests}, retries ${http.counts.retries}, raw responses purged ${await raw.purge()}`,

@@ -60,6 +60,9 @@ const addDays = (iso: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+/** "fl_oz" → "fl oz", "l" → "L". */
+const unitLabel = (u: string) => (u === 'l' ? 'L' : u.replace('_', ' '));
+
 const key = (item: string, retailer: string, store: number | null) =>
   `${item}|${retailer}|${store ?? 'online'}`;
 
@@ -244,7 +247,7 @@ export async function runDay(opts: RunOptions): Promise<RunSummary> {
             from_price: prev!.regularPrice,
             to_price: n.regularPrice,
             kind: 'size_change',
-            tag: `${v.sizeChange.from.qty} ${v.sizeChange.from.unit} → ${v.sizeChange.to.qty} ${v.sizeChange.to.unit}`,
+            tag: `${v.sizeChange.from.qty} ${unitLabel(v.sizeChange.from.unit)} → ${v.sizeChange.to.qty} ${unitLabel(v.sizeChange.to.unit)}`,
           });
         }
       }
