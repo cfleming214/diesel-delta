@@ -1,0 +1,907 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DieselDelta Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Nocturne tokens (src/theme/tokens.ts). The admin console is dark like the app. */
+      :root {
+        --bg: #161826;
+        --surface: #232532;
+        --text: #e9e9ed;
+        --accent: #9184d9;
+        --accent-300: #d2cefd;
+        --accent-800: #423a6a;
+        --n300: #cfd3e5;
+        --n400: #b2b6ca;
+        --n500: #9397ab;
+        --n600: #75798c;
+        --n700: #595d6c;
+        --n800: #3f424d;
+        --n900: #292b31;
+        --divider: rgba(233, 233, 237, 0.16);
+        --rule: rgba(233, 233, 237, 0.08);
+        /* Status: reserved for state, always with an icon and a label. */
+        --critical: #f2918b;
+        --good: #9fd8b5;
+        --radius: 8px;
+        --radius-lg: 14px;
+        --shadow-sm: 0 0 0 1px #3f424d;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font:
+          400 14px/1.45 Inter,
+          system-ui,
+          sans-serif;
+        background:
+          radial-gradient(120% 55% at 0% 0%, #232532 0%, #161826 62%) fixed,
+          var(--bg);
+        font-variant-numeric: tabular-nums;
+      }
+      main {
+        max-width: 1240px;
+        margin: 0 auto;
+        padding: 24px 20px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      h1 {
+        margin: 0;
+        font-weight: 500;
+        font-size: 28px;
+        line-height: 1.12;
+        letter-spacing: -0.015em;
+      }
+      h2 {
+        margin: 0;
+        font-weight: 500;
+        font-size: 16px;
+      }
+      .sub {
+        color: var(--n400);
+        font-size: 12px;
+      }
+      .live {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--n300);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--n600);
+      }
+      .live[data-state='live'] .dot {
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent);
+      }
+      .live[data-state='error'] .dot {
+        background: var(--critical);
+      }
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+        gap: 10px;
+      }
+      .tile {
+        background: var(--surface);
+        box-shadow: var(--shadow-sm);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .tile .label {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--n400);
+      }
+      .tile .value {
+        font-size: 28px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+      .tile .note {
+        font-size: 12px;
+        color: var(--n500);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+      }
+      .card {
+        background: var(--surface);
+        box-shadow: var(--shadow-sm);
+        border-radius: var(--radius);
+        padding: 14px 16px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 0;
+        grid-column: span 12;
+      }
+      @media (min-width: 900px) {
+        .span6 {
+          grid-column: span 6;
+        }
+        .span4 {
+          grid-column: span 4;
+        }
+        .span8 {
+          grid-column: span 8;
+        }
+      }
+      .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .legend {
+        display: flex;
+        gap: 14px;
+        font-size: 12px;
+        color: var(--n300);
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .swatch {
+        width: 12px;
+        height: 2px;
+        border-radius: 1px;
+      }
+      .chart {
+        position: relative;
+      }
+      .chart svg {
+        display: block;
+        width: 100%;
+        overflow: visible;
+      }
+      .axis text {
+        fill: var(--n500);
+        font-size: 10px;
+      }
+      .grid-line {
+        stroke: var(--divider);
+        stroke-dasharray: 2 4;
+      }
+      .tooltip {
+        position: absolute;
+        pointer-events: none;
+        background: var(--bg);
+        box-shadow:
+          0 0 0 1px #595d6c,
+          0 6px 18px rgba(0, 0, 0, 0.55);
+        border-radius: var(--radius);
+        padding: 8px 10px;
+        font-size: 12px;
+        white-space: nowrap;
+        z-index: 2;
+        display: none;
+      }
+      .tooltip b {
+        font-weight: 500;
+      }
+      .bars {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .bar-row {
+        display: grid;
+        grid-template-columns: minmax(90px, 32%) 1fr 64px;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .bar-row .name {
+        color: var(--n300);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .bar-track {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--n900);
+        position: relative;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: var(--accent);
+        min-width: 2px;
+      }
+      .bar-row .val {
+        text-align: right;
+      }
+      .bar-row .pct {
+        color: var(--n500);
+        font-size: 11px;
+      }
+      .bar-row:hover .bar-fill {
+        box-shadow: 0 0 8px var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th {
+        text-align: left;
+        font-weight: 500;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--n400);
+        padding: 6px 8px 6px 0;
+        border-bottom: 1px solid var(--divider);
+      }
+      td {
+        padding: 7px 8px 7px 0;
+        border-bottom: 1px solid var(--rule);
+        vertical-align: top;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+      }
+      td.mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        color: var(--n300);
+        word-break: break-all;
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .status[data-s='failed'] {
+        color: var(--critical);
+      }
+      .status[data-s='succeeded'] {
+        color: var(--good);
+      }
+      details summary {
+        cursor: pointer;
+        color: var(--n400);
+        font-size: 12px;
+      }
+      details[open] summary {
+        margin-bottom: 6px;
+      }
+      .empty {
+        color: var(--n500);
+        font-size: 13px;
+        padding: 12px 0;
+      }
+      .scroll {
+        max-height: 360px;
+        overflow: auto;
+      }
+      button {
+        font: inherit;
+        color: var(--accent);
+        background: transparent;
+        border: 1px solid var(--accent);
+        border-radius: var(--radius);
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(145, 132, 217, 0.12);
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>DieselDelta Admin</h1>
+          <div class="sub" id="source">Connecting…</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <div class="live" id="live" data-state="connecting" role="status" aria-live="polite">
+            <span class="dot"></span><span id="live-text">Connecting</span>
+          </div>
+          <button id="pause" type="button">Pause</button>
+        </div>
+      </header>
+
+      <section class="kpis" id="kpis" aria-label="Key numbers"></section>
+
+      <section class="grid">
+        <div class="card span8">
+          <div class="card-head">
+            <h2>Events per minute</h2>
+            <span class="sub">Last 30 minutes, all clients</span>
+          </div>
+          <div class="chart" id="events-chart"></div>
+          <details>
+            <summary>Data table</summary>
+            <div id="events-table"></div>
+          </details>
+        </div>
+        <div class="card span4">
+          <div class="card-head">
+            <h2>Activation funnel</h2>
+            <span class="sub">Installs, last 24 hours</span>
+          </div>
+          <div class="bars" id="funnel"></div>
+        </div>
+
+        <div class="card span8">
+          <div class="card-head">
+            <h2>API latency</h2>
+            <div class="legend" id="latency-legend">
+              <span><i class="swatch" style="background: var(--accent); height: 3px"></i>p95</span>
+              <span><i class="swatch" style="background: var(--n500)"></i>p50</span>
+            </div>
+          </div>
+          <div class="chart" id="latency-chart"></div>
+          <details>
+            <summary>Data table</summary>
+            <div id="latency-table"></div>
+          </details>
+        </div>
+        <div class="card span4">
+          <div class="card-head">
+            <h2>Users by region</h2>
+            <span class="sub">Onboarded installs</span>
+          </div>
+          <div class="bars" id="regions"></div>
+        </div>
+
+        <div class="card span6">
+          <div class="card-head">
+            <h2>API routes</h2>
+            <span class="sub">Last hour</span>
+          </div>
+          <div id="routes"></div>
+        </div>
+        <div class="card span6">
+          <div class="card-head">
+            <h2>Screens</h2>
+            <span class="sub">Views, last hour</span>
+          </div>
+          <div class="bars" id="screens"></div>
+        </div>
+
+        <div class="card span6">
+          <div class="card-head">
+            <h2>EIA ingest runs</h2>
+            <span class="sub">Newest first</span>
+          </div>
+          <div id="ingest"></div>
+        </div>
+        <div class="card span6">
+          <div class="card-head">
+            <h2>Events by name</h2>
+            <span class="sub">Last hour</span>
+          </div>
+          <div class="bars" id="event-counts"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Recent events</h2>
+            <span class="sub">Anonymous; props as sent</span>
+          </div>
+          <div class="scroll" id="recent"></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      'use strict';
+      // Data source. Mock backend (default): same origin, live stream. Live Supabase:
+      //   ?metrics=https://<ref>.supabase.co/functions/v1/admin-metrics&token=<ADMIN_TOKEN> (polled).
+      const params = new URLSearchParams(location.search);
+      const token = params.get('token') || 'mock-admin';
+      const metricsUrl = params.get('metrics') || '/admin/api/metrics';
+      const streamUrl = params.has('metrics') ? null : params.get('stream') || '/admin/api/stream';
+      const POLL_MS = 10000;
+
+      const $ = (id) => document.getElementById(id);
+      function el(tag, attrs, ...children) {
+        const n = document.createElement(tag);
+        for (const [k, v] of Object.entries(attrs || {})) {
+          if (k === 'style') n.style.cssText = v;
+          else if (k.startsWith('data-')) n.setAttribute(k, v);
+          else n[k] = v;
+        }
+        for (const c of children.flat()) if (c != null) n.append(c instanceof Node ? c : String(c));
+        return n;
+      }
+      const svgEl = (tag, attrs) => {
+        const n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
+        return n;
+      };
+      const fmt = (v, d = 0) =>
+        v == null
+          ? '–'
+          : Number(v).toLocaleString('en-US', {
+              maximumFractionDigits: d,
+              minimumFractionDigits: d,
+            });
+      const time = (iso) =>
+        new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+      const timeSec = (iso) =>
+        new Date(iso).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          second: '2-digit',
+        });
+
+      let paused = false;
+      $('pause').addEventListener('click', () => {
+        paused = !paused;
+        $('pause').textContent = paused ? 'Resume' : 'Pause';
+        setLive(paused ? 'paused' : 'live', paused ? 'Paused' : 'Live');
+      });
+      function setLive(state, text) {
+        $('live').dataset.state = state;
+        $('live-text').textContent = text;
+      }
+
+      function renderKpis(k) {
+        const tiles = [
+          ['Active now', fmt(k.activeNow), 'installs, last 5 min'],
+          ['Active today', fmt(k.active24h), 'installs, last 24 h'],
+          ['Sessions', fmt(k.sessions1h), 'last hour'],
+          ['Events / min', fmt(k.eventsPerMin, 1), 'last 5 min'],
+          ['Requests / min', fmt(k.requestsPerMin, 1), 'API, last 5 min'],
+          ['API p95', k.apiP95Ms == null ? '–' : fmt(k.apiP95Ms) + ' ms', 'last 5 min'],
+          [
+            'API errors',
+            k.apiErrorRate == null ? '–' : fmt(k.apiErrorRate * 100, 1) + '%',
+            '5xx, last 5 min',
+          ],
+          ['Pro purchases', fmt(k.purchases24h), 'last 24 h'],
+        ];
+        $('kpis').replaceChildren(
+          ...tiles.map(([label, value, note]) =>
+            el(
+              'div',
+              { className: 'tile' },
+              el('span', { className: 'label' }, label),
+              el('span', { className: 'value' }, value),
+              el('span', { className: 'note' }, note),
+            ),
+          ),
+        );
+      }
+
+      /** One-axis time chart. series: [{key,label,color,width,area}] — at most one emphasized series. */
+      function timeChart(host, points, series, unit) {
+        host.replaceChildren();
+        const W = Math.max(280, host.clientWidth || 600),
+          H = 180,
+          L = 36,
+          B = 22,
+          T = 8;
+        const vals = points.flatMap((p) => series.map((s) => p[s.key])).filter((v) => v != null);
+        const max = Math.max(1, ...vals);
+        const step = niceStep(max);
+        const top = Math.ceil(max / step) * step;
+        const x = (i) => L + (i / Math.max(1, points.length - 1)) * (W - L - 4);
+        const y = (v) => T + (1 - v / top) * (H - T - B);
+        const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, height: H, role: 'img' });
+        const axis = svgEl('g', { class: 'axis' });
+        for (let g = 0; g <= top + 1e-9; g += step) {
+          axis.append(svgEl('line', { x1: L, x2: W - 4, y1: y(g), y2: y(g), class: 'grid-line' }));
+          const t = svgEl('text', { x: L - 6, y: y(g) + 3, 'text-anchor': 'end' });
+          t.textContent = fmt(g);
+          axis.append(t);
+        }
+        points.forEach((p, i) => {
+          if (i % 10 !== 0 && i !== points.length - 1) return;
+          const t = svgEl('text', {
+            x: x(i),
+            y: H - 6,
+            'text-anchor': i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle',
+          });
+          t.textContent = time(p.t);
+          axis.append(t);
+        });
+        svg.append(axis);
+        for (const s of series) {
+          let d = '';
+          points.forEach((p, i) => {
+            const v = p[s.key];
+            if (v == null) return;
+            d += (d ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1);
+          });
+          if (!d) continue;
+          if (s.area) {
+            const first = points.findIndex((p) => p[s.key] != null);
+            const last =
+              points.length - 1 - [...points].reverse().findIndex((p) => p[s.key] != null);
+            svg.append(
+              svgEl('path', {
+                d: d + `L${x(last)} ${y(0)}L${x(first)} ${y(0)}Z`,
+                fill: s.color,
+                'fill-opacity': 0.14,
+              }),
+            );
+          }
+          svg.append(
+            svgEl('path', {
+              d,
+              fill: 'none',
+              stroke: s.color,
+              'stroke-width': s.width,
+              'stroke-linejoin': 'round',
+              'stroke-linecap': 'round',
+            }),
+          );
+          // A minute with no neighbours draws no line segment, so mark it.
+          points.forEach((p, i) => {
+            if (p[s.key] == null) return;
+            if (points[i - 1]?.[s.key] != null || points[i + 1]?.[s.key] != null) return;
+            svg.append(
+              svgEl('circle', {
+                cx: x(i),
+                cy: y(p[s.key]),
+                r: 4,
+                fill: s.color,
+                stroke: 'var(--surface)',
+                'stroke-width': 2,
+              }),
+            );
+          });
+          // Direct label at the last value.
+          const lastI =
+            points.length - 1 - [...points].reverse().findIndex((p) => p[s.key] != null);
+          if (series.length > 1 && points[lastI]) {
+            const t = svgEl('text', {
+              x: x(lastI) - 4,
+              y: y(points[lastI][s.key]) - 6,
+              'text-anchor': 'end',
+              fill: 'var(--n300)',
+              'font-size': 10,
+            });
+            t.textContent = s.label;
+            svg.append(t);
+          }
+        }
+        // Hover layer: crosshair + tooltip, snapping to the nearest minute.
+        const cross = svgEl('line', {
+          y1: T,
+          y2: H - B,
+          stroke: 'var(--n600)',
+          visibility: 'hidden',
+        });
+        const dots = series.map((s) =>
+          svgEl('circle', {
+            r: 4,
+            fill: s.color,
+            stroke: 'var(--surface)',
+            'stroke-width': 2,
+            visibility: 'hidden',
+          }),
+        );
+        svg.append(cross, ...dots);
+        const tip = el('div', { className: 'tooltip' });
+        const hit = svgEl('rect', { x: L, y: 0, width: W - L, height: H, fill: 'transparent' });
+        hit.addEventListener('pointermove', (ev) => {
+          const r = svg.getBoundingClientRect();
+          const fx = ((ev.clientX - r.left) / r.width) * W;
+          const i = Math.max(
+            0,
+            Math.min(points.length - 1, Math.round(((fx - L) / (W - L - 4)) * (points.length - 1))),
+          );
+          const p = points[i];
+          cross.setAttribute('x1', x(i));
+          cross.setAttribute('x2', x(i));
+          cross.setAttribute('visibility', 'visible');
+          series.forEach((s, k) => {
+            if (p[s.key] == null) return dots[k].setAttribute('visibility', 'hidden');
+            dots[k].setAttribute('cx', x(i));
+            dots[k].setAttribute('cy', y(p[s.key]));
+            dots[k].setAttribute('visibility', 'visible');
+          });
+          tip.replaceChildren(
+            el('div', {}, el('b', {}, time(p.t))),
+            ...series.map((s) =>
+              el(
+                'div',
+                {},
+                `${s.label}: ${fmt(p[s.key], unit === 'ms' ? 1 : 0)}${unit === 'ms' && p[s.key] != null ? ' ms' : ''}`,
+              ),
+            ),
+          );
+          tip.style.display = 'block';
+          const left = (x(i) / W) * r.width;
+          tip.style.left = Math.min(r.width - tip.offsetWidth, Math.max(0, left + 12)) + 'px';
+          tip.style.top = '8px';
+        });
+        hit.addEventListener('pointerleave', () => {
+          tip.style.display = 'none';
+          cross.setAttribute('visibility', 'hidden');
+          dots.forEach((d) => d.setAttribute('visibility', 'hidden'));
+        });
+        svg.append(hit);
+        svg.setAttribute(
+          'aria-label',
+          series.map((s) => `${s.label}: latest ${fmt(points.at(-1)?.[s.key], 1)}`).join('; '),
+        );
+        host.append(svg, tip);
+      }
+      function niceStep(max) {
+        const raw = max / 4,
+          pow = 10 ** Math.floor(Math.log10(raw)),
+          n = raw / pow;
+        return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow;
+      }
+
+      /** Ranked horizontal bars, one hue, largest first; share shown against the first row or the max. */
+      function bars(host, rows, emptyText, shareOf) {
+        if (!rows.length) return host.replaceChildren(el('div', { className: 'empty' }, emptyText));
+        const max = Math.max(1, ...rows.map((r) => r.value));
+        host.replaceChildren(
+          ...rows.map((r) => {
+            const share = shareOf ? (shareOf ? r.value / Math.max(1, shareOf) : null) : null;
+            return el(
+              'div',
+              {
+                className: 'bar-row',
+                title: `${r.label}: ${fmt(r.value)}${share != null ? ` (${fmt(share * 100)}%)` : ''}`,
+              },
+              el('span', { className: 'name' }, r.label),
+              el(
+                'div',
+                { className: 'bar-track' },
+                el('div', { className: 'bar-fill', style: `width:${(r.value / max) * 100}%` }),
+              ),
+              el(
+                'span',
+                { className: 'val' },
+                fmt(r.value),
+                share != null ? el('span', { className: 'pct' }, ` ${fmt(share * 100)}%`) : null,
+              ),
+            );
+          }),
+        );
+      }
+
+      function table(host, cols, rows, emptyText) {
+        if (!rows.length) return host.replaceChildren(el('div', { className: 'empty' }, emptyText));
+        host.replaceChildren(
+          el(
+            'table',
+            {},
+            el(
+              'thead',
+              {},
+              el(
+                'tr',
+                {},
+                cols.map((c) => el('th', { className: c.num ? 'num' : '' }, c.label)),
+              ),
+            ),
+            el(
+              'tbody',
+              {},
+              rows.map((r) =>
+                el(
+                  'tr',
+                  {},
+                  cols.map((c) => {
+                    const v = c.get(r);
+                    return el(
+                      'td',
+                      { className: (c.num ? 'num ' : '') + (c.mono ? 'mono' : '') },
+                      v,
+                    );
+                  }),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      let last = null;
+      function render(m) {
+        last = m;
+        renderKpis(m.kpis);
+        timeChart(
+          $('events-chart'),
+          m.eventsPerMinute,
+          [{ key: 'count', label: 'Events', color: 'var(--accent)', width: 2, area: true }],
+          'count',
+        );
+        table(
+          $('events-table'),
+          [
+            { label: 'Minute', get: (r) => time(r.t) },
+            { label: 'Events', num: true, get: (r) => fmt(r.count) },
+          ],
+          m.eventsPerMinute,
+          '',
+        );
+        if (m.latencyPerMinute) {
+          // Emphasis: p95 is the point (accent); p50 is context (gray). One axis, milliseconds.
+          timeChart(
+            $('latency-chart'),
+            m.latencyPerMinute,
+            [
+              { key: 'p50', label: 'p50', color: 'var(--n500)', width: 1.5 },
+              { key: 'p95', label: 'p95', color: 'var(--accent)', width: 2.2 },
+            ],
+            'ms',
+          );
+          table(
+            $('latency-table'),
+            [
+              { label: 'Minute', get: (r) => time(r.t) },
+              { label: 'Requests', num: true, get: (r) => fmt(r.count) },
+              { label: 'p50 ms', num: true, get: (r) => fmt(r.p50, 1) },
+              { label: 'p95 ms', num: true, get: (r) => fmt(r.p95, 1) },
+            ],
+            m.latencyPerMinute,
+            '',
+          );
+        } else {
+          $('latency-chart').replaceChildren(
+            el(
+              'div',
+              { className: 'empty' },
+              'API latency comes from request logs; on the live project see Supabase logs.',
+            ),
+          );
+        }
+        const opened = m.funnel[0]?.installs || 0;
+        bars(
+          $('funnel'),
+          m.funnel.map((f) => ({ label: f.label, value: f.installs })),
+          'No installs yet.',
+          opened,
+        );
+        bars(
+          $('regions'),
+          m.regions.map((r) => ({ label: r.label, value: r.installs })),
+          'No onboarding yet.',
+        );
+        bars(
+          $('screens'),
+          m.screens.slice(0, 10).map((s) => ({ label: s.screen, value: s.views })),
+          'No screen views in the last hour.',
+        );
+        bars(
+          $('event-counts'),
+          m.eventCounts.slice(0, 12).map((e) => ({ label: e.name, value: e.count })),
+          'No events in the last hour.',
+        );
+        if (m.routes) {
+          table(
+            $('routes'),
+            [
+              { label: 'Route', mono: true, get: (r) => r.route },
+              { label: 'Requests', num: true, get: (r) => fmt(r.requests) },
+              { label: 'p50', num: true, get: (r) => fmt(r.p50, 1) + ' ms' },
+              { label: 'p95', num: true, get: (r) => fmt(r.p95, 1) + ' ms' },
+              { label: 'Errors', num: true, get: (r) => fmt(r.errors) },
+            ],
+            m.routes,
+            'No API traffic in the last hour.',
+          );
+        } else {
+          $('routes').replaceChildren(
+            el(
+              'div',
+              { className: 'empty' },
+              'Per-route figures come from request logs; on the live project see Supabase logs.',
+            ),
+          );
+        }
+        table(
+          $('ingest'),
+          [
+            { label: 'Run', num: true, get: (r) => '#' + r.id },
+            { label: 'Started', get: (r) => timeSec(r.startedAt) },
+            {
+              label: 'Status',
+              get: (r) =>
+                el(
+                  'span',
+                  { className: 'status', 'data-s': r.status },
+                  r.status === 'succeeded' ? '✓' : r.status === 'failed' ? '✕' : '…',
+                  ' ',
+                  r.status[0].toUpperCase() + r.status.slice(1),
+                ),
+            },
+            { label: 'Rows', num: true, get: (r) => fmt(r.rows) },
+            {
+              label: 'Missing series',
+              get: (r) => (r.missing.length ? r.missing.join(', ') : 'None'),
+            },
+          ],
+          m.ingest,
+          'No ingest runs yet.',
+        );
+        table(
+          $('recent'),
+          [
+            { label: 'Time', get: (r) => timeSec(r.at) },
+            { label: 'Event', get: (r) => r.name },
+            { label: 'Platform', get: (r) => r.platform },
+            { label: 'Props', mono: true, get: (r) => JSON.stringify(r.props) },
+          ],
+          m.recent,
+          'No events yet. Open the app or run a load test.',
+        );
+        $('source').textContent =
+          `${params.has('metrics') ? 'Live project' : 'Mock backend'} · updated ${timeSec(m.generatedAt)}`;
+      }
+      window.addEventListener('resize', () => last && render(last));
+
+      function onSnapshot(m) {
+        if (!paused) {
+          render(m);
+          setLive('live', 'Live');
+        }
+      }
+
+      async function poll() {
+        try {
+          const res = await fetch(metricsUrl, { headers: { 'x-admin-token': token } });
+          if (!res.ok)
+            throw new Error(res.status === 401 ? 'Admin token rejected' : 'HTTP ' + res.status);
+          onSnapshot(await res.json());
+        } catch (e) {
+          setLive('error', e.message);
+        }
+        setTimeout(poll, POLL_MS);
+      }
+
+      if (streamUrl && 'EventSource' in window) {
+        const es = new EventSource(`${streamUrl}?token=${encodeURIComponent(token)}`);
+        es.onmessage = (e) => onSnapshot(JSON.parse(e.data));
+        es.onerror = () => setLive('error', 'Reconnecting');
+      } else {
+        poll();
+      }
+    </script>
+  </body>
+</html>

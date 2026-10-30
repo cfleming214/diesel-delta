@@ -11,6 +11,7 @@ const backend = createMockBackend({
   jitterMs: Number(process.env.MOCK_JITTER_MS ?? 50),
   errorRate: Number(process.env.MOCK_ERROR_RATE ?? 0),
   ingestSecret: process.env.INGEST_SECRET,
+  adminToken: process.env.ADMIN_TOKEN,
 });
 
 void (async () => {
@@ -19,5 +20,6 @@ void (async () => {
   server.listen(port, () => {
     console.log(`mock backend on http://localhost:${port}`);
     console.log(`ingest-eia: ${JSON.stringify(ingest)}`);
+    console.log(`admin: http://localhost:${port}/admin?token=${backend.adminToken}`);
   });
 })();

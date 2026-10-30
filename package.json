@@ -14,7 +14,7 @@
     "test": "jest",
     "web": "expo start --web",
     "db:check": "scripts/check-migrations.sh",
-    "functions:check": "cd supabase/functions && deno check --node-modules-dir=none --no-lock ingest-eia/index.ts",
+    "functions:check": "cd supabase/functions && deno check --node-modules-dir=none --no-lock ingest-eia/index.ts admin-metrics/index.ts",
     "functions:test": "cd supabase/functions && deno test --node-modules-dir=none --no-lock && deno fmt --check --single-quote --line-width 100 .",
     "mock:server": "tsx --tsconfig mock-server/tsconfig.json mock-server/index.ts",
     "mock:test": "tsx --tsconfig mock-server/tsconfig.json --test mock-server/*.test.ts",

@@ -78,6 +78,15 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=mock-anon-key npm start
 
 On a phone, use your computer's LAN address instead of `localhost`. `MOCK_LATENCY_MS`, `MOCK_JITTER_MS` and `MOCK_ERROR_RATE` simulate slow or failing networks. Tests: `npm run mock:test`.
 
+## Admin dashboard
+
+A live metrics dashboard for operators: active installs, events and API requests per minute, API latency (p50/p95), the activation funnel (open → ZIP → basket → share → Pro), installs by region, screen views, per-route latency and errors, EIA ingest runs and a feed of recent events. Every chart has a hover tooltip and a data table.
+
+- **Mock:** with `npm run mock:server` running, open http://localhost:54321/admin?token=mock-admin. It updates every 2 seconds over server-sent events. Set `ADMIN_TOKEN` to change the token.
+- **Live Supabase:** deploy the `admin-metrics` function and set its secret (`supabase secrets set ADMIN_TOKEN=…`), then open the same page with `?metrics=https://<ref>.supabase.co/functions/v1/admin-metrics&token=…`. It polls every 10 seconds. API latency figures come from the mock's request log, so they show as "–" against Supabase (use the Supabase dashboard's API reports there).
+
+Metrics are computed by `supabase/functions/_shared/metrics.ts`, shared by the mock and the Edge Function, so both views agree.
+
 ## Telemetry
 
 `track()` (`src/lib/telemetry.ts`) records anonymous product events (names in `src/domain/events.ts`) and sends them in batches to the `app_events` table when a backend is configured; otherwise it does nothing. Each event carries a random install ID (not a device or advertising ID), a per-launch session ID, platform and app version. Props never include ZIP codes, search text or receipt contents; location is at most a state. The table is insert-only for clients.

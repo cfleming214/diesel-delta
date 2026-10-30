@@ -418,3 +418,7 @@ enabled = true
 [functions.ingest-eia]
 # Authenticated by the x-ingest-secret header (see supabase/schedule.sql), not a user JWT.
 verify_jwt = false
+
+[functions.admin-metrics]
+# Authenticated by the x-admin-token header (the ADMIN_TOKEN secret), not a user JWT.
+verify_jwt = false
