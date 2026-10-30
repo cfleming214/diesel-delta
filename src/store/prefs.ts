@@ -41,6 +41,9 @@ type Actions = {
   /** Moves the item at `from` to position `to`. */
   moveBasketItem: (from: number, to: number) => void;
   toggleFollow: (id: string) => void;
+  setAlert: (key: keyof AlertPrefs, on: boolean) => void;
+  /** Clamped to 1–15 points. */
+  setTolerance: (pts: number) => void;
   unlockPro: (plan: PlanKey) => void;
   reset: () => void;
 };
@@ -87,6 +90,8 @@ export const usePrefs = create<Prefs & Actions>()(
             : [...s.followed, id],
         })),
       unlockPro: (plan) => set({ isPro: true, plan }),
+      setAlert: (key, on) => set((s) => ({ alerts: { ...s.alerts, [key]: on } })),
+      setTolerance: (pts) => set({ tolerance: Math.min(15, Math.max(1, Math.round(pts))) }),
       reset: () => set(DEFAULT_PREFS),
     }),
     {
