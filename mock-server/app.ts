@@ -9,6 +9,8 @@ import { computeMetrics } from '../supabase/functions/_shared/metrics.ts';
 import { createHandler, type IngestDb } from '../supabase/functions/ingest-eia/handler.ts';
 import { eiaResponse } from './eiaMock';
 import { createMetrics, type Metrics } from './metrics';
+import { claimPriceTasks, createTables, handleRest, RestError, type Row } from './rest';
+import { createRetailMock, isMockRetailer } from './retailMock';
 import { createStore, fuelSeriesDaily, type AppEvent, type Store } from './store';
 
 export type MockOptions = {
@@ -22,6 +24,10 @@ export type MockOptions = {
   adminToken?: string;
   /** How often the live stream pushes a snapshot. */
   streamIntervalMs?: number;
+  /** Key that grants service-role access (writes and private tables), like Supabase's. */
+  serviceKey?: string;
+  /** Requests per second each mock retailer allows before answering 429. Unlimited if unset. */
+  retailRateLimit?: number;
   random?: () => number;
 };
 
@@ -34,7 +40,7 @@ const CORS = {
   'access-control-allow-origin': '*',
   'access-control-allow-headers':
     'authorization, apikey, content-type, prefer, x-client-info, x-ingest-secret',
-  'access-control-allow-methods': 'GET, POST, OPTIONS',
+  'access-control-allow-methods': 'GET, POST, PATCH, DELETE, OPTIONS',
 };
 
 function send(res: ServerResponse, status: number, body?: unknown) {
@@ -66,6 +72,10 @@ export function createMockBackend(opts: MockOptions = {}) {
   const ingestSecret = opts.ingestSecret ?? 'mock-ingest-secret';
   const adminToken = opts.adminToken ?? 'mock-admin';
   const streamMs = opts.streamIntervalMs ?? 2000;
+  const serviceKey = opts.serviceKey ?? 'mock-service-role-key';
+  const tables = createTables(store.runs as unknown as Row[]);
+  const retail = createRetailMock();
+  const retailHits = new Map<string, number[]>();
 
   const snapshot = () =>
     computeMetrics({ events: store.events, requests: metrics.requests, runs: store.runs });
@@ -193,6 +203,51 @@ export function createMockBackend(opts: MockOptions = {}) {
       return (send(res, 201), 201);
     }
 
+    if (path.startsWith('/retail-mock/')) return routeRetail(req, res, url);
+
+    const bearer = (req.headers.authorization ?? '').replace(/^Bearer\s+/i, '');
+    const service = bearer === serviceKey || req.headers.apikey === serviceKey;
+
+    if (req.method === 'POST' && path === '/rest/v1/rpc/claim_price_tasks') {
+      if (!service) return (send(res, 401, { message: 'permission denied' }), 401);
+      const body = (await readJson(req)) as { p_run_id?: number; p_limit?: number };
+      return (
+        send(res, 200, claimPriceTasks(tables, Number(body?.p_run_id), Number(body?.p_limit))),
+        200
+      );
+    }
+
+    const table = path.match(/^\/rest\/v1\/([a-z_]+)$/)?.[1];
+    if (table && table in tables) {
+      try {
+        const out = handleRest(tables, {
+          method: req.method ?? 'GET',
+          table,
+          params: url.searchParams,
+          prefer: String(req.headers.prefer ?? ''),
+          service,
+          body: req.method === 'POST' || req.method === 'PATCH' ? await readJson(req) : undefined,
+        });
+        let body = out.body;
+        if (String(req.headers.accept ?? '').includes('vnd.pgrst.object') && Array.isArray(body)) {
+          if (body.length !== 1) {
+            return (send(res, 406, { message: `expected 1 row, got ${body.length}` }), 406);
+          }
+          body = body[0];
+        }
+        res.writeHead(out.status, {
+          ...CORS,
+          ...out.headers,
+          ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        });
+        res.end(body === undefined ? undefined : JSON.stringify(body));
+        return out.status;
+      } catch (e) {
+        if (!(e instanceof RestError)) throw e;
+        return (send(res, e.status, { message: e.message }), e.status);
+      }
+    }
+
     if (req.method === 'POST' && path === '/functions/v1/ingest-eia') {
       const headers = new Headers();
       for (const [k, v] of Object.entries(req.headers))
@@ -205,6 +260,58 @@ export function createMockBackend(opts: MockOptions = {}) {
     return (send(res, 404, { message: `No route for ${req.method} ${path}` }), 404);
   }
 
+  /** Simulated retailers (see retailMock.ts): robots.txt, store locations, catalog and prices. */
+  function routeRetail(req: IncomingMessage, res: ServerResponse, url: URL): number {
+    const [, , retailer, ...rest] = url.pathname.split('/');
+    const sub = rest.join('/');
+    if (!retailer || !isMockRetailer(retailer) || req.method !== 'GET') {
+      return (send(res, 404, { message: 'unknown retailer' }), 404);
+    }
+    if (opts.retailRateLimit) {
+      const now = Date.now();
+      const hits = (retailHits.get(retailer) ?? []).filter((t) => now - t < 1000);
+      if (hits.length >= opts.retailRateLimit) {
+        res.writeHead(429, { 'retry-after': '1', 'content-type': 'application/json' });
+        res.end(JSON.stringify({ message: 'rate limited' }));
+        return 429;
+      }
+      retailHits.set(retailer, [...hits, now]);
+    }
+    if (sub === 'robots.txt') {
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.end(`User-agent: *\nDisallow: /retail-mock/${retailer}/checkout\n`);
+      return 200;
+    }
+    if (sub === 'locations') {
+      return (send(res, 200, { data: retail.stores[retailer] }), 200);
+    }
+    if (sub === 'catalog') {
+      const all = retail.products[retailer];
+      const offset = Number(url.searchParams.get('offset') ?? 0);
+      const limit = Math.min(Number(url.searchParams.get('limit') ?? 50), 50);
+      const page = all.slice(offset, offset + limit).map(({ itemId: _hidden, ...p }) => p);
+      return (send(res, 200, { data: page, total: all.length }), 200);
+    }
+    if (sub === 'products') {
+      const skus = (url.searchParams.get('skus') ?? '').split(',').filter(Boolean);
+      const locationId = url.searchParams.get('locationId');
+      const date = url.searchParams.get('date') ?? new Date().toISOString().slice(0, 10);
+      if (skus.length === 0 || skus.length > 50) {
+        return (send(res, 400, { message: 'skus must list 1 to 50 products' }), 400);
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return (send(res, 400, { message: 'bad date' }), 400);
+      if (retailer === 'amazon' ? !!locationId : !locationId) {
+        return (send(res, 400, { message: 'locationId is required for store prices only' }), 400);
+      }
+      try {
+        return (send(res, 200, { data: retail.offers(retailer, skus, locationId, date) }), 200);
+      } catch (e) {
+        return (send(res, 404, { message: (e as Error).message }), 404);
+      }
+    }
+    return (send(res, 404, { message: `No route for ${url.pathname}` }), 404);
+  }
+
   async function handle(req: IncomingMessage, res: ServerResponse) {
     const started = performance.now();
     const path = new URL(req.url ?? '/', 'http://localhost').pathname;
@@ -215,7 +322,12 @@ export function createMockBackend(opts: MockOptions = {}) {
       status = e instanceof SyntaxError ? 400 : 500;
       if (!res.headersSent) send(res, status, { message: (e as Error).message });
     } finally {
-      if (req.method !== 'OPTIONS' && !path.startsWith('/admin') && path !== '/health') {
+      if (
+        req.method !== 'OPTIONS' &&
+        !path.startsWith('/admin') &&
+        !path.startsWith('/retail-mock/') &&
+        path !== '/health'
+      ) {
         metrics.record({
           at: Date.now(),
           route: `${req.method} ${path}`,
@@ -226,7 +338,18 @@ export function createMockBackend(opts: MockOptions = {}) {
     }
   }
 
-  return { handle, store, metrics, runIngest, ingestSecret, adminToken, snapshot };
+  return {
+    handle,
+    store,
+    metrics,
+    runIngest,
+    ingestSecret,
+    adminToken,
+    serviceKey,
+    snapshot,
+    tables,
+    retail,
+  };
 }
 
 export type MockBackend = ReturnType<typeof createMockBackend>;
