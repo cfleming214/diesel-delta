@@ -1,4 +1,4 @@
-import type { Icon, IconWeight } from 'phosphor-react-native';
+import type { Icon, IconWeight } from '@/ui/icons';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { alpha, colors, layout, radius } from '@/theme';

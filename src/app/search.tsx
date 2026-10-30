@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Barcode, Check, Link, MagnifyingGlass, Plus } from 'phosphor-react-native';
+import { Barcode, Check, Link, MagnifyingGlass, Plus } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 

@@ -1,4 +1,4 @@
-import { X } from 'phosphor-react-native';
+import { X } from '@/ui/icons';
 import type { ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';

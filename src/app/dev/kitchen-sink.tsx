@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { Barcode, GasPump, MagnifyingGlass, ShareNetwork, Star } from 'phosphor-react-native';
+import { Barcode, GasPump, MagnifyingGlass, ShareNetwork, Star } from '@/ui/icons';
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 

@@ -1,4 +1,4 @@
-import type { Icon } from 'phosphor-react-native';
+import type { Icon } from '@/ui/icons';
 import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps, type TextStyle } from 'react-native';
 

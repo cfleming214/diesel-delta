@@ -1,4 +1,4 @@
-import { DownloadSimple, ShareNetwork } from 'phosphor-react-native';
+import { DownloadSimple, ShareNetwork } from '@/ui/icons';
 import { useRef, useState } from 'react';
 import { StyleSheet, View, type HostInstance } from 'react-native';
 

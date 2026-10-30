@@ -1,4 +1,4 @@
-import { MinusCircle, Star } from 'phosphor-react-native';
+import { MinusCircle, Star } from '@/ui/icons';
 import { StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 

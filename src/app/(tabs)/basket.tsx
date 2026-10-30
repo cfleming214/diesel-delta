@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Plus } from 'phosphor-react-native';
+import { Plus } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

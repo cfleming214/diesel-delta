@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Camera, Info, ShareNetwork, Star } from 'phosphor-react-native';
+import { Camera, Info, ShareNetwork, Star } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

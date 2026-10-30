@@ -1,4 +1,4 @@
-import { CheckCircle } from 'phosphor-react-native';
+import { CheckCircle } from '@/ui/icons';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 

@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Basket, ChartBar, ChartLineUp, Gauge, Receipt, type Icon } from 'phosphor-react-native';
+import { Basket, ChartBar, ChartLineUp, Gauge, Receipt, type Icon } from '@/ui/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { alpha, colors, glow } from '@/theme';

@@ -1,4 +1,4 @@
-import { Camera, PencilSimple } from 'phosphor-react-native';
+import { Camera, PencilSimple } from '@/ui/icons';
 import { useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
