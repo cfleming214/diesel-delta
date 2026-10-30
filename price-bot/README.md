@@ -36,7 +36,7 @@ npm run bot -- report [--days 30] [--end 2026-10-30] [--out dir] [--no-pdf]
 | `MOCK_RETAIL_URL` | `SUPABASE_URL` | Where the simulated retailers live. |
 
 - **`--dry-run`:** starts a mock server inside the process, so nothing outside it is touched.
-- **`simulate`:** replays past days and refuses any source that isn't a mock retailer.
+- **`simulate`:** replays past days and refuses any source that isn't a mock retailer. Because the retailers are simulated, it skips the politeness wait and raw capture, and carries each day's prices to the next run in memory. A year takes about 15 minutes. Give the mock server more memory for a year (`NODE_OPTIONS=--max-old-space-size=8192`), because it holds about 1.1 million rows.
 - **What runs:** a source runs only if it has an adapter and its `sources.enabled` flag is on. Page sources also need `legal_approved_at`.
 
 ## How a run works

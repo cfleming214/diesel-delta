@@ -26,8 +26,15 @@ export type RunOptions = {
   workers?: number;
   /** Re-match each retailer's listings even if it already has identifiers. */
   discover?: boolean;
+  /**
+   * Latest prices carried between consecutive runs in one process (simulations), so each run
+   * doesn't re-read two weeks of observations. Filled from the database when empty.
+   */
+  carry?: Carry;
   log?: (msg: string) => void;
 };
+
+export type Carry = Map<string, Previous & { day: string }>;
 
 export type SourceSummary = {
   tasks: number;
@@ -155,8 +162,10 @@ export async function runDay(opts: RunOptions): Promise<RunSummary> {
     log(`queued ${tasks.length} fetches`);
 
     // The latest earlier observation per item × retailer × store, for jump and size checks.
-    const previous = new Map<string, Previous & { day: string }>();
-    for (const o of await db.observations(addDays(day, -LOOKBACK_DAYS), day)) {
+    const previous: Carry = opts.carry ?? new Map();
+    const fromDb =
+      previous.size === 0 ? await db.observations(addDays(day, -LOOKBACK_DAYS), day) : [];
+    for (const o of fromDb) {
       const k = key(o.item_id, o.retailer_id, o.store_id);
       const p = previous.get(k);
       if (!p || o.day > p.day) {
@@ -170,6 +179,7 @@ export async function runDay(opts: RunOptions): Promise<RunSummary> {
 
     const adapters = new Map(active.map((a) => [a.sourceId, a]));
     const filled = new Set<string>();
+    const latest: [string, Previous & { day: string }][] = [];
     let sizeChanges = 0;
 
     async function process(task: { id: number; payload: Record<string, unknown> }) {
@@ -237,6 +247,10 @@ export async function runDay(opts: RunOptions): Promise<RunSummary> {
           raw_ref: rawRef,
         });
         filled.add(`${item.id}|${t.retailerId}`);
+        latest.push([
+          key(item.id, t.retailerId, t.storeId),
+          { day, regularPrice: n.regularPrice, size: n.size },
+        ]);
         if (v.sizeChange) {
           sizeChanges++;
           events.push({
@@ -281,6 +295,8 @@ export async function runDay(opts: RunOptions): Promise<RunSummary> {
       }
     }
     await Promise.all(Array.from({ length: opts.workers ?? 4 }, worker));
+    // Today's prices become the comparison point for the next run (after all checks used the old).
+    for (const [k, v] of latest) previous.set(k, v);
 
     const retailers = new Set(active.map((a) => a.retailerId));
     const possible = opts.items.length * retailers.size;

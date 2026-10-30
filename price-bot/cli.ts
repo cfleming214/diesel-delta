@@ -19,7 +19,7 @@ import type { SourceAdapter } from './adapters/types';
 import { loadCatalog } from './catalog';
 import { type BotDb, createBotDb } from './db';
 import { createPoliteHttp } from './http';
-import { runDay, type RunSummary } from './pipeline';
+import { type Carry, runDay, type RunSummary } from './pipeline';
 import { fileRawStore } from './raw';
 import { buildReport, loadReportData, renderReport, writePdf } from './report';
 
@@ -31,9 +31,13 @@ export function userAgent(contactUrl: string) {
 }
 
 /** Adapters available in this build. Real sources (kroger-api, ...) arrive in P3 and P4. */
-export function buildAdapters(baseUrl: string, only?: string[]): SourceAdapter[] {
+export function buildAdapters(
+  baseUrl: string,
+  only?: string[],
+  opts: { minIntervalMs?: number } = {},
+): SourceAdapter[] {
   const all = (['kroger', 'walmart', 'amazon'] as const).map((retailerId) =>
-    mockAdapter({ retailerId, baseUrl }),
+    mockAdapter({ retailerId, baseUrl, minIntervalMs: opts.minIntervalMs }),
   );
   return only ? all.filter((a) => only.includes(a.sourceId)) : all;
 }
@@ -149,12 +153,22 @@ async function main() {
       await assertMockOnly(db, adapters);
       const days = Number(values.days ?? 30);
       const end = values.end ?? today();
+      // Simulated retailers only: no politeness wait and no raw capture, so a year runs quickly.
+      const fast = buildAdapters(process.env.MOCK_RETAIL_URL ?? url, values.sources?.split(','), {
+        minIntervalMs: 0,
+      });
+      const simHttp = createPoliteHttp({
+        userAgent: userAgent(contactUrl),
+        isEnabled: (id) => db.isEnabled(id),
+      });
+      const carry: Carry = new Map();
       for (let i = days - 1; i >= 0; i--) {
         const s = await runDay({
           db,
-          http,
-          adapters,
+          http: simHttp,
+          adapters: fast,
           items,
+          carry,
           day: addDays(end, -i),
           discover: i === days - 1 && values.discover,
           workers,

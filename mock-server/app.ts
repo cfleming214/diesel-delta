@@ -9,7 +9,15 @@ import { computeMetrics } from '../supabase/functions/_shared/metrics.ts';
 import { createHandler, type IngestDb } from '../supabase/functions/ingest-eia/handler.ts';
 import { eiaResponse } from './eiaMock';
 import { createMetrics, type Metrics } from './metrics';
-import { claimPriceTasks, createTables, handleRest, RestError, type Row } from './rest';
+import {
+  basketDaily,
+  claimPriceTasks,
+  createTables,
+  handleRest,
+  itemPricesOn,
+  RestError,
+  type Row,
+} from './rest';
 import { createRetailMock, isMockRetailer } from './retailMock';
 import { createStore, fuelSeriesDaily, type AppEvent, type Store } from './store';
 
@@ -215,6 +223,28 @@ export function createMockBackend(opts: MockOptions = {}) {
         send(res, 200, claimPriceTasks(tables, Number(body?.p_run_id), Number(body?.p_limit))),
         200
       );
+    }
+
+    if (req.method === 'POST' && path === '/rest/v1/rpc/item_prices_on') {
+      const body = (await readJson(req)) as { p_days?: string[] };
+      if (!Array.isArray(body?.p_days))
+        return (send(res, 400, { message: 'p_days is required' }), 400);
+      return (send(res, 200, itemPricesOn(tables, body.p_days)), 200);
+    }
+    if (req.method === 'POST' && path === '/rest/v1/rpc/basket_daily') {
+      const b = (await readJson(req)) as {
+        p_from?: string;
+        p_to?: string;
+        p_items?: string[];
+        p_retailer?: string;
+      };
+      if (!b?.p_from || !b.p_to || !Array.isArray(b.p_items) || !b.p_retailer) {
+        return (
+          send(res, 400, { message: 'p_from, p_to, p_items and p_retailer are required' }),
+          400
+        );
+      }
+      return (send(res, 200, basketDaily(tables, b.p_from, b.p_to, b.p_items, b.p_retailer)), 200);
     }
 
     const table = path.match(/^\/rest\/v1\/([a-z_]+)$/)?.[1];

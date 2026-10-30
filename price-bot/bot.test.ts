@@ -286,6 +286,18 @@ describe('daily run against the mock server', () => {
     );
   });
 
+  test('carries prices between consecutive runs without re-reading them', async () => {
+    const carry = new Map();
+    await runDay({ db, http: http(), adapters, items, day: '2026-10-04', carry });
+    assert.ok(carry.size > 2900, `carried ${carry.size}`);
+    // Ice cream shrinks at Amazon on 2026-10-05; the carried size catches it.
+    const s = await runDay({ db, http: http(), adapters, items, day: '2026-10-05', carry });
+    assert.equal(s.sizeChanges, 1);
+    // Everything published today replaces the carried price; held prices keep the earlier one.
+    const today = [...carry.values()].filter((p) => p.day === '2026-10-05').length;
+    assert.ok(today >= carry.size - 10 && today < carry.size + 1, `${today} of ${carry.size}`);
+  });
+
   test('skips a disabled source', async () => {
     await db.disableSource('mock-amazon', 'test');
     const s = await runDay({ db, http: http(), adapters, items, day: '2026-10-13' });

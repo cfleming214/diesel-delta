@@ -307,3 +307,63 @@ export function claimPriceTasks(tables: Record<string, TableDef>, runId: number,
   }
   return claimed;
 }
+
+const medianOf = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
+};
+const round4 = (n: number) => Math.round(n * 1e4) / 1e4;
+
+/** Same contract as the SQL item_prices_on(): national (median) price per item × retailer × day. */
+export function itemPricesOn(tables: Record<string, TableDef>, days: string[]) {
+  const want = new Set(days);
+  const groups = new Map<string, number[]>();
+  for (const o of tables.price_observations!.rows) {
+    if (!want.has(String(o.day))) continue;
+    const k = `${o.day}|${o.item_id}|${o.retailer_id}`;
+    (groups.get(k) ?? groups.set(k, []).get(k)!).push(Number(o.regular_price));
+  }
+  return [...groups]
+    .map(([k, prices]) => {
+      const [day, item_id, retailer_id] = k.split('|');
+      return { day, item_id, retailer_id, price: round4(medianOf(prices)), stores: prices.length };
+    })
+    .sort(
+      (a, b) =>
+        a.day!.localeCompare(b.day!) ||
+        a.item_id!.localeCompare(b.item_id!) ||
+        a.retailer_id!.localeCompare(b.retailer_id!),
+    );
+}
+
+/** Same contract as the SQL basket_daily(): daily basket cost at one retailer. */
+export function basketDaily(
+  tables: Record<string, TableDef>,
+  from: string,
+  to: string,
+  items: string[],
+  retailer: string,
+) {
+  const want = new Set(items);
+  const groups = new Map<string, number[]>();
+  for (const o of tables.price_observations!.rows) {
+    const day = String(o.day);
+    if (o.retailer_id !== retailer || day < from || day > to || !want.has(String(o.item_id))) {
+      continue;
+    }
+    const k = `${day}|${o.item_id}`;
+    (groups.get(k) ?? groups.set(k, []).get(k)!).push(Number(o.regular_price));
+  }
+  const byDay = new Map<string, { cost: number; items: number }>();
+  for (const [k, prices] of groups) {
+    const day = k.slice(0, k.indexOf('|'));
+    const d = byDay.get(day) ?? { cost: 0, items: 0 };
+    d.cost += medianOf(prices);
+    d.items++;
+    byDay.set(day, d);
+  }
+  return [...byDay]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([day, d]) => ({ day, cost: round4(d.cost), items: d.items }));
+}
