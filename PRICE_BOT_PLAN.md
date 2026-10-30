@@ -8,6 +8,8 @@ It builds on "Daily Multi-Retailer Price Scraper" in `FEATURES.md` and the price
 2. **No rotating residential proxies, and no workarounds for bot protection.**
 3. **A Postgres job queue instead of Temporal.**
 
+**v1 scope (decided):** Kroger, Walmart and Amazon, plus prices that users contribute from their receipts, collected daily. Target, Costco and Albertsons are added later. Until then, their prices come only from user contributions (§3.1).
+
 ---
 
 ## 1. Goals
@@ -42,7 +44,7 @@ These are design constraints, not afterthoughts. Retailer terms of service commo
    Tier 4 is used only where the site's terms permit it and counsel has signed off on that source.
 2. **Respect robots.txt and published rate limits.** Default politeness is ≤ 1 request every 5 s per host, a nightly window, and a backoff on 429 or 503.
 3. **Identify the bot honestly.** Use a stable User-Agent with a contact URL. Run from fixed egress IPs, with no rotating residential proxies and no fingerprint spoofing.
-4. **Never bypass access controls.** No logins, no CAPTCHA solving, no circumventing bot protection. If a source starts blocking, the bot pauses that source, alerts, and the source moves to a licensed feed instead.
+4. **Never bypass access controls.** No logins, no CAPTCHA solving, no circumventing bot protection. If a source starts blocking, the bot pauses that source and alerts. The retailer then relies on user contributions until an API or licensed feed is in place.
 5. **Store the minimum:**
    - Store the price, regular or promo flag, size, identifiers and stock.
    - Keep raw responses for 90 days, the dispute window in `FEATURES.md`, and then delete them.
@@ -57,16 +59,37 @@ The rows marked *verify* come from secondary sources. Confirm them on each provi
 | Retailer | Primary source | Price scope | Access needed | Notes |
 | --- | --- | --- | --- | --- |
 | **Kroger** (and banners) | Kroger Developer Products API | Per store (`filter.locationId`) | Free developer account (OAuth client credentials) | Community docs cite 10,000 Products calls/day and a separate Locations quota (*verify*). It is the best first source because it is official, local and free. |
-| **Walmart** | Walmart.io Affiliate API (product lookup) | Online; store-level availability *verify* | Affiliate approval, consumer ID and private key | Returns price, was-price and seller. Restrict to items sold by Walmart, not marketplace sellers. |
-| **Amazon** | Amazon Creators API | Online | Associates account; eligibility rules apply | PA-API 5 was retired in 2026 and replaced by the Creators API (OAuth 2.0). Whole Foods prices online may differ from in-store. |
-| **Target** | Licensed feed (default); page collection only with sign-off | Per store or online | Vendor contract | No public price API is known. |
-| **Costco** | Licensed feed (default) | Warehouse, member pricing | Vendor contract | Warehouse and online prices differ. Sizes are bulk, so compare unit prices. |
-| **Albertsons / Safeway** | Licensed feed (default) | Per store | Vendor contract | Same position as Target. |
+| **Walmart** (v1) | Walmart.io Affiliate API (product lookup); public walmart.com product pages if the API is refused | Online; store-level availability *verify* | Affiliate approval, consumer ID and private key; page collection needs counsel sign-off | Returns price, was-price and seller. Restrict to items sold by Walmart, not marketplace sellers. |
+| **Amazon** (v1) | Amazon Creators API; public amazon.com product pages if the API is refused | Online | Associates account, with eligibility rules; page collection needs counsel sign-off | PA-API 5 was retired in 2026 and replaced by the Creators API (OAuth 2.0). Only items sold by Amazon or Amazon Fresh, not third-party sellers. |
+| **Users** (v1) | Opt-in receipt contributions from the Log tab (§3.1) | Per store, ZIP-3 | None | Covers any store, including Target, Costco and Albertsons before they have a bot source. |
+| **Target** (later) | Licensed feed (default); page collection only with sign-off | Per store or online | Vendor contract | No public price API is known. |
+| **Costco** (later) | Licensed feed (default) | Warehouse, member pricing | Vendor contract | Warehouse and online prices differ. Sizes are bulk, so compare unit prices. |
+| **Albertsons / Safeway** (later) | Licensed feed (default) | Per store | Vendor contract | Same position as Target. |
 | *(benchmark)* **BLS Average Price Data** | `download.bls.gov/pub/time.series/ap/` | U.S. and 4 Census regions, monthly | None (public domain) | About 70 food items. Used for validation bands, history and the citable baseline in the app. It is not a retailer price. |
 
 **Licensed-feed candidates to get quotes from:** grocery price data vendors (for example Datasembly, NielsenIQ or Circana), plus resellers of retailer feeds. Evaluate each on coverage of the six retailers, store-level granularity, history depth, refresh cadence, redistribution rights and price.
 
 The redistribution right is critical. The app shows prices publicly and on share cards.
+
+### 3.1 User contributions
+
+The Log tab already turns a receipt or a manual entry into line items with a store and date. Contributions add an opt-in path from there to the price database.
+
+- **Consent:**
+  - Off by default.
+  - One switch in Insights → Settings, with a plain description, and asked once after a user's first logged receipt.
+  - Turning it off stops new uploads.
+- **What is sent per line:** canonical item ID (matched on device against the catalog, so unmatched lines never leave the phone), price, regular or sale, size, store chain, ZIP-3, purchase date.
+  - The receipt photo, receipt text, full ZIP, install ID and any other line items are never sent.
+  - Each upload carries a fresh random ID and is not linked to the install, so contributions can't be joined into a shopping history.
+- **Endpoint:** a `contribute-prices` Edge Function writes to `contributed_prices` (insert only through the function; no client read access). It is rate-limited to 50 lines per device per day, using a short-lived token and not the install ID.
+- **Trust rules:**
+  - A contributed price is published only after it passes the same unit-price and outlier validation as bot data.
+  - It also needs either agreement within 10% with a bot price for the same item, retailer and region, or 3 independent contributions within 14 days.
+  - Contributions are labelled in Provenance ("Shopper receipts, 4 in the last 2 weeks").
+  - They never set a verdict on their own until the item has ≥ 26 weeks of contributed history.
+- **Abuse:** contributions far from the regional median go to the review queue. A ZIP-3 with sudden volume is held for review.
+- **Privacy:** `docs/launch/PRIVACY.md` and the store privacy labels change, because contributed prices leave the device. They are declared as "Purchases → Purchase history, not linked to the user" (*verify* the category in App Store Connect).
 
 **Later regional chains:** Publix, H-E-B, Aldi, Ahold Delhaize banners and Meijer. They go through the same adapter interface once v1 is stable. The `Store` union in `src/data/types.ts` widens to match.
 
@@ -260,6 +283,7 @@ This is a new migration next to the fuel tables. Market data is public-read unde
 | `price_observations` | One row per item × store/online × capture | `item_id`, `retailer_id`, `store_id`, `captured_at`, `week`, `regular_price`, `promo_price`, `member_price`, `size_qty`, `size_unit`, `unit_price`, `in_stock`, `source_id`, `run_id`, `raw_ref`, `match_confidence` |
 | `price_events` | Detected changes: the ledger | `item_id`, `retailer_id`, `region`, `date`, `from`, `to`, `kind` (`increase`, `decrease`, `size_change`), `fuel_price_at`, `tag` |
 | `price_tasks` | Work queue | `run_id`, `source_id`, `payload`, `state`, `attempts`, `claimed_at`, `error` |
+| `contributed_prices` | Opt-in user receipt prices (§3.1); not readable by clients | `id`, `item_id`, `chain`, `zip3`, `purchased_on`, `price`, `is_sale`, `size_qty`, `size_unit`, `received_at`, `state` (`pending`, `published`, `held`, `rejected`) |
 | `review_queue` | Low-confidence matches and validation holds | `observation_ref`, `reason`, `state`, `decided_by`, `decided_at` |
 
 **Views and RPCs for the app:**
@@ -373,15 +397,27 @@ Each phase ends with a commit, PR and merge, as before. Mock-first throughout: e
 - The matcher eval set and its CI gate.
 - **Exit:** live Kroger data for 150 items × ~10 stores in a staging project, with precision ≥ 98% on audit.
 
-### P4: Walmart and Amazon adapters (≈4 days)
+### P4: Walmart and Amazon adapters (≈1 week)
 - Both online sources, restricted to first-party sellers.
+- Each retailer has an API adapter and a public-page adapter. Whichever has access and sign-off is enabled.
+  - The page adapter reads structured product data only.
+  - It runs through `PoliteHttp`, within §2.
 - Golden tests from recorded responses.
 - **Exit:** three retailers live in staging.
 
-### P5: Licensed feed(s) for Target, Costco and Albertsons (≈1 week, after a vendor is chosen)
-- A bulk-file adapter that maps vendor IDs to `item_identifiers`, plus history backfill if purchased.
-- Page collection is added here only for a source with written legal sign-off, and through `PoliteHttp` only.
-- **Exit:** all six retailers ≥ 90% coverage in staging.
+### P5: User contributions (≈1 week)
+- App side:
+  - The opt-in switch and prompt.
+  - On-device matching of receipt lines to catalog items.
+  - The upload queue, which retries when offline.
+- Server side: the `contribute-prices` Edge Function, the `contributed_prices` table, the trust rules in §3.1 and the abuse holds.
+- `PRIVACY.md` and the permission and settings copy updated.
+- Mock server endpoint, E2E journey for opt-in and contribution, and a load test with contributing virtual users.
+- **Exit:** a contributed Target price from 3 test devices is published with its Provenance label, and a single outlier is held for review.
+
+### Later: Target, Costco and Albertsons (≈1 week each, after a source is chosen)
+- A licensed-feed adapter that maps vendor IDs to `item_identifiers`, plus history backfill if purchased. Or a page adapter, only with written legal sign-off.
+- **Exit:** the retailer ≥ 90% coverage in staging.
 
 ### P6: Validation, aggregates and monitoring (≈4 days)
 - Validation rules, the size-change events, and hysteresis change detection into `price_events`.
@@ -405,7 +441,7 @@ Each phase ends with a commit, PR and merge, as before. Mock-first throughout: e
 - The runbook is written.
 - **Exit:** the store screenshots in `STORE_LISTING.md` are captured from real data.
 
-**Total build effort:** roughly 5–6 weeks, plus P0 approvals and P8 burn-in on the calendar.
+**Total build effort for v1:** roughly 6 weeks, plus P0 approvals and P8 burn-in on the calendar.
 
 ---
 
@@ -415,7 +451,7 @@ Each phase ends with a commit, PR and merge, as before. Mock-first throughout: e
 | --- | --- |
 | Kroger API, BLS | Free |
 | Walmart.io Affiliate, Amazon Creators API | Free, subject to program eligibility and approval |
-| Licensed data (Target, Costco, Albertsons, and possibly history) | The main cost; needs quotes |
+| Licensed data (later: Target, Costco, Albertsons, and possibly history) | Not needed for v1; needs quotes when those retailers are added |
 | Compute (container job, a few hours per day) | Low; tens of dollars a month |
 | Object storage (90 days of raw responses) | Low; a few GB |
 | Supabase | Existing project. `price_observations` grows by about 9k rows a day at full coverage, which is fine on a paid tier; partition by month after year one |
@@ -424,13 +460,13 @@ Each phase ends with a commit, PR and merge, as before. Mock-first throughout: e
 
 ## 12. Risks and open questions
 
-1. **Access approval.** Walmart and Amazon programs can reject or revoke apps that aren't driving affiliate sales, and Amazon's Creators API has eligibility thresholds. Mitigation: the licensed feed covers any retailer the APIs don't.
-2. **Terms of service.** Covered by §2. The default for retailers without an API is a licensed feed, not scraping.
+1. **Access approval.** Walmart and Amazon programs can reject or revoke apps that aren't driving affiliate sales, and Amazon's Creators API has eligibility thresholds. Mitigation: the public-page adapter, with sign-off, and user contributions.
+2. **Terms of service and blocking.** Covered by §2. Walmart and Amazon page collection is the riskiest v1 source: both sites' terms restrict automated access, and both run bot protection. If either blocks the bot, that retailer falls back to user contributions until an API or licence is in place.
+3. **Thin contributions at launch.** Contributions need users, and users need prices. Kroger, Walmart and Amazon carry launch; contributions fill in over time.
 3. **Online vs in-store prices.** Online prices from Walmart and Amazon can differ from the shelf. The app labels scope in Provenance ("Online price, walmart.com"). Retailer scores compare like with like.
 4. **Matching errors** produce false Gouge Gaps, which are the most damaging failure. Mitigations: the conservative auto-approve threshold, the review queue, the weekly audit, and a verdict that requires ≥ 26 weeks of data.
 5. **The history gap.** See §7. This decides what the app can show at launch.
 6. **Product churn.** Discontinued SKUs and reformulations. The matcher re-resolves weekly, and specs, not SKUs, are the unit of comparison.
-7. **Open questions for the owner:**
-   - What is the budget ceiling for licensed data?
-   - Is it acceptable to launch with Kroger, Walmart and Amazon, adding the other three when a feed is signed?
+8. **Open questions for the owner:**
+   - What is the budget ceiling for licensed data, for Target, Costco and Albertsons later?
    - Should the bot live in this repository (`price-bot/`, sharing types) or its own? This plan assumes this repository, to share `Store`, the domain math and the mock server.
