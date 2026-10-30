@@ -83,3 +83,11 @@ export function useCatalogSearch(query: string) {
     placeholderData: keepPreviousData,
   });
 }
+
+export function useCatalog() {
+  return useQuery({
+    queryKey: queryKeys.catalog,
+    queryFn: () => api.getCatalog(),
+    staleTime: Infinity,
+  });
+}
