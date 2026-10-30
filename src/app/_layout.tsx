@@ -7,7 +7,8 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { QueryProvider } from '@/data';
-import { usePrefsHydrated } from '@/store/prefs';
+import { useAlertRunner } from '@/lib/useAlerts';
+import { usePrefs, usePrefsHydrated } from '@/store/prefs';
 import { colors } from '@/theme';
 import { ToastHost } from '@/ui';
 
@@ -17,6 +18,8 @@ export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium });
   const hydrated = usePrefsHydrated();
   const ready = (fontsLoaded || fontError != null) && hydrated;
+  const onboarded = usePrefs((s) => s.zip != null);
+  useAlertRunner(ready && onboarded);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
