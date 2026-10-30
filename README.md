@@ -91,6 +91,25 @@ Playwright's Chromium must be installed (`npx playwright install chromium`) wher
 
 **Devices (Maestro):** the same journeys live in `.maestro/` and use the same accessibility labels. Install a build on a simulator or device (`npx expo run:ios|android`, or an EAS `preview` build) and run `maestro test .maestro`. Running them on EAS Workflows is on the go-live checklist.
 
+## Stress tests
+
+**Virtual users** (`load/`): each one is an app install that picks a state by population, then runs sessions that replay the app's real network calls:
+- the fuel series RPC for onboarding, Today and Chart variants;
+- batched `app_events` inserts, flushed at 20 events or every 10 s, as the app does.
+
+Between actions it waits a random think time, and it repeats sessions until the run ends.
+
+```sh
+npm run mock:server                         # in one terminal
+npm run load -- --users 500 --ramp 30 --duration 120
+```
+
+The run reports p50/p95/p99 per operation, throughput, error rate and journey completion. It checks them against thresholds (defaults: p95 < 500 ms, p99 < 1000 ms, errors < 1%, ≥ 99% of journeys complete) and writes JSON and Markdown to `load/reports/`. It exits 1 if a threshold fails. Watch it live on the admin dashboard.
+
+To target a live project, pass `--url https://<ref>.supabase.co --key <anon key>` (or set `LOAD_URL` and `LOAD_KEY`). Every insert writes real rows, so use a staging project. `--seed` makes journeys reproducible.
+
+**Browser users:** `npm run load:browsers -- --users 5` runs concurrent Chromium users through onboarding, Today, Chart and Basket against the e2e web build and its mock. It times each step against a p95 limit (`--p95-ms`, default 3000). The browsers share the machine running them, so keep `--users` near its core count.
+
 ## Admin dashboard
 
 A live metrics dashboard for operators: active installs, events and API requests per minute, API latency (p50/p95), the activation funnel (open → ZIP → basket → share → Pro), installs by region, screen views, per-route latency and errors, EIA ingest runs and a feed of recent events. Every chart has a hover tooltip and a data table.

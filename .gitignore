@@ -44,3 +44,4 @@ example
 dist-e2e/
 test-results/
 playwright-report/
+load/reports/
