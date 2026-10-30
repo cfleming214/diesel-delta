@@ -94,7 +94,10 @@ export function LagChart({
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel="Basket and diesel, indexed to 100"
-        accessibilityValue={accessibilityValueText ? { text: accessibilityValueText } : undefined}
+        aria-valuemin={0}
+        aria-valuemax={count - 1}
+        aria-valuenow={k}
+        aria-valuetext={accessibilityValueText}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(e) => {
           const step = e.nativeEvent.actionName === 'increment' ? A11Y_STEP : -A11Y_STEP;

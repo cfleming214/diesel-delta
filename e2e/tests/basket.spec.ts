@@ -1,7 +1,7 @@
 import { drag, expect, test } from '../fixtures';
 
 const rows = (page: import('@playwright/test').Page) =>
-  page.getByRole('button', { name: /, (Gouge Gap|Sticky Price|Tracking Fuel), \$/ });
+  page.getByRole('button', { name: /, (Gouge Gap|Sticky Price|Tracking Fuel), [A-Za-z]+, \$/ });
 
 test.beforeEach(async ({ onboarded: page }) => {
   await page.getByRole('tab', { name: 'Basket' }).click();

@@ -10,7 +10,7 @@ describe('Retailer scorecard', () => {
   test('lists chains with grades and expands one at a time', async () => {
     await renderRouter('./src/app', { initialUrl: '/retailers' });
     const costco = await screen.findByLabelText(
-      'Costco, grade B+, 64% rolled back, 212 items tracked',
+      'Grade B+, Costco, 212 items tracked, 64% rolled back',
     );
     expect(screen.getByText('Albertsons')).toBeTruthy();
     expect(screen.queryByLabelText('Produce 78%')).toBeNull();

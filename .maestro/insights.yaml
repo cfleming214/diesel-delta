@@ -11,7 +11,7 @@ name: Alert settings, scorecard and methodology
     text: 'Allow'
     optional: true
 - tapOn: 'Retailer scorecard'
-- assertVisible: "Costco, grade B\\+.*"
+- assertVisible: "Grade B\\+, Costco.*"
 - tapOn: 'Back'
 - tapOn: 'Methodology and sources'
 - assertVisible: '.*Energy Information Administration.*'

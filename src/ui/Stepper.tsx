@@ -1,5 +1,5 @@
 import { Minus, Plus } from '@/ui/icons';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { IconButton } from './IconButton';
 import { Text } from './Text';
@@ -20,15 +20,21 @@ export function Stepper({ value, onChange, min, max, format = String, accessibil
   return (
     <View
       style={styles.row}
-      accessible
-      accessibilityRole="adjustable"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityValue={{ min, max, now: value, text: format(value) }}
-      onAccessibilityAction={(e) => {
-        if (e.nativeEvent.actionName === 'increment') onChange(clamp(value + 1));
-        if (e.nativeEvent.actionName === 'decrement') onChange(clamp(value - 1));
-      }}
-      accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+      // Native: one adjustable element (swipe up/down). Web has no adjustable, and buttons nested in a
+      // slider are invalid ARIA, so it gets a labelled group with the two buttons.
+      {...(Platform.OS === 'web'
+        ? { role: 'group' as const, 'aria-label': accessibilityLabel }
+        : {
+            accessible: true,
+            accessibilityRole: 'adjustable' as const,
+            accessibilityLabel,
+            accessibilityValue: { min, max, now: value, text: format(value) },
+            accessibilityActions: [{ name: 'increment' }, { name: 'decrement' }],
+            onAccessibilityAction: (e: { nativeEvent: { actionName: string } }) => {
+              if (e.nativeEvent.actionName === 'increment') onChange(clamp(value + 1));
+              if (e.nativeEvent.actionName === 'decrement') onChange(clamp(value - 1));
+            },
+          })}
     >
       <IconButton
         icon={Minus}

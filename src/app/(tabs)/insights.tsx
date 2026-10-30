@@ -89,6 +89,7 @@ export default function InsightsScreen() {
           <View
             key={c.category}
             style={styles.catRow}
+            accessible
             accessibilityLabel={`${c.category} ${c.pct}%`}
           >
             <Text variant="bodySmall" style={styles.catName}>

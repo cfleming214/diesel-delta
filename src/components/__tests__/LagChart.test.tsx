@@ -41,7 +41,7 @@ describe('LagChart', () => {
     for (const label of ['94', '96', '98', '100']) expect(tree).toContain(`"${label}"`);
     expect(tree).toContain('M0.0 34.9L4.0 41.4L8.0 49.0');
     expect(tree).toContain('"x1":362');
-    expect(chart.props.accessibilityValue).toEqual({ text: 'Gap 4.0 points on Oct 26' });
+    expect(chart.props['aria-valuetext']).toBe('Gap 4.0 points on Oct 26');
   });
 
   test('dragging snaps to the nearest day with a haptic tick, and release resets', async () => {

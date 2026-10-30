@@ -23,7 +23,7 @@ test('scorecard and methodology are reachable', async ({ onboarded: page }) => {
   await page.getByRole('tab', { name: 'Insights' }).click();
   await page.getByRole('button', { name: 'Retailer scorecard' }).click();
   await expect(page.getByRole('heading', { name: 'Retailer scorecard' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Costco, grade B\+/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Grade B\+, Costco/ })).toBeVisible();
   await page.getByRole('button', { name: 'Back', exact: true }).click();
   await page.getByRole('button', { name: 'Methodology and sources' }).click();
   await expect(page.getByRole('dialog')).toContainText('U.S. Energy Information Administration');
