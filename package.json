@@ -24,7 +24,9 @@
     "load": "tsx --tsconfig load/tsconfig.json load/run.ts",
     "load:browsers": "tsx --tsconfig load/tsconfig.json load/browsers.ts",
     "load:test": "tsx --tsconfig load/tsconfig.json --test load/*.test.ts",
-    "load:typecheck": "tsc -p load/tsconfig.json"
+    "load:typecheck": "tsc -p load/tsconfig.json",
+    "bot:test": "tsx --tsconfig price-bot/tsconfig.json --test price-bot/*.test.ts",
+    "bot:typecheck": "tsc -p price-bot/tsconfig.json"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
