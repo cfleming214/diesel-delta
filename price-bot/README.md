@@ -73,7 +73,7 @@ National prices are the median across a retailer's sampled stores. They come fro
 It contains:
 - **Summary:** a written summary, plus tiles with each retailer's basket and U.S. diesel, each showing 30-day and 1-year change.
 - **Changes at a glance:** a table of the baskets, the average item at each retailer and diesel, each now, 30 days ago and 1 year ago.
-- **Basket index charts:** one over the past year (with a monthly cost table) and one over the last 30 days. The basket is the default-basket items every retailer carries.
+- **Basket index charts:** one over the past year (with a daily cost table) and one over the last 30 days. The basket is the default-basket items every retailer carries.
 - **Retailers:** a scorecard with 30-day and 1-year basket change, and the basket cost by region.
 - **Categories:** 30-day and 1-year change by category.
 - **Biggest movers:** the largest rises and falls over 30 days and over the year.

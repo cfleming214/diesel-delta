@@ -260,6 +260,7 @@ describe('report', () => {
     assert.match(html, /<title>DieselDelta Price Report<\/title>/);
     assert.match(html, /Simulated data\./);
     assert.match(html, /30-day change<\/th>/);
+    assert.match(html, /Basket cost, daily<\/h3>/);
     assert.match(html, /1-year change<\/th>/);
     assert.match(html, /No item fell over the year\./);
     assert.match(html, /8 oz → 7\.5 oz/);

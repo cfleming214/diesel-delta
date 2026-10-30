@@ -726,7 +726,7 @@ export function renderReport(m: ReportModel): string {
     ? ''
     : `<div class="note">1-year changes need prices from ${esc(longDate(m.yearStart))}. ${m.firstDay ? `Collection started ${esc(longDate(m.firstDay))}, so they show as “—” until then.` : ''}</div>`;
 
-  const monthly = `<table class="small"><thead><tr><th>Month</th>${m.basketSeries.map((s) => `<th class="num">${esc(name(s.retailer))}</th>`).join('')}</tr></thead><tbody>${m.yearDays
+  const daily = `<table class="small"><thead><tr><th>Day</th>${m.basketSeries.map((s) => `<th class="num">${esc(name(s.retailer))}</th>`).join('')}</tr></thead><tbody>${m.yearDays
     .map((day, i) => ({ day, i }))
     .filter(
       ({ day, i }) =>
@@ -836,8 +836,8 @@ ${glance}
 <p>The same ${m.basketItems.length} default-basket items at each retailer, indexed to 100 on the first complete day of the year.</p>
 <div class="figure">${lineChart({ days: m.yearDays, series: m.basketSeries.map((s) => ({ retailer: s.retailer, ...s.year })), ticks: 'month', label: `Basket index by retailer, ${m.yearStart} to ${m.to}` })}</div>
 </section>
-<h3>Basket cost, monthly</h3>
-${monthly}
+<h3>Basket cost, daily</h3>
+${daily}
 
 <section class="keep">
 <h2>Basket over the last 30 days</h2>
