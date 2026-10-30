@@ -57,6 +57,12 @@
           "savePhotosPermission": "DieselDelta saves share cards to your photo library.",
           "isAccessMediaLocationEnabled": false
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#9184d9"
+        }
       ]
     ],
     "experiments": {

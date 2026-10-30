@@ -6,3 +6,4 @@ export * from './stats';
 export * from './verdict';
 export * from './chart';
 export * from './receipt';
+export * from './alerts';

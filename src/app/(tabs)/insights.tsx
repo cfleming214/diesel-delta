@@ -19,6 +19,8 @@ import {
 } from '@/data';
 import { alignSeries, money, pct, sgn, windowInfo, windowRange } from '@/domain';
 import { basketIds, usePrefs, type AlertPrefs } from '@/store/prefs';
+import { push } from '@/lib/push';
+import { toast } from '@/store/toast';
 import { useUi } from '@/store/ui';
 import { colors } from '@/theme';
 import { Card, KVRow, Screen, Sheet, Stepper, Text, Toggle } from '@/ui';
@@ -145,7 +147,12 @@ export default function InsightsScreen() {
             </View>
             <Toggle
               value={prefs.alerts[a.key]}
-              onChange={(on) => prefs.setAlert(a.key, on)}
+              onChange={async (on) => {
+                prefs.setAlert(a.key, on);
+                if (on && !(await push.request())) {
+                  toast('Turn on notifications in Settings to get alerts');
+                }
+              }}
               accessibilityLabel={a.title}
             />
           </View>
