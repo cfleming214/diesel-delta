@@ -20,7 +20,11 @@
     "mock:test": "tsx --tsconfig mock-server/tsconfig.json --test mock-server/*.test.ts",
     "mock:typecheck": "tsc -p mock-server/tsconfig.json",
     "e2e:build": "EXPO_PUBLIC_DATA_SOURCE=supabase EXPO_PUBLIC_SUPABASE_URL=http://localhost:54331 EXPO_PUBLIC_SUPABASE_ANON_KEY=mock-anon-key expo export -p web --output-dir dist-e2e",
-    "e2e": "playwright test -c e2e/playwright.config.ts"
+    "e2e": "playwright test -c e2e/playwright.config.ts",
+    "load": "tsx --tsconfig load/tsconfig.json load/run.ts",
+    "load:browsers": "tsx --tsconfig load/tsconfig.json load/browsers.ts",
+    "load:test": "tsx --tsconfig load/tsconfig.json --test load/*.test.ts",
+    "load:typecheck": "tsc -p load/tsconfig.json"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

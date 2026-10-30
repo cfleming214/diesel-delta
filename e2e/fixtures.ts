@@ -22,9 +22,9 @@ export async function drag(
 }
 
 export const test = base.extend<{ onboarded: Page }>({
-  onboarded: async ({ page }, use) => {
+  onboarded: async ({ page }, provide) => {
     await onboard(page);
-    await use(page);
+    await provide(page);
   },
 });
 

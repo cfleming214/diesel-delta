@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": [
+    "./**/*.ts",
+    "../mock-server/**/*.ts",
+    "../src/**/*.ts",
+    "../supabase/functions/**/*.ts"
+  ],
+  "exclude": ["../supabase/functions/**/index.ts", "../supabase/functions/**/*_test.ts"]
+}
