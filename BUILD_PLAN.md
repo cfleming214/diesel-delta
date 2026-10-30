@@ -305,26 +305,55 @@ Each phase ends with a TestFlight build from EAS.
 
 **Done when:** Today shows real EIA diesel for the user's region and opens offline with cached data.
 
-### Phase 5: Log, Insights, Retailers (≈1.5 weeks)
-- Receipt OCR flow with the line parser, the manual form with validation, and on-device history
-- Insights (category bars, region table, toggles, stepper, Methodology sheet) and the Retailer scorecard
+> **Mock-first (decided Oct 30, 2026):** every external service is mocked behind an interface until the
+> live services are connected: OCR, purchases (RevenueCat), push delivery, EIA and Supabase. The mock
+> backend (Phase 7) speaks the same HTTP API as Supabase (`/rest/v1/...`, `/functions/v1/...`), so the
+> app's Supabase data source runs against it unchanged. Going live is configuration, not code.
 
-**Done when:** a photo of a real receipt yields editable lines and saved history survives an app restart.
+### Phase 5: Log, Insights, Retailers
+- Receipt log: camera capture → `OcrProvider` (mock returns sample lines; ML Kit later) → line parser → checkbox list → history; manual form with validation; history persisted on device
+- Insights (category bars, region table, alert toggles, tolerance stepper, Methodology sheet, Pro status) and the Retailer scorecard
 
-### Phase 6: Alerts, share, Pro (≈1.5 weeks)
-- `expo-notifications` permission flow, token registration, `evaluate-alerts`, deep link from a notification to the item
-- Share card capture at the 3 aspects, Save to Photos, native share sheet, `dd.app` short links
-- RevenueCat products, the paywall, entitlement gating (State scope, history beyond 12 months, multiple baskets), restore purchases
+**Done when:** a captured receipt yields editable lines, and saved history survives an app restart.
 
-**Done when:** a sandbox purchase unlocks Pro, a test alert arrives and deep-links correctly, and the exported card is legible on Instagram Stories.
+### Phase 6: Alerts, share, Pro
+- Share card at the 3 aspects (`react-native-view-shot`), Save to Photos, native share sheet
+- Paywall with a `PurchasesProvider` (mock store now, RevenueCat later), entitlement gating, restore purchases
+- Alerts: notification permission, push token registration (`PushProvider`), pure alert-evaluation rules, deep link from a notification to the item
 
-### Phase 7: Hardening + launch (≈1.5 weeks)
-- Accessibility: VoiceOver labels on charts (summary text, plus `accessibilityActions` to step through days), Dynamic Type caps on hero numbers, contrast check of `accent-300` on surfaces
-- Performance profiling (Hermes; FlashList if the basket grows past 40 rows), Sentry (`@sentry/react-native`), EAS Update channels
-- Maestro E2E covering onboarding, scrubbing, add to basket, logging a receipt, sharing and the paywall
-- App Store assets, privacy nutrition label (camera and photos used on device, no tracking), App Review notes for the subscription, then Android parity pass and Play submission
+**Done when:** a mock purchase unlocks Pro and survives restart, an alert notification deep-links to its item, and the exported card renders at all three sizes.
 
-**Total: about 10–11 weeks for one engineer, or 6–7 weeks with a second engineer on the backend.**
+### Phase 7: Mock backend + telemetry (new)
+- `mock-server/`: Node server implementing the Supabase surface the app uses (PostgREST RPC and inserts, `ingest-eia`, `evaluate-alerts`) with a mock EIA feed, in-memory storage and realistic latency
+- Anonymous telemetry: `track()` batches events (no ZIP, no device IDs; state-level only) to an `app_events` table (Supabase migration + mock endpoint)
+
+**Done when:** the app runs end to end against the mock server with `EXPO_PUBLIC_DATA_SOURCE=supabase`.
+
+### Phase 8: Admin dashboard (new)
+- Metrics aggregation (active users, sessions, funnel, events per minute, regions, ingest runs, alerts sent, API latency and errors) served as a snapshot plus a live Server-Sent Events stream
+- Web dashboard at `/admin` in the Nocturne style, updating live; the same views map to SQL views on Supabase later
+
+**Done when:** the dashboard shows activity within seconds of it happening in the app or a load test.
+
+### Phase 9: End-to-end tests (new)
+- Playwright journeys against the web build + mock server: onboarding, scrub, add/remove/reorder basket, item detail, search, receipt logging, share, paywall purchase and restore, alert settings
+- Maestro flows for iOS/Android devices (same journeys), run on EAS or locally
+
+**Done when:** the Playwright suite passes headless here and the Maestro flows are ready for a device run.
+
+### Phase 10: Stress tests simulating users (new)
+- Virtual-user load generator replaying real app journeys (population-weighted states, think time, ramp-up) against the backend; latency percentiles, throughput, error rate and pass/fail thresholds; a JSON + Markdown report
+- Concurrent browser users (Playwright) for front-end load; live view on the admin dashboard
+
+**Done when:** a 500-virtual-user run meets the thresholds against the mock server, and the same script can target a live project by URL and key.
+
+### Phase 11: Hardening + launch prep
+- Accessibility pass, performance (FlashList if lists grow), error reporting behind an interface (Sentry later), EAS Update channels
+- Store metadata, privacy nutrition label, App Review notes; a go-live checklist for every mocked service
+
+**Done when:** everything that can run without store accounts and live keys is green, and the remaining steps are a checklist.
+
+**Total: about 14–15 weeks for one engineer with the added phases, or 8–9 weeks with a second engineer on the backend and testing.**
 
 ---
 
