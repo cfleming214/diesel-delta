@@ -12,6 +12,7 @@ import { usePrefs } from '@/store/prefs';
 import { useUi } from '@/store/ui';
 import { colors } from '@/theme';
 import { Button, IconButton, Screen, ScreenHeader, Seg, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 const CHART_HEIGHT = 230;
 const WINDOW_OPTIONS = WINDOWS.map((w) => ({ value: w.days, label: w.short }));
@@ -50,7 +51,10 @@ export default function TodayScreen() {
               height={CHART_HEIGHT}
               bleed={4}
               index={scrub}
-              onIndexChange={setScrub}
+              onIndexChange={(i) => {
+                if (i == null && scrub != null) track('scrub', { screen: 'today', window });
+                setScrub(i);
+              }}
               accessibilityValueText={`${day}: basket ${b.toFixed(1)}, diesel ${f.toFixed(1)}, gap ${sgn(b - f)} points`}
             />
             <View style={styles.caption}>
@@ -116,6 +120,7 @@ export default function TodayScreen() {
         onChange={(w) => {
           setScrub(null);
           setWindow(w);
+          track('window_change', { window: w, screen: 'today' });
         }}
         options={WINDOW_OPTIONS}
         accessibilityLabel="Window"

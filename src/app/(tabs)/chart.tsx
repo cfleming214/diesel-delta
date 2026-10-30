@@ -20,6 +20,7 @@ import { usePrefs } from '@/store/prefs';
 import { useUi } from '@/store/ui';
 import { colors, fonts } from '@/theme';
 import { Card, Screen, ScreenHeader, Seg, Slider, Tag, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 const CHART_HEIGHT = 250;
 const MAX_LAG_WEEKS = 12;
@@ -117,7 +118,10 @@ export default function ChartScreen() {
           lagDays={lagDays}
           height={CHART_HEIGHT}
           index={scrub}
-          onIndexChange={setScrub}
+          onIndexChange={(i) => {
+            if (i == null && scrub != null) track('scrub', { screen: 'chart', window });
+            setScrub(i);
+          }}
           accessibilityValueText={`${formatDate(dateAtIndex(model.startDate, day))}: gap ${sgn(b - f)} points`}
         />
         <View style={styles.axis}>
@@ -161,6 +165,7 @@ export default function ChartScreen() {
         onChange={(w) => {
           setScrub(null);
           setWindow(w);
+          track('window_change', { window: w, screen: 'chart' });
         }}
         options={WINDOW_OPTIONS}
         accessibilityLabel="Window"

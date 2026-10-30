@@ -1,13 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { useState, type ReactNode } from 'react';
+
+import { track } from '@/lib/telemetry';
 
 const HOUR = 60 * 60 * 1000;
 
 export function createQueryClient() {
   return new QueryClient({
+    queryCache: new QueryCache({
+      onError: (_error, query) =>
+        track('error', { where: 'query', key: String(query.queryKey[0] ?? '') }),
+    }),
     defaultOptions: {
       queries: {
         staleTime: HOUR,

@@ -24,6 +24,7 @@ import { toast } from '@/store/toast';
 import { useUi } from '@/store/ui';
 import { colors } from '@/theme';
 import { Card, KVRow, Screen, Sheet, Stepper, Text, Toggle } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 const REGION_ROWS: RegionKey[] = ['gulf', 'east', 'mid', 'rocky', 'west', 'nat'];
 const REGION_AREAS: FuelArea[] = REGION_ROWS.map((r) => PADD_AREA[r]);
@@ -149,6 +150,7 @@ export default function InsightsScreen() {
               value={prefs.alerts[a.key]}
               onChange={async (on) => {
                 prefs.setAlert(a.key, on);
+                track('alert_toggle', { kind: a.key, on });
                 if (on && !(await push.request())) {
                   toast('Turn on notifications in Settings to get alerts');
                 }

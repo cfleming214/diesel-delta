@@ -12,6 +12,7 @@ import { usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
 import { useUi } from '@/store/ui';
 import { Button, Screen, Seg, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 const ASPECT_OPTIONS = (Object.keys(ASPECTS) as Aspect[]).map((value) => ({
   value,
@@ -30,13 +31,21 @@ export default function ShareScreen() {
   const asOf = model ? formatDate(model.latestDate, true) : '';
   const link = links.shortLink({ state: state ?? '', window, asOf });
 
-  const run = async (action: (uri: string) => Promise<boolean>, done: string, denied: string) => {
+  const run = async (
+    kind: 'save' | 'share',
+    action: (uri: string) => Promise<boolean>,
+    done: string,
+    denied: string,
+  ) => {
     if (busy) return;
     setBusy(true);
     try {
       const uri = await captureCard(card, ASPECTS[aspect].export);
-      toast((await action(uri)) ? done : denied);
+      const ok = await action(uri);
+      track('share', { action: kind, aspect, ok });
+      toast(ok ? done : denied);
     } catch {
+      track('share', { action: kind, aspect, ok: false });
       toast('Could not create the image');
     } finally {
       setBusy(false);
@@ -85,7 +94,12 @@ export default function ShareScreen() {
           style={styles.action}
           disabled={!model || busy}
           onPress={() =>
-            run(saveToPhotos, 'Image saved to Photos', 'Allow Photos access in Settings to save')
+            run(
+              'save',
+              saveToPhotos,
+              'Image saved to Photos',
+              'Allow Photos access in Settings to save',
+            )
           }
         />
         <Button
@@ -96,6 +110,7 @@ export default function ShareScreen() {
           disabled={!model || busy}
           onPress={() =>
             run(
+              'share',
               (uri) => shareImage(uri, 'Share your Delta'),
               'Share sheet opened',
               'Sharing is not available on this device',

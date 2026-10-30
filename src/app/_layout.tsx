@@ -1,5 +1,5 @@
 import { Inter_400Regular, Inter_500Medium, useFonts } from '@expo-google-fonts/inter';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -11,6 +11,7 @@ import { useAlertRunner } from '@/lib/useAlerts';
 import { usePrefs, usePrefsHydrated } from '@/store/prefs';
 import { colors } from '@/theme';
 import { ToastHost } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -20,6 +21,7 @@ export default function RootLayout() {
   const ready = (fontsLoaded || fontError != null) && hydrated;
   const onboarded = usePrefs((s) => s.zip != null);
   useAlertRunner(ready && onboarded);
+  useScreenTracking(ready, onboarded);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync();
@@ -50,3 +52,21 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
 });
+
+/** app_open once per launch, then screen_view on every route change (route name only). */
+function useScreenTracking(ready: boolean, onboarded: boolean) {
+  const pathname = usePathname();
+  useEffect(() => {
+    if (ready) track('app_open');
+  }, [ready]);
+  useEffect(() => {
+    if (!ready) return;
+    const [, first = '', second] = pathname.split('/');
+    // Before onboarding, '/' only flashes on the way to the redirect.
+    if (!onboarded && first !== 'onboarding') return;
+    track('screen_view', {
+      screen: first || 'today',
+      ...(first === 'item' && second ? { item: second } : {}),
+    });
+  }, [ready, onboarded, pathname]);
+}

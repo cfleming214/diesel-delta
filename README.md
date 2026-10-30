@@ -78,6 +78,10 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=mock-anon-key npm start
 
 On a phone, use your computer's LAN address instead of `localhost`. `MOCK_LATENCY_MS`, `MOCK_JITTER_MS` and `MOCK_ERROR_RATE` simulate slow or failing networks. Tests: `npm run mock:test`.
 
+## Telemetry
+
+`track()` (`src/lib/telemetry.ts`) records anonymous product events (names in `src/domain/events.ts`) and sends them in batches to the `app_events` table when a backend is configured; otherwise it does nothing. Each event carries a random install ID (not a device or advertising ID), a per-launch session ID, platform and app version. Props never include ZIP codes, search text or receipt contents; location is at most a state. The table is insert-only for clients.
+
 ## Kitchen sink
 
 In development builds, open `dieseldelta://dev/kitchen-sink` (or `/dev/kitchen-sink` on web) to see every primitive for side-by-side review against `design/handoff/DieselDeltaApp.dc.html`.

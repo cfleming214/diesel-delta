@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Camera, Info, ShareNetwork, Star } from 'phosphor-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { BackButton } from '@/components/BackButton';
@@ -20,6 +20,7 @@ import { usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
 import { colors, fonts } from '@/theme';
 import { Button, Card, IconButton, KVRow, Screen, Sheet, Tag, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 const TAG_COLOR: Record<LedgerTag, string> = {
   'Fuel-correlated': colors.accentRamp[300],
@@ -36,6 +37,10 @@ export default function ItemScreen() {
   const { data: item, error } = useItem(id, region);
   const [sourcesOpen, setSourcesOpen] = useState(false);
   const provenance = useProvenance(id, zip, sourcesOpen);
+  const verdictKind = item?.verdict;
+  useEffect(() => {
+    if (verdictKind) track('item_view', { item: id, verdict: verdictKind });
+  }, [id, verdictKind]);
 
   const top = (
     <View style={styles.top}>

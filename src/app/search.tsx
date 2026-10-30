@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Barcode, Check, Link, MagnifyingGlass, Plus } from 'phosphor-react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { BackButton } from '@/components/BackButton';
@@ -12,6 +12,7 @@ import { basketIds, usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
 import { colors } from '@/theme';
 import { Button, IconButton, Input, Screen, Tag, Text } from '@/ui';
+import { track } from '@/lib/telemetry';
 
 /** Synthetic code the dev-only "Simulate a scan" button feeds in (Heinz ketchup 32 oz fixture). */
 const DEV_SCAN_CODE = '0000000000017';
@@ -26,6 +27,15 @@ export default function SearchScreen() {
   const search = useCatalogSearch(query);
 
   const inBasket = new Set(basketIds(basket));
+
+  // One search event per settled query (debounced), with the outcome only, not the text.
+  const settledCount = search.data && query.trim() ? search.data.items.length : null;
+  const fromLink = search.data?.resolvedFromLink ?? false;
+  useEffect(() => {
+    if (settledCount == null) return;
+    const t = setTimeout(() => track('search', { results: settledCount, link: fromLink }), 1000);
+    return () => clearTimeout(t);
+  }, [settledCount, fromLink, query]);
   const q = query.trim();
   const results = q ? (search.data?.items ?? []) : [];
 
@@ -33,6 +43,7 @@ export default function SearchScreen() {
     selectionTick();
     const item = await lookupBarcode(code);
     setScanning(false);
+    track('barcode_scan', { matched: item != null });
     if (item) {
       setScanMiss(null);
       setQuery(`${item.name} ${item.size}`);
@@ -44,8 +55,10 @@ export default function SearchScreen() {
   const toggle = (item: CatalogItem) => {
     if (inBasket.has(item.id)) {
       removeFromBasket(item.id);
+      track('basket_remove', { item: item.id, mode: 'search' });
     } else {
       addToBasket(item.id);
+      track('basket_add', { item: item.id, source: 'search' });
       toast(`${item.name} added to basket`);
     }
   };
