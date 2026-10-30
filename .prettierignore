@@ -4,3 +4,6 @@ dist/
 package-lock.json
 *.md
 supabase/functions/
+dist-e2e/
+test-results/
+playwright-report/

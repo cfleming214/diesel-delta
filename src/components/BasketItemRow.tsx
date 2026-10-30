@@ -82,7 +82,7 @@ export function BasketItemRow({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={followed ? `Unfollow ${item.name}` : `Follow ${item.name}`}
-        accessibilityState={{ selected: followed }}
+        aria-selected={followed}
         onPress={onToggleFollow}
         style={styles.star}
       >

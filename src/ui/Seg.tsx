@@ -36,7 +36,7 @@ export function Seg<T extends string | number>({
           <Pressable
             key={String(opt.value)}
             accessibilityRole="tab"
-            accessibilityState={{ selected }}
+            aria-selected={selected}
             onPress={() => onChange(opt.value)}
             style={({ pressed }) => [
               compact ? styles.optCompact : styles.opt,

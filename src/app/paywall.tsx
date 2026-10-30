@@ -93,7 +93,7 @@ export default function PaywallScreen() {
             <Pressable
               key={o.key}
               accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
+              aria-checked={on}
               accessibilityLabel={`${o.name}, ${o.price}, ${o.sub}`}
               onPress={() => setPlan(o.key)}
               style={[

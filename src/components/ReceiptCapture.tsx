@@ -59,7 +59,7 @@ export function ReceiptCapture({ onAdd }: Props) {
           <Pressable
             key={`${line.text}-${i}`}
             accessibilityRole="checkbox"
-            accessibilityState={{ checked: selected[i] }}
+            aria-checked={selected[i]}
             accessibilityLabel={`${line.text}, ${money(line.price)}`}
             onPress={() => setSelected((s) => s.map((v, j) => (j === i ? !v : v)))}
             style={styles.line}

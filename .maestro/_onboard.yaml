@@ -1,0 +1,10 @@
+# Shared: fresh install, enter a Gulf Coast ZIP, land on Today.
+appId: app.dieseldelta
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Home ZIP code'
+- inputText: '77002'
+- assertVisible: 'Fuel series'
+- tapOn: 'Continue'
+- assertVisible: 'Today'
