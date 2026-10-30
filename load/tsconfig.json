@@ -8,6 +8,7 @@
   "include": [
     "./**/*.ts",
     "../mock-server/**/*.ts",
+    "../price-bot/**/*.ts",
     "../src/**/*.ts",
     "../supabase/functions/**/*.ts"
   ],
