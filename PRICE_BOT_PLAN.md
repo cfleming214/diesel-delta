@@ -13,7 +13,7 @@ It builds on "Daily Multi-Retailer Price Scraper" in `FEATURES.md` and the price
 ## 1. Goals
 
 - **Coverage:** 150 canonical items × 6 retailers. Prices are per store location where the retailer exposes local pricing, and online otherwise.
-- **Freshness:** daily for API sources, weekly at minimum for everything else. EIA fuel data is weekly, so weekly is enough for the Delta. Daily data makes promos and price changes sharper.
+- **Freshness:** daily for every source (decided). EIA fuel data is weekly, but daily prices make promos and price changes sharper. A source that misses a day is filled forward and flagged stale after 3 days.
 - **Trust:** every price is traceable to a source, a capture time, a method and a match confidence. This is what the app's Provenance sheet shows.
 - **Quality bars:**
   - ≥ 90% of item × retailer cells filled each week.
@@ -69,6 +69,29 @@ The rows marked *verify* come from secondary sources. Confirm them on each provi
 The redistribution right is critical. The app shows prices publicly and on share cards.
 
 **Later regional chains:** Publix, H-E-B, Aldi, Ahold Delhaize banners and Meijer. They go through the same adapter interface once v1 is stable. The `Store` union in `src/data/types.ts` widens to match.
+
+### Fallback: no API or licensed access
+
+If API access is refused and licensed data is out of budget, these sources need nobody's permission:
+
+1. **Kroger API.** Registration is self-serve, so this is the one retailer source most likely to stay available.
+2. **BLS Average Price Data.** Public domain, but monthly and regional, not per store.
+3. **Open Prices (Open Food Facts).** A crowd-sourced open price database under the ODbL license. Coverage in the U.S. is thin today. *verify*
+4. **In-app receipts, opt-in.** The Log tab already parses receipts. Users can choose to contribute line items (item, price, store, ZIP-3, date), and nothing else.
+   - The privacy answers in `PRIVACY.md` change: contributed prices leave the device.
+   - Each price is checked against the matcher and validation rules before it counts.
+
+**Public-page collection** is the last resort. It is built as a `page` source behind the same `PoliteHttp` client, and only within §2:
+
+- **Pages:** public product pages with no login. Prices are read from the structured data the page publishes (JSON-LD `Offer`, or embedded product JSON), not from layout.
+- **Store selection:** a store is chosen through the site's public store picker, the same way a logged-out shopper sets it.
+- **Daily budget:** 150 items × ~10 stores per retailer is about 1,500 page loads per host per day. At 1 request every 5 seconds, that is about 2 hours per host in a nightly window.
+- **Blocking:** if a site blocks the bot, that source stops.
+  - Blocks show up as 403s, challenge pages or CAPTCHAs.
+  - The bot does not rotate IPs, spoof browsers or solve challenges to get past a block.
+- **Before enabling a site:**
+  - Counsel reviews that site's terms.
+  - Then `sources.legal_approved_at` is set.
 
 ---
 
@@ -410,5 +433,4 @@ Each phase ends with a commit, PR and merge, as before. Mock-first throughout: e
 7. **Open questions for the owner:**
    - What is the budget ceiling for licensed data?
    - Is it acceptable to launch with Kroger, Walmart and Amazon, adding the other three when a feed is signed?
-   - Daily or weekly cadence for non-API sources?
    - Should the bot live in this repository (`price-bot/`, sharing types) or its own? This plan assumes this repository, to share `Store`, the domain math and the mock server.
