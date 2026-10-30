@@ -1,4 +1,4 @@
-import { MinusCircle } from 'phosphor-react-native';
+import { MinusCircle } from '@/ui/icons';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';

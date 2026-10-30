@@ -1,4 +1,4 @@
-import { GasPump } from 'phosphor-react-native';
+import { GasPump } from '@/ui/icons';
 import { useState, type Ref } from 'react';
 import { StyleSheet, View, type HostInstance } from 'react-native';
 import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';

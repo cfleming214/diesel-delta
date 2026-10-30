@@ -1,4 +1,4 @@
-import { CaretDown, CaretUp } from 'phosphor-react-native';
+import { CaretDown, CaretUp } from '@/ui/icons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';

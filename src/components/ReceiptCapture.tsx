@@ -1,5 +1,5 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { CheckSquare, Square } from 'phosphor-react-native';
+import { CheckSquare, Square } from '@/ui/icons';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 

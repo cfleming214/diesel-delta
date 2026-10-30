@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { MagnifyingGlass, ShareNetwork } from 'phosphor-react-native';
+import { MagnifyingGlass, ShareNetwork } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

@@ -1,4 +1,4 @@
-import { DotsSixVertical } from 'phosphor-react-native';
+import { DotsSixVertical } from '@/ui/icons';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';

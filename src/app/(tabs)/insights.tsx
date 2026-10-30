@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { BookOpen, CaretRight, StarFour, Storefront, type Icon } from 'phosphor-react-native';
+import { BookOpen, CaretRight, StarFour, Storefront, type Icon } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 

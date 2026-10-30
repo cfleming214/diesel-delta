@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { CaretLeft, X } from 'phosphor-react-native';
+import { CaretLeft, X } from '@/ui/icons';
 
 import { IconButton } from '@/ui';
 
