@@ -173,6 +173,21 @@ function filtersOf(params: URLSearchParams) {
 
 const keyOf = (r: Row, cols: string[]) => JSON.stringify(cols.map((c) => r[c] ?? null));
 
+/** Natural-key indexes per table and conflict key, kept across requests (like a unique index). */
+const indexes = new WeakMap<TableDef, Map<string, Map<string, Row>>>();
+function indexFor(def: TableDef, cols: string[]) {
+  let byCols = indexes.get(def);
+  if (!byCols) indexes.set(def, (byCols = new Map()));
+  const name = cols.join(',');
+  let index = byCols.get(name);
+  // Rebuild if rows were added or removed outside this index (seed rows, other keys).
+  if (!index || index.size !== def.rows.length) {
+    index = new Map(def.rows.map((r) => [keyOf(r, cols), r]));
+    byCols.set(name, index);
+  }
+  return index;
+}
+
 export type RestRequest = {
   method: string;
   table: string;
@@ -234,7 +249,7 @@ export function handleRest(tables: Record<string, TableDef>, req: RestRequest): 
     const conflict = req.params.get('on_conflict')?.split(',') ?? def.key;
     const merge = req.prefer.includes('resolution=merge-duplicates');
     const ignore = req.prefer.includes('resolution=ignore-duplicates');
-    const index = conflict ? new Map(def.rows.map((r) => [keyOf(r, conflict), r])) : null;
+    const index = conflict ? indexFor(def, conflict) : null;
     const out: Row[] = [];
     for (const raw of input) {
       const existing = index?.get(keyOf(raw, conflict!));
@@ -260,6 +275,8 @@ export function handleRest(tables: Record<string, TableDef>, req: RestRequest): 
     const match = filtersOf(req.params);
     const out = def.rows.filter(match);
     for (const r of out) Object.assign(r, req.body as Row);
+    // An update may change key columns; drop cached indexes for this table.
+    indexes.delete(def);
     return { status: representation ? 200 : 204, body: representation ? out : undefined };
   }
 
@@ -267,6 +284,7 @@ export function handleRest(tables: Record<string, TableDef>, req: RestRequest): 
     const match = filtersOf(req.params);
     const keep = def.rows.filter((r) => !match(r));
     def.rows.splice(0, def.rows.length, ...keep);
+    indexes.delete(def);
     return { status: 204 };
   }
 

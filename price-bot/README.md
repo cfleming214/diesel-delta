@@ -25,6 +25,7 @@ Retailer GTINs and SKUs are not in the catalog. They are matched per retailer, r
 ```sh
 npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,mock-walmart] [--discover] [--workers 4] [--dry-run]
 npm run bot -- simulate --days 30 [--end 2026-10-30]
+npm run bot -- report [--days 30] [--end 2026-10-30] [--out dir] [--no-pdf]
 ```
 
 | Setting | Default | Meaning |
@@ -62,3 +63,27 @@ npm run bot -- simulate --days 30 [--end 2026-10-30]
    - It holds out-of-band prices (a misplaced decimal) and moves over 40% for review in `review_queue`.
    - A package size change on the same SKU is published and recorded in `price_events` as `size_change`.
 6. **Load:** upserts `price_observations`, one row per item × retailer × store × day × source, so re-running a day updates it. The run summary goes in `ingest_runs`.
+
+## Printable report
+
+`npm run bot -- report` reads what the bot collected for a period (default: the 30 days ending today) and writes `price-report-<end>.html` and `.pdf` (US Letter, through Chromium) to `price-bot/.data/reports/`.
+
+It contains:
+- **Summary:** a written summary, plus tiles for prices collected, coverage, held prices, each retailer's basket and U.S. diesel.
+- **Basket index chart:** the default-basket items every retailer carries, priced at the median across stores and indexed to 100, with a weekly table.
+- **Retailers:** a scorecard and the basket cost by region.
+- **Categories:** average change by category.
+- **Biggest movers:** the largest increases and decreases.
+- **Shrinkflation:** package-size reductions.
+- **Data quality:** held prices by reason, and the daily runs.
+- **Appendix:** a price table for all 150 items, with the cheapest retailer in bold.
+
+A report built from mock sources carries a "Simulated data" banner.
+
+To produce one locally:
+
+```sh
+npm run mock:server                          # terminal 1
+npm run bot -- simulate --days 30 --end 2026-10-30
+npm run bot -- report --days 30 --end 2026-10-30
+```
