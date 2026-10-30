@@ -11,6 +11,7 @@ import { usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
 import { alpha, colors, em, fonts, radius } from '@/theme';
 import { Button, Kicker, Screen, Text } from '@/ui';
+import { reportError } from '@/lib/errors';
 import { track } from '@/lib/telemetry';
 
 export default function PaywallScreen() {
@@ -34,7 +35,10 @@ export default function PaywallScreen() {
       close();
       toast('Pro unlocked');
     } catch (e) {
-      if (!(e instanceof PurchaseCancelledError)) toast('The purchase did not go through');
+      if (!(e instanceof PurchaseCancelledError)) {
+        reportError(e, { where: 'purchase', plan });
+        toast('The purchase did not go through');
+      }
     } finally {
       setBusy(null);
     }
@@ -53,7 +57,8 @@ export default function PaywallScreen() {
       } else {
         toast('No previous purchase found');
       }
-    } catch {
+    } catch (e) {
+      reportError(e, { where: 'restore' });
       toast('Could not reach the store');
     } finally {
       setBusy(null);

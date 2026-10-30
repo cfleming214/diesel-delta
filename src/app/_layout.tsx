@@ -6,7 +6,9 @@ import { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { ErrorScreen } from '@/components/ErrorScreen';
 import { QueryProvider } from '@/data';
+import { installGlobalErrorHandler } from '@/lib/errors';
 import { useAlertRunner } from '@/lib/useAlerts';
 import { usePrefs, usePrefsHydrated } from '@/store/prefs';
 import { colors } from '@/theme';
@@ -14,6 +16,10 @@ import { ToastHost } from '@/ui';
 import { track } from '@/lib/telemetry';
 
 SplashScreen.preventAutoHideAsync();
+installGlobalErrorHandler();
+
+/** Any screen that throws while rendering lands here (reported, with a retry). */
+export const ErrorBoundary = ErrorScreen;
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({ Inter_400Regular, Inter_500Medium });
