@@ -1,0 +1,6 @@
+# Maestro device flows. Same journeys as the Playwright suite (e2e/), run against an installed build.
+flows:
+  - '*.yaml'
+excludeFiles:
+  - config.yaml
+  - _onboard.yaml

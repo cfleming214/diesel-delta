@@ -1,0 +1,24 @@
+appId: app.dieseldelta
+name: Share card sizes, save to Photos, restore and buy Pro
+---
+- runFlow: _onboard.yaml
+- tapOn: 'Share this chart'
+- assertVisible: 'Share card'
+- tapOn: 'X 16:9'
+- tapOn: 'Square'
+- assertVisible: '.*dd.app/d/.*'
+- tapOn: 'Save image'
+- tapOn:
+    text: 'Allow.*|OK'
+    optional: true
+- assertVisible: 'Image saved to Photos|Allow Photos access in Settings to save'
+- tapOn: 'Close'
+- tapOn: 'Insights'
+- tapOn: 'DieselDelta Pro, Free plan'
+- tapOn: 'Restore purchases'
+- assertVisible: 'No previous purchase found'
+- tapOn: "Monthly, \\$3.99.*"
+- tapOn: "Start Pro · \\$3.99"
+- assertVisible: 'Pro unlocked'
+- tapOn: 'Insights'
+- assertVisible: 'DieselDelta Pro, Active'

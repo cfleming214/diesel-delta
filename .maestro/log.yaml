@@ -1,0 +1,28 @@
+appId: app.dieseldelta
+name: Scan a receipt and enter a price manually
+---
+- runFlow: _onboard.yaml
+- tapOn: 'Log'
+- tapOn: 'Scan receipt'
+- runFlow:
+    when:
+      visible: 'Allow camera'
+    commands:
+      - tapOn: 'Allow camera'
+      - tapOn:
+          text: 'Allow|OK|While using the app'
+          optional: true
+- tapOn: 'Capture'
+- assertVisible: '4 of 4 lines selected'
+- tapOn: 'BANANAS.*'
+- tapOn: 'Add 3 prices'
+- assertVisible: '3 prices added'
+- tapOn: 'Enter manually'
+- tapOn: 'Item'
+- inputText: 'Oat milk 64 oz'
+- tapOn: 'Price paid'
+- inputText: '4.29'
+- tapOn: 'Walmart'
+- tapOn: 'Save price'
+- assertVisible: 'Price saved'
+- assertVisible: 'Oat milk 64 oz'

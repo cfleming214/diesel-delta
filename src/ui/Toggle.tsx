@@ -10,7 +10,7 @@ export function Toggle({ value, onChange, accessibilityLabel }: Props) {
     <Pressable
       accessibilityRole="switch"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ checked: value }}
+      aria-checked={value}
       hitSlop={8}
       onPress={() => onChange(!value)}
       style={[

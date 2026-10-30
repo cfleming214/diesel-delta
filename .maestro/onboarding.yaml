@@ -1,0 +1,13 @@
+appId: app.dieseldelta
+name: Onboarding maps a ZIP to its fuel series
+---
+- launchApp:
+    clearState: true
+- tapOn: 'Home ZIP code'
+- inputText: '94103'
+- assertVisible: '.*State series: California retail diesel.*'
+- tapOn: 'Continue'
+- assertVisible: '.*CA 94103.*'
+- stopApp
+- launchApp
+- assertVisible: '.*CA 94103.*'

@@ -78,6 +78,19 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=mock-anon-key npm start
 
 On a phone, use your computer's LAN address instead of `localhost`. `MOCK_LATENCY_MS`, `MOCK_JITTER_MS` and `MOCK_ERROR_RATE` simulate slow or failing networks. Tests: `npm run mock:test`.
 
+## End-to-end tests
+
+**Web (Playwright):** journeys for onboarding, chart scrubbing and lag, basket remove/swipe/reorder/add/follow, search and pasted links, item detail and provenance, receipt scan and manual entry, share card, paywall restore and purchase, alert settings, and telemetry reaching the admin metrics. They run against the exported web build talking to the mock backend:
+
+```sh
+npm run e2e:build   # web export pointed at the e2e mock (port 54331)
+npm run e2e         # starts the mock + a static server, then runs e2e/tests
+```
+
+Playwright's Chromium must be installed (`npx playwright install chromium`) where it isn't already.
+
+**Devices (Maestro):** the same journeys live in `.maestro/` and use the same accessibility labels. Install a build on a simulator or device (`npx expo run:ios|android`, or an EAS `preview` build) and run `maestro test .maestro`. Running them on EAS Workflows is on the go-live checklist.
+
 ## Admin dashboard
 
 A live metrics dashboard for operators: active installs, events and API requests per minute, API latency (p50/p95), the activation funnel (open → ZIP → basket → share → Pro), installs by region, screen views, per-route latency and errors, EIA ingest runs and a feed of recent events. Every chart has a hover tooltip and a data table.

@@ -38,7 +38,7 @@ export default function RetailersScreen() {
             <View key={r.name} style={styles.item}>
               <Pressable
                 accessibilityRole="button"
-                accessibilityState={{ expanded: isOpen }}
+                aria-expanded={isOpen}
                 accessibilityLabel={`${r.name}, grade ${r.grade}, ${r.rollbackPct}% rolled back, ${r.itemsTracked} items tracked`}
                 onPress={() => setOpen(isOpen ? null : r.name)}
                 style={styles.row}

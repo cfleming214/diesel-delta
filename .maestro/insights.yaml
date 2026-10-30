@@ -1,0 +1,17 @@
+appId: app.dieseldelta
+name: Alert settings, scorecard and methodology
+---
+- runFlow: _onboard.yaml
+- tapOn: 'Insights'
+- tapOn: 'Increase'
+- assertVisible: '.*tolerance 4 pts.*'
+- tapOn: "Diesel crosses \\$3.25/gal"
+- tapOn: "Diesel crosses \\$3.25/gal"
+- tapOn:
+    text: 'Allow'
+    optional: true
+- tapOn: 'Retailer scorecard'
+- assertVisible: "Costco, grade B\\+.*"
+- tapOn: 'Back'
+- tapOn: 'Methodology and sources'
+- assertVisible: '.*Energy Information Administration.*'

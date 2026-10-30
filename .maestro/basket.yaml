@@ -1,0 +1,21 @@
+appId: app.dieseldelta
+name: Remove, add and follow basket items
+---
+- runFlow: _onboard.yaml
+- tapOn: 'Basket'
+- assertVisible: '16 items · weighted by purchase frequency'
+- tapOn: 'Edit'
+- tapOn: 'Remove Paper towels'
+- assertVisible: 'Paper towels removed'
+- assertVisible: '15 items · weighted by purchase frequency'
+- tapOn: 'Done'
+- tapOn: 'Add item'
+- tapOn: 'Search items'
+- inputText: 'yogurt'
+- tapOn: 'Add'
+- assertVisible: 'Greek yogurt added to basket'
+- tapOn: 'Back'
+- assertVisible: '16 items · weighted by purchase frequency'
+- tapOn: 'Greek yogurt · 32 oz.*'
+- tapOn: 'Follow'
+- assertVisible: 'Unfollow'
