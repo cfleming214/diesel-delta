@@ -91,3 +91,26 @@ export function useCatalog() {
     staleTime: Infinity,
   });
 }
+
+export function useCategoryPassThrough(region: RegionKey | null) {
+  return useQuery({
+    queryKey: ['passThrough', region ?? 'nat'] as const,
+    queryFn: () => api.getCategoryPassThrough(region ?? 'nat'),
+    enabled: region != null,
+  });
+}
+
+export function useRetailerScores() {
+  return useQuery({ queryKey: ['retailers'] as const, queryFn: () => api.getRetailerScores() });
+}
+
+/** Diesel series for several areas, in order; entries are undefined until loaded. */
+export function useFuelSeriesMany(areas: readonly FuelArea[], kind: FuelSeriesKind = 'diesel') {
+  return useQueries({
+    queries: areas.map((area) => ({
+      queryKey: queryKeys.fuel(area, kind),
+      queryFn: () => api.getFuelSeries(area, kind),
+    })),
+    combine: (results) => results.map((r) => r.data),
+  });
+}
