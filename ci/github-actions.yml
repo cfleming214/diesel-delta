@@ -21,6 +21,8 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm test -- --ci
+      - run: npm run mock:typecheck
+      - run: npm run mock:test
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
