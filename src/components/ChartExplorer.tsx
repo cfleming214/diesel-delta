@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { LagChart } from '@/components/LagChart';
-import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
 import { localSeries, useDeltaModel, type FuelScope, type FuelSeriesKind } from '@/data';
 import {
   bestLag,
@@ -19,7 +18,7 @@ import {
 import { usePrefs } from '@/store/prefs';
 import { useUi } from '@/store/ui';
 import { colors, fonts } from '@/theme';
-import { Card, Screen, ScreenHeader, Seg, Slider, Tag, Text } from '@/ui';
+import { Card, Seg, Slider, Tag, Text } from '@/ui';
 import { track } from '@/lib/telemetry';
 
 const CHART_HEIGHT = 250;
@@ -32,7 +31,11 @@ const SERIES_OPTIONS = [
 
 const lagLabel = (w: number) => (w === 0 ? 'none' : w === 1 ? '1 week' : `${w} weeks`);
 
-export default function ChartScreen() {
+/**
+ * The basket-against-fuel explorer: fuel series and scope, a scrubbable indexed chart, the window
+ * and the lag slider with best fit and correlation. Shown at the top of Insights.
+ */
+export function ChartExplorer() {
   const state = usePrefs((s) => s.state);
   const isPro = usePrefs((s) => s.isPro);
   const {
@@ -137,8 +140,15 @@ export default function ChartScreen() {
   }
 
   return (
-    <Screen scroll bottomInset={TAB_BAR_CLEARANCE} contentStyle={styles.content}>
-      <ScreenHeader title="Chart" right={<Tag label={scopeName} />} />
+    <View style={styles.content}>
+      <View style={styles.header}>
+        <Text variant="section" accessibilityRole="header">
+          Chart
+        </Text>
+        <View testID="chart-scope">
+          <Tag label={scopeName} />
+        </View>
+      </View>
       <View style={styles.segRow}>
         <Seg
           style={styles.seriesSeg}
@@ -197,12 +207,13 @@ export default function ChartScreen() {
           </Text>
         ) : null}
       </View>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   content: { gap: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   segRow: { flexDirection: 'row', gap: 8 },
   seriesSeg: { flex: 1 },
   scopeSeg: { flex: 1.4 },

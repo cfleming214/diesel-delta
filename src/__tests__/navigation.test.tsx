@@ -10,12 +10,13 @@ describe('app navigation', () => {
   test('opens on Today and switches tabs from the tab bar', async () => {
     await renderRouter('./src/app');
     expect(await screen.findByText('TX 77002 · Oct 26, 2026')).toBeTruthy();
-    for (const tab of ['Today', 'Chart', 'Basket', 'Log', 'Insights']) {
+    for (const tab of ['Today', 'Basket', 'Log', 'Insights']) {
       expect(screen.getByRole('tab', { name: tab })).toBeTruthy();
     }
 
     await act(() => fireEvent.press(screen.getByLabelText('Basket')));
     expect(screen.getByText('16 items · weighted by purchase frequency')).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: 'Chart' })).toBeNull();
   });
 
   test('pushes Search from Today and goes back', async () => {

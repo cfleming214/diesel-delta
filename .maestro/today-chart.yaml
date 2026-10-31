@@ -9,7 +9,7 @@ name: Scrub the Today chart, change window, set a lag
 - assertVisible: '.*Gap at Oct 26.*'
 - tapOn: '30D'
 - assertVisible: '.*over 30 days.*'
-- tapOn: 'Chart'
+- tapOn: 'Insights'
 - assertVisible: 'Lag: none'
 - swipe:
     from:

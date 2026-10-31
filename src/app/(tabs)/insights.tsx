@@ -3,6 +3,7 @@ import { BookOpen, CaretRight, StarFour, Storefront, type Icon } from '@/ui/icon
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ChartExplorer } from '@/components/ChartExplorer';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
 import {
   AREA_NAMES,
@@ -79,6 +80,8 @@ export default function InsightsScreen() {
       <Text variant="title" accessibilityRole="header">
         Insights
       </Text>
+
+      <ChartExplorer />
 
       <View style={styles.section}>
         <SectionTitle

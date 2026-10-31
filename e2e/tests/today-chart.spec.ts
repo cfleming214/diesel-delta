@@ -25,10 +25,10 @@ test('changing the window rewrites the verdict', async ({ onboarded: page }) => 
   await expect(page.getByText(/over 12 months/).first()).toBeVisible();
 });
 
-test('the chart explorer lag slider shifts diesel and reports correlation', async ({
+test('the chart at the top of Insights: lag slider shifts diesel and reports correlation', async ({
   onboarded: page,
 }) => {
-  await page.getByRole('tab', { name: 'Chart' }).click();
+  await page.getByRole('tab', { name: 'Insights' }).click();
   await expect(page.getByRole('heading', { name: 'Chart' })).toBeVisible();
   await expect(page.getByText('Lag: none')).toBeVisible();
   const lag = (await page.getByRole('slider', { name: 'Lag' }).boundingBox())!;
@@ -44,10 +44,11 @@ test('the chart explorer lag slider shifts diesel and reports correlation', asyn
 test('switching to gasoline and the U.S. series changes the region label', async ({
   onboarded: page,
 }) => {
-  await page.getByRole('tab', { name: 'Chart' }).click();
-  await expect(page.getByText('Gulf Coast', { exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: 'Insights' }).click();
+  const scope = page.getByTestId('chart-scope');
+  await expect(scope).toHaveText('Gulf Coast');
   await page.getByRole('tab', { name: 'U.S.' }).click();
-  await expect(page.getByText('Gulf Coast', { exact: true })).toBeHidden();
+  await expect(scope).toHaveText('National');
   await page.getByRole('tab', { name: 'Gasoline' }).click();
   await expect(page.getByText(/^Gasoline \$\d\.\d\d/)).toBeVisible();
 });
