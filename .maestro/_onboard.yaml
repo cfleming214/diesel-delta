@@ -1,5 +1,5 @@
 # Shared: fresh install, enter a Gulf Coast ZIP, land on Today.
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 ---
 - launchApp:
     clearState: true

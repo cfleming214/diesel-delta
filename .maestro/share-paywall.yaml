@@ -1,4 +1,4 @@
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 name: Share card sizes, save to Photos, restore and buy Pro
 ---
 - runFlow: _onboard.yaml

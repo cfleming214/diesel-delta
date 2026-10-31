@@ -1,4 +1,4 @@
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 name: Remove, add and follow basket items
 ---
 - runFlow: _onboard.yaml
