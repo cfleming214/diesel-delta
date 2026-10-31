@@ -59,6 +59,49 @@ describe('Search tab', () => {
     expect(screen).toHavePathname('/product/yogurt');
   });
 
+  test('typing shows auto-fill suggestions; picking one fills and runs the search', async () => {
+    await openSearch();
+    await fireEvent.changeText(screen.getByLabelText('Search items'), 'heinz');
+    const pick = await screen.findByLabelText('Suggestion: Heinz ketchup, 2 products');
+    await fireEvent.press(pick);
+    expect(screen.getByLabelText('Search items').props.value).toBe('Heinz ketchup');
+    expect(screen.queryByLabelText(/^Suggestion: /)).toBeNull();
+    expect(screen.getByText('2 products')).toBeTruthy();
+
+    // Typing again brings suggestions back; categories are suggested too.
+    await fireEvent.changeText(screen.getByLabelText('Search items'), 'dair');
+    await fireEvent.press(
+      await screen.findByLabelText(/^Suggestion: Dairy, category, \d+ products$/),
+    );
+    expect(screen.getByLabelText('Search items').props.value).toBe('Dairy');
+    expect(screen.getByText('18 products')).toBeTruthy();
+
+    // Submitting the typed text hides them as well.
+    await fireEvent.changeText(screen.getByLabelText('Search items'), 'yog');
+    expect(await screen.findByLabelText(/^Suggestion: Greek yogurt/)).toBeTruthy();
+    await fireEvent(screen.getByLabelText('Search items'), 'submitEditing');
+    expect(screen.queryByLabelText(/^Suggestion: /)).toBeNull();
+  });
+
+  test('results load 20 at a time', async () => {
+    await openSearch();
+    expect(await screen.findByText('Showing 20 of 150')).toBeTruthy();
+    // (The list itself is virtualized, so the counter is what to check.)
+    await fireEvent.press(screen.getByText('Show more'));
+    expect(screen.getByText('Showing 40 of 150')).toBeTruthy();
+    // 40 → 60, 80, 100, 120, 140, 150.
+    for (let i = 0; i < 6; i++) await fireEvent.press(screen.getByText('Show more'));
+    expect(screen.getByText('Showing all 150')).toBeTruthy();
+    expect(screen.queryByText('Show more')).toBeNull();
+
+    // A new query starts from the first page; a short result list has no footer.
+    await fireEvent.changeText(screen.getByLabelText('Search items'), 'frozen');
+    expect(await screen.findByText(/^1\d products$/)).toBeTruthy();
+    expect(screen.queryByText(/^Showing /)).toBeNull();
+    await fireEvent.changeText(screen.getByLabelText('Search items'), '');
+    expect(await screen.findByText('Showing 20 of 150')).toBeTruthy();
+  });
+
   test('a pasted retailer link resolves', async () => {
     await openSearch();
     await fireEvent.press(await screen.findByText('Paste a link'));
