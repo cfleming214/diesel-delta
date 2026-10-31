@@ -24,7 +24,7 @@ jest.mock('expo-sharing', () => ({
 
 async function openShare() {
   await renderRouter('./src/app', { initialUrl: '/share' });
-  await screen.findByLabelText(/^Share card: 4\.0 points gap over 90 days/);
+  await screen.findByLabelText(/^Share card: 6\.5 points gap over 90 days/);
 }
 
 describe('Share card', () => {
@@ -37,7 +37,7 @@ describe('Share card', () => {
 
   test('renders the Delta, verdict, as-of footer and a stable short link', async () => {
     await openShare();
-    expect(screen.getByText('4.0')).toBeTruthy();
+    expect(screen.getByText('6.5')).toBeTruthy();
     expect(
       screen.getByText('As of Oct 26, 2026 · TX 77002 · EIA retail diesel, retailer shelf prices'),
     ).toBeTruthy();

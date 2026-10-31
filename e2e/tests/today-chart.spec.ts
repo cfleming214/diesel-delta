@@ -52,3 +52,22 @@ test('switching to gasoline and the U.S. series changes the region label', async
   await page.getByRole('tab', { name: 'Gasoline' }).click();
   await expect(page.getByText(/^Gasoline \$\d\.\d\d/)).toBeVisible();
 });
+
+test('Today shows the basket total and 9 nationwide movers that can be paused', async ({
+  onboarded: page,
+}) => {
+  await expect(
+    page.getByRole('button', { name: /^Your basket, 16 items, \$\d+\.\d\d, 30 days / }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Nationwide movers' })).toBeVisible();
+  const movers = page.getByRole('button', { name: /^(Rising|Falling|Stable): / });
+  await expect(movers).toHaveCount(9);
+  await expect(page.getByRole('button', { name: /^Rising: / })).toHaveCount(3);
+  await page.getByRole('button', { name: 'Pause movers' }).click();
+  await expect(page.getByText(/^Paused · 30-day change/)).toBeVisible();
+  await page
+    .getByRole('button', { name: /^Falling: / })
+    .first()
+    .click();
+  await expect(page.getByText('By retailer')).toBeVisible();
+});

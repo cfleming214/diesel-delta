@@ -3,7 +3,6 @@ import { pct, toISODate } from '@/domain';
 import {
   CATALOG,
   CATEGORY_PASS_THROUGH,
-  DEFAULT_BASKET_IDS,
   FUEL_FALLING_WEEKS,
   LEDGER_TEMPLATES,
   RETAILER_SCORES,
@@ -23,7 +22,13 @@ import {
 } from './fixtures/series';
 import { AREA_NAMES, PADD_AREA, type FuelArea } from './geo';
 import { describeZip } from './geo/zip';
-import { isProduct, productDetail, productSummaries, verdictFromChange } from './products';
+import {
+  basketCostSeries,
+  isProduct,
+  productDetail,
+  productSummaries,
+  verdictFromChange,
+} from './products';
 import type { CatalogItem, DataApi, ItemDetail, RegionKey } from './types';
 
 const WEEKS = 52;
@@ -41,10 +46,6 @@ const FULL_CATALOG: CatalogItem[] = productSummaries().map((p) => ({
   price: p.price,
   verdict: CATALOG.find((c) => c.id === p.id)?.verdict ?? verdictFromChange(p.change),
 }));
-
-const priceSum = (ids: readonly string[]) =>
-  FULL_CATALOG.filter((c) => ids.includes(c.id)).reduce((sum, c) => sum + c.price, 0);
-const DEFAULT_BASKET_TOTAL = priceSum(DEFAULT_BASKET_IDS);
 
 const publicRegion = (key: RegionKey) => ({ key, name: AREA_NAMES[PADD_AREA[key]] });
 
@@ -149,9 +150,9 @@ export const fixtureApi: DataApi = {
     return { startDate: START_DATE, values: fixtureFuel(area, kind) };
   },
 
+  /** The basket's cost from the same product prices as Search and the basket card. */
   async getBasketSeries(itemIds) {
-    const scale = priceSum(itemIds) / DEFAULT_BASKET_TOTAL;
-    return { startDate: START_DATE, values: BASKET.map((v) => v * scale) };
+    return { startDate: START_DATE, values: basketCostSeries(itemIds, BASKET.length) };
   },
 
   async getCatalog() {

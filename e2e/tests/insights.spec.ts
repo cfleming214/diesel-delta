@@ -10,7 +10,7 @@ test('alert settings toggle, adjust tolerance and persist', async ({ onboarded: 
   await expect(diesel).toBeChecked({ checked: !wasOn });
 
   await page.getByRole('button', { name: 'Increase' }).click();
-  await expect(page.getByText('Currently 4.1 pts, tolerance 4 pts')).toBeVisible();
+  await expect(page.getByText(/^Currently \d+\.\d pts, tolerance 4 pts$/)).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole('switch', { name: 'Diesel crosses $3.25/gal' })).toBeChecked({

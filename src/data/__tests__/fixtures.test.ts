@@ -39,10 +39,10 @@ describe('fixture series match the prototype', () => {
 
 describe('golden: Delta for ZIP 77002', () => {
   const golden = {
-    30: { fuelPct: -0.22224574461848276, basketPct: -0.08857395925598209, severity: 'In step' },
-    60: { fuelPct: -1.8112649218483334, basketPct: -0.17204392430068596, severity: 'Moderate lag' },
-    90: { fuelPct: -4.249969091800477, basketPct: -0.2545724598884369, severity: 'Wide gap' },
-    365: { fuelPct: -1.9553449870973474, basketPct: 5.317652144156464, severity: 'Wide gap' },
+    30: { fuelPct: -0.22224574461848276, basketPct: 1.7899761336515558, severity: 'Moderate lag' },
+    60: { fuelPct: -1.8112649218483334, basketPct: 1.7899761336515558, severity: 'Wide gap' },
+    90: { fuelPct: -4.249969091800477, basketPct: 2.2475277195085406, severity: 'Wide gap' },
+    365: { fuelPct: -1.9553449870973474, basketPct: 6.2266500622664775, severity: 'Wide gap' },
   } as const;
 
   test.each(WINDOWS.map((w) => w.days))('%i-day window', async (days) => {

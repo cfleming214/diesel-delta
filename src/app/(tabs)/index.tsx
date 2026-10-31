@@ -3,12 +3,14 @@ import { ShareNetwork } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { BasketSummaryCard } from '@/components/BasketSummaryCard';
 import { DeltaHeader } from '@/components/DeltaHeader';
 import { LagChart } from '@/components/LagChart';
+import { MoversList } from '@/components/MoversList';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
-import { useDeltaModel } from '@/data';
+import { useDeltaModel, useProducts } from '@/data';
 import { dateAtIndex, formatDate, indexWindow, sgn, WINDOWS } from '@/domain';
-import { usePrefs } from '@/store/prefs';
+import { basketIds, usePrefs } from '@/store/prefs';
 import { useUi } from '@/store/ui';
 import { colors } from '@/theme';
 import { Button, IconButton, Screen, ScreenHeader, Seg, Text } from '@/ui';
@@ -22,6 +24,8 @@ export default function TodayScreen() {
   const window = useUi((s) => s.window);
   const setWindow = useUi((s) => s.setWindow);
   const { model, error, state, basketEmpty } = useDeltaModel({ window });
+  const basket = usePrefs((s) => s.basket);
+  const products = useProducts().data;
   const [scrub, setScrub] = useState<number | null>(null);
 
   const indexed = useMemo(
@@ -119,6 +123,14 @@ export default function TodayScreen() {
         accessibilityLabel="Window"
       />
       {body}
+      {products ? (
+        <>
+          {basket.length ? (
+            <BasketSummaryCard products={products} basketIds={basketIds(basket)} />
+          ) : null}
+          <MoversList products={products} />
+        </>
+      ) : null}
     </Screen>
   );
 }
