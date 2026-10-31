@@ -17,7 +17,7 @@ describe('Item detail', () => {
   test('Gouge Gap item: header, verdict, stats and ledger', async () => {
     await openItem('milk');
     expect(await screen.findByText('Whole milk')).toBeTruthy();
-    expect(screen.getByText('Dairy · 1 gal · Kroger')).toBeTruthy();
+    expect(screen.getByText('Dairy · 1 gal · Walmart')).toBeTruthy();
     expect(screen.getByText('Gouge Gap')).toBeTruthy();
     expect(
       screen.getByText(
@@ -55,7 +55,7 @@ describe('Item detail', () => {
     await openItem('milk');
     await act(async () => fireEvent.press(await screen.findByText('Sources')));
     expect(await screen.findByText('Data provenance')).toBeTruthy();
-    expect(await screen.findByText('Kroger listed price, Whole milk 1 gal')).toBeTruthy();
+    expect(await screen.findByText('Walmart listed price, Whole milk 1 gal')).toBeTruthy();
     expect(screen.getByText('Oct 28, 2026 at 04:12 CT · store ZIP 77002')).toBeTruthy();
     expect(screen.getByText('Report a correction with a shelf-tag photo')).toBeTruthy();
   });

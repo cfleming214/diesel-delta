@@ -115,7 +115,12 @@ describe('search', () => {
   test('word-AND matching across name, size, category and store', () => {
     expect(matchCatalog('heinz ketchup').items.map((i) => i.id)).toEqual(['ketchup', 'ketchup20']);
     expect(matchCatalog('heinz 32').items.map((i) => i.id)).toEqual(['ketchup']);
-    expect(matchCatalog('dairy kroger').items.map((i) => i.id)).toEqual(['milk', 'yogurt']);
+    expect(matchCatalog('dairy kroger').items.map((i) => i.id)).toEqual([
+      'milk2',
+      'eggs',
+      'cream_cheese',
+      'sour_cream',
+    ]);
     expect(matchCatalog('  ').items).toEqual([]);
     expect(matchCatalog('caviar').items).toEqual([]);
   });

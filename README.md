@@ -36,12 +36,12 @@ The CI workflow is staged at `ci/github-actions.yml`. Move it to `.github/workfl
 
 | Path | Contents |
 |---|---|
-| `src/app` | Expo Router routes: `(tabs)` for Today, Chart, Basket, Log, Insights; stack routes for item, search, retailers, share, paywall, onboarding |
+| `src/app` | Expo Router routes: `(tabs)` for Today, Search, Basket, Log, Insights; stack routes for item, retailers, onboarding; modals for product, share, paywall |
 | `src/theme` | Nocturne tokens: colors, spacing, radii, type, elevations |
 | `src/ui` | Primitives: Text, Screen, Button, IconButton, Seg, Tag, Card, Input, Toggle, Stepper, Sheet, Toast… |
 | `src/components` | App components (TabBar, BackButton) |
 | `src/domain` | Pure, unit-tested math: Delta, severity, verdict copy, correlation and lag, basket attribution |
-| `src/data` | `DataApi` interface and the fixture implementation ported from the prototype |
+| `src/data` | `DataApi` interface and the fixture implementation ported from the prototype. `products.ts` prices the 150-item catalog (`fixtures/products.gen.ts`, generated from `price-bot/catalog/items.csv` by `npm run products:gen`) at Kroger, Walmart and Amazon with the simulation shared with the mock retailers (`fixtures/priceSim.ts`) |
 | `src/store` | Zustand stores |
 
 ## Backend (Supabase + EIA)

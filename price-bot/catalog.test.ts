@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 
 import { CATALOG, DEFAULT_BASKET_IDS } from '@/data/fixtures/catalog';
+import { PRODUCT_SEEDS } from '@/data/fixtures/products.gen';
 
 import { CATEGORIES, loadCatalog, parseCatalog, sizeLabel } from './catalog';
 import { parseSize, sizeRatio, toBase } from './units';
@@ -45,6 +46,20 @@ describe('catalog', () => {
       const unit = item.size.unit === 'fl_oz' ? 'oz' : item.size.unit;
       assert.equal(unit, fixture.unit, `${f.id} unit (${sizeLabel(item)} vs ${f.size})`);
     }
+  });
+
+  test("the app's product list matches the catalog (regenerate with npm run products:gen)", () => {
+    assert.deepEqual(
+      PRODUCT_SEEDS,
+      items.map((i) => [
+        i.id,
+        i.name,
+        sizeLabel(i),
+        i.category,
+        i.refPrice,
+        i.inDefaultBasket ? 1 : 0,
+      ]),
+    );
   });
 
   test('reports every invalid row at once', () => {

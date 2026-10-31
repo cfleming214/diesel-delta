@@ -14,7 +14,7 @@ describe('BasketItemRow', () => {
     );
     expect(screen.getByText('Whole milk · 1 gal')).toBeTruthy();
     expect(screen.getByText('Gouge Gap')).toBeTruthy();
-    expect(screen.getByText('Kroger')).toBeTruthy();
+    expect(screen.getByText('Walmart')).toBeTruthy();
     expect(screen.getByText('$3.89')).toBeTruthy();
     expect(screen.getByText('+13.6%')).toBeTruthy();
     expect(screen.queryByLabelText('Remove Whole milk')).toBeNull();

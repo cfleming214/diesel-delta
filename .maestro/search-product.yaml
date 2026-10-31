@@ -1,0 +1,15 @@
+appId: app.dieseldelta
+name: Search a product, open it, change range and retailer
+---
+- runFlow: _onboard.yaml
+- tapOn: 'Search'
+- tapOn: 'Search items'
+- inputText: 'whole milk'
+- tapOn: 'Whole milk 1 gal.*'
+- assertVisible: 'By retailer'
+- tapOn: '1Y'
+- assertVisible: '.*over 1 year'
+- tapOn: 'Kroger, .*'
+- assertVisible: 'at Kroger.*'
+- tapOn: 'Close'
+- assertVisible: 'Search items'
