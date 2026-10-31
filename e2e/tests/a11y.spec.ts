@@ -4,7 +4,6 @@ import { expect, test } from '../fixtures';
 
 const SCREENS = [
   '/',
-  '/chart',
   '/basket',
   '/log',
   '/insights',

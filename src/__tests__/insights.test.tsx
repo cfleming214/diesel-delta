@@ -7,7 +7,8 @@ import { useUi } from '@/store/ui';
 
 async function openInsights() {
   await renderRouter('./src/app', { initialUrl: '/insights' });
-  await screen.findByText('Gulf Coast');
+  await screen.findByText('Pass-through by category');
+  await screen.findByText('Diesel −4.2%');
 }
 
 describe('Insights', () => {

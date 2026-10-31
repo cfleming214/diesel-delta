@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { act, fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen, within } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
 import { usePrefs } from '@/store/prefs';
@@ -7,9 +7,12 @@ import { useUi } from '@/store/ui';
 
 jest.mock('expo-haptics', () => ({ selectionAsync: jest.fn(() => Promise.resolve()) }));
 
+/** The chart's scope tag ("Gulf Coast" also names a row in the Insights region table). */
+const scopeTag = () => within(screen.getByTestId('chart-scope'));
+
 async function openChart() {
-  await renderRouter('./src/app', { initialUrl: '/chart' });
-  await screen.findByText('+4.0 pts gap');
+  await renderRouter('./src/app', { initialUrl: '/insights' });
+  await screen.findByText('+4.0 pts gap', {}, { timeout: 5000 });
 }
 
 async function adjust(label: string, actionName: 'increment' | 'decrement', times = 1) {
@@ -20,7 +23,7 @@ async function adjust(label: string, actionName: 'increment' | 'decrement', time
   }
 }
 
-describe('Chart explorer', () => {
+describe('Chart explorer (top of Insights)', () => {
   beforeEach(() => {
     usePrefs.getState().reset();
     usePrefs.getState().setLocation('77002', 'TX', 'gulf');
@@ -29,7 +32,7 @@ describe('Chart explorer', () => {
 
   test('shows the readout, best fit and correlation at zero lag', async () => {
     await openChart();
-    expect(screen.getByText('Gulf Coast')).toBeTruthy();
+    expect(scopeTag().getByText('Gulf Coast')).toBeTruthy();
     // Readout date and the axis end label.
     expect(screen.getAllByText('Oct 26')).toHaveLength(2);
     expect(screen.getByText('Basket $101.52 · 99.7')).toBeTruthy();
@@ -68,11 +71,11 @@ describe('Chart explorer', () => {
     await openChart();
     await act(() => fireEvent.press(screen.getByText('Gasoline')));
     await act(async () => fireEvent.press(await screen.findByText('TX')));
-    expect(await screen.findByText('Texas')).toBeTruthy();
+    expect(await scopeTag().findByText('Texas')).toBeTruthy();
     expect(await screen.findByText(/^Gasoline \$/)).toBeTruthy();
     expect(screen.getByText(/Shifts the gasoline line forward/)).toBeTruthy();
     // Back to diesel: no Texas series, so the chart falls back to the PADD.
     await act(() => fireEvent.press(screen.getByText('Diesel')));
-    expect(await screen.findByText('Gulf Coast')).toBeTruthy();
+    expect(await scopeTag().findByText('Gulf Coast')).toBeTruthy();
   });
 });

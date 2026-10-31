@@ -17,8 +17,6 @@ export const CaretRight: Icon =
   require('phosphor-react-native/src/icons/CaretRight').CaretRightIcon;
 export const CaretUp: Icon = require('phosphor-react-native/src/icons/CaretUp').CaretUpIcon;
 export const ChartBar: Icon = require('phosphor-react-native/src/icons/ChartBar').ChartBarIcon;
-export const ChartLineUp: Icon =
-  require('phosphor-react-native/src/icons/ChartLineUp').ChartLineUpIcon;
 export const Check: Icon = require('phosphor-react-native/src/icons/Check').CheckIcon;
 export const CheckCircle: Icon =
   require('phosphor-react-native/src/icons/CheckCircle').CheckCircleIcon;
