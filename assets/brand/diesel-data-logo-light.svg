@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 456 96" role="img" aria-label="Diesel Data">
+  <svg x="0" y="0" width="96" height="96" viewBox="-2 8 100 100">
+    <polyline points="33,60 45,47 56,54 74,28" fill="none" stroke="#2b9a58" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="74" cy="28" r="5" fill="#2b9a58"/>
+    <path d="M8 24H20L31 68H78L87 36H24" fill="none" stroke="#1f7a46" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="38" cy="83" r="6.5" fill="#1f7a46"/>
+    <circle cx="72" cy="83" r="6.5" fill="#1f7a46"/>
+  </svg>
+  <text x="112" y="71" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" letter-spacing="-2.2"><tspan fill="#0e1d16">Diesel</tspan> <tspan fill="#1f7a46">Data</tspan></text>
+</svg>
