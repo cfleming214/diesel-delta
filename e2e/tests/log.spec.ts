@@ -19,7 +19,7 @@ test('scan a receipt, deselect a line and add the rest', async ({ onboarded: pag
 
 test('enter a price manually; it stays after a reload', async ({ onboarded: page }) => {
   await page.getByRole('button', { name: 'Enter manually' }).click();
-  await page.getByLabel('Item').fill('Oat milk 64 oz');
+  await page.getByLabel('Item', { exact: true }).fill('Oat milk 64 oz');
   await page.getByLabel('Price paid').fill('4.29');
   await page.getByRole('button', { name: 'Walmart' }).click();
   await page.getByRole('button', { name: 'Save price' }).click();

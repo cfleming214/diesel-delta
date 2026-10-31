@@ -112,6 +112,26 @@ export function productDetail(id: string): ProductDetail {
 
 export const isProduct = (id: string) => seeds.has(id);
 
+const SIM: Record<string, SimRetailer> = { Kroger: 'kroger', Walmart: 'walmart', Amazon: 'amazon' };
+
+/**
+ * Daily basket cost for the `days` days ending today: each item at the retailer that is cheapest
+ * today (as Search and the basket card show it). Unknown ids are skipped.
+ */
+export function basketCostSeries(ids: readonly string[], days: number): number[] {
+  const today = dayNumber(PRODUCTS_AS_OF);
+  const byId = new Map(productSummaries().map((p) => [p.id, p]));
+  const items = ids.flatMap((id) => {
+    const seed = seeds.get(id);
+    const summary = byId.get(id);
+    return seed && summary ? [{ seed, r: SIM[summary.retailer]! }] : [];
+  });
+  return Array.from({ length: days }, (_, i) => {
+    const day = today - (days - 1) + i;
+    return items.reduce((sum, { seed, r }) => sum + nationalPrice(seed, r, day), 0);
+  });
+}
+
 /** A verdict from the 1-year change, for products without a curated fixture verdict. */
 export function verdictFromChange(c: PriceChange): Verdict {
   const y = c.d365 ?? 0;

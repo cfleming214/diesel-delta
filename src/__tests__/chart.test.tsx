@@ -12,7 +12,7 @@ const scopeTag = () => within(screen.getByTestId('chart-scope'));
 
 async function openChart() {
   await renderRouter('./src/app', { initialUrl: '/insights' });
-  await screen.findByText('+4.0 pts gap', {}, { timeout: 5000 });
+  await screen.findByText('+6.5 pts gap', {}, { timeout: 5000 });
 }
 
 async function adjust(label: string, actionName: 'increment' | 'decrement', times = 1) {
@@ -35,11 +35,11 @@ describe('Chart explorer (top of Insights)', () => {
     expect(scopeTag().getByText('Gulf Coast')).toBeTruthy();
     // Readout date and the axis end label.
     expect(screen.getAllByText('Oct 26')).toHaveLength(2);
-    expect(screen.getByText('Basket $101.52 · 99.7')).toBeTruthy();
+    expect(screen.getByText('Basket $68.24 · 102.2')).toBeTruthy();
     expect(screen.getByText('Diesel $3.44 · 95.8')).toBeTruthy();
     expect(screen.getByText('Lag: none')).toBeTruthy();
     expect(screen.getByText('Best fit 12 wks')).toBeTruthy();
-    expect(screen.getByText(/Correlation at this lag: 0\.00\./)).toBeTruthy();
+    expect(screen.getByText(/Correlation at this lag: −0\.09\./)).toBeTruthy();
   });
 
   test('the lag slider shifts the fuel line and updates the correlation', async () => {
@@ -47,8 +47,8 @@ describe('Chart explorer (top of Insights)', () => {
     await adjust('Lag', 'increment', 4);
     expect(useUi.getState().lagWeeks).toBe(4);
     expect(screen.getByText('Lag: 4 weeks')).toBeTruthy();
-    expect(screen.getByText(/Correlation at this lag: 0\.38\./)).toBeTruthy();
-    expect(screen.queryByText('+4.0 pts gap')).toBeNull();
+    expect(screen.getByText(/Correlation at this lag: 0\.27\./)).toBeTruthy();
+    expect(screen.queryByText('+6.5 pts gap')).toBeNull();
   });
 
   test('Texas has no state diesel series, so the scope control offers U.S. and PADD only', async () => {

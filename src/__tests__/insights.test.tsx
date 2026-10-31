@@ -23,14 +23,14 @@ describe('Insights', () => {
     expect(await screen.findByLabelText('Produce 71%')).toBeTruthy();
     expect(screen.getByLabelText('Household 6%')).toBeTruthy();
     expect(await screen.findByText('Diesel −4.2%')).toBeTruthy();
-    // Basket −0.25% over 90 days against each region's diesel change.
+    // Basket +2.25% over 90 days against each region's diesel change.
     for (const [delta] of [
-      ['+4.0 pts'],
-      ['+3.6 pts'],
-      ['+4.4 pts'],
-      ['+3.1 pts'],
-      ['+2.7 pts'],
-      ['+3.8 pts'],
+      ['+6.5 pts'],
+      ['+6.1 pts'],
+      ['+6.9 pts'],
+      ['+5.6 pts'],
+      ['+5.2 pts'],
+      ['+6.3 pts'],
     ]) {
       expect(screen.getByText(delta!)).toBeTruthy();
     }

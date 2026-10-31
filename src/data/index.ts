@@ -19,4 +19,5 @@ export {
 } from './geo';
 export { ZIP_ERROR, ZIP_UNSUPPORTED } from './geo/zip';
 export { filterProducts } from './productSearch';
+export * from './highlights';
 export { useDeltaModel } from './useDeltaModel';
