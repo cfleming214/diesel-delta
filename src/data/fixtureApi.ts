@@ -23,11 +23,27 @@ import {
 } from './fixtures/series';
 import { AREA_NAMES, PADD_AREA, type FuelArea } from './geo';
 import { describeZip } from './geo/zip';
+import { isProduct, productDetail, productSummaries, verdictFromChange } from './products';
 import type { CatalogItem, DataApi, ItemDetail, RegionKey } from './types';
 
 const WEEKS = 52;
+/**
+ * Every catalog product as a catalog item, priced at its cheapest retailer, so Search, the product
+ * screen and the basket agree. The 22 prototype items keep their curated verdicts (their ledger
+ * templates); the rest take a verdict from their 1-year change.
+ */
+const FULL_CATALOG: CatalogItem[] = productSummaries().map((p) => ({
+  id: p.id,
+  name: p.name,
+  size: p.size,
+  category: p.category,
+  store: p.retailer,
+  price: p.price,
+  verdict: CATALOG.find((c) => c.id === p.id)?.verdict ?? verdictFromChange(p.change),
+}));
+
 const priceSum = (ids: readonly string[]) =>
-  CATALOG.filter((c) => ids.includes(c.id)).reduce((sum, c) => sum + c.price, 0);
+  FULL_CATALOG.filter((c) => ids.includes(c.id)).reduce((sum, c) => sum + c.price, 0);
 const DEFAULT_BASKET_TOTAL = priceSum(DEFAULT_BASKET_IDS);
 
 const publicRegion = (key: RegionKey) => ({ key, name: AREA_NAMES[PADD_AREA[key]] });
@@ -38,7 +54,7 @@ function fixtureFuel(area: FuelArea, kind: 'diesel' | 'gas') {
 }
 
 function findItem(id: string): CatalogItem {
-  const item = CATALOG.find((c) => c.id === id);
+  const item = FULL_CATALOG.find((c) => c.id === id);
   if (!item) throw new Error(`Unknown item ${id}`);
   return item;
 }
@@ -104,9 +120,9 @@ export function matchCatalog(query: string): { items: CatalogItem[]; resolvedFro
   const q = query.trim().toLowerCase();
   if (!q) return { items: [], resolvedFromLink: false };
   if (LINK.test(q))
-    return { items: CATALOG.filter((c) => c.id === 'ketchup'), resolvedFromLink: true };
+    return { items: FULL_CATALOG.filter((c) => c.id === 'ketchup'), resolvedFromLink: true };
   const words = q.split(/\s+/);
-  const items = CATALOG.filter((c) => {
+  const items = FULL_CATALOG.filter((c) => {
     const hay = `${c.name} ${c.size} ${c.category} ${c.store}`.toLowerCase();
     const compact = hay.replace(/\s/g, '');
     return words.every((w) => hay.includes(w) || compact.includes(w));
@@ -139,7 +155,7 @@ export const fixtureApi: DataApi = {
   },
 
   async getCatalog() {
-    return CATALOG;
+    return FULL_CATALOG;
   },
 
   async searchCatalog(query) {
@@ -171,5 +187,14 @@ export const fixtureApi: DataApi = {
 
   async getRetailerScores() {
     return RETAILER_SCORES;
+  },
+
+  async getProducts() {
+    return productSummaries();
+  },
+
+  async getProduct(id) {
+    if (!isProduct(id)) throw new Error(`Unknown product ${id}`);
+    return productDetail(id);
   },
 };

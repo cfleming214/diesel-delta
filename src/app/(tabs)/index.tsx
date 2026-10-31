@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { MagnifyingGlass, ShareNetwork } from '@/ui/icons';
+import { ShareNetwork } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -100,18 +100,11 @@ export default function TodayScreen() {
         title="Today"
         subtitle={subtitle}
         right={
-          <>
-            <IconButton
-              icon={MagnifyingGlass}
-              accessibilityLabel="Search"
-              onPress={() => router.push('/search')}
-            />
-            <IconButton
-              icon={ShareNetwork}
-              accessibilityLabel="Share"
-              onPress={() => router.push('/share')}
-            />
-          </>
+          <IconButton
+            icon={ShareNetwork}
+            accessibilityLabel="Share"
+            onPress={() => router.push('/share')}
+          />
         }
       />
       <Seg

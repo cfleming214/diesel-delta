@@ -14,6 +14,8 @@ export const queryKeys = {
   provenance: (id: string, zip: string) => ['provenance', id, zip] as const,
   catalog: ['catalog'] as const,
   search: (query: string) => ['search', query.trim().toLowerCase()] as const,
+  products: ['products'] as const,
+  product: (id: string) => ['product', id] as const,
 };
 
 export function useZipLookup(zip: string) {
@@ -112,5 +114,22 @@ export function useFuelSeriesMany(areas: readonly FuelArea[], kind: FuelSeriesKi
       queryFn: () => api.getFuelSeries(area, kind),
     })),
     combine: (results) => results.map((r) => r.data),
+  });
+}
+
+/** Every tracked product. Prices update daily, so a 6-hour stale time is plenty. */
+export function useProducts() {
+  return useQuery({
+    queryKey: queryKeys.products,
+    queryFn: () => api.getProducts(),
+    staleTime: SIX_HOURS,
+  });
+}
+
+export function useProduct(id: string) {
+  return useQuery({
+    queryKey: queryKeys.product(id),
+    queryFn: () => api.getProduct(id),
+    staleTime: SIX_HOURS,
   });
 }

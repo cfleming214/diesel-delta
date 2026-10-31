@@ -56,6 +56,40 @@ export type ItemDetail = CatalogItem & {
   spark: number[];
 };
 
+/** % change in the national price over each horizon; null without enough history. */
+export type PriceChange = { d30: number | null; d90: number | null; d365: number | null };
+
+/** A catalog product as Search and Today list it: the cheapest retailer's national price. */
+export type ProductSummary = {
+  id: string;
+  name: string;
+  size: string;
+  category: string;
+  /** Product photo from a retailer listing, when one is known. */
+  imageUrl: string | null;
+  price: number;
+  retailer: Store;
+  change: PriceChange;
+  /** How many tracked retailers carry it. */
+  retailerCount: number;
+};
+
+/** One retailer's national price for a product: today's, its changes, and its daily history. */
+export type RetailerPriceHistory = {
+  retailer: Store;
+  price: number;
+  change: PriceChange;
+  /** One value per day for the past year, ending on `asOf`. */
+  history: DailySeries;
+};
+
+export type ProductDetail = ProductSummary & {
+  /** ISO date of the latest price. */
+  asOf: string;
+  /** Cheapest first. */
+  retailers: RetailerPriceHistory[];
+};
+
 export type Provenance = { source: string; captured: string; method: string; confidence: string };
 
 export type CategoryPassThrough = { category: string; pct: number };
@@ -93,4 +127,8 @@ export interface DataApi {
   getProvenance(id: string, zip: string): Promise<Provenance>;
   getCategoryPassThrough(region: RegionKey): Promise<CategoryPassThrough[]>;
   getRetailerScores(): Promise<RetailerScore[]>;
+  /** Every tracked product, with the cheapest retailer's price and 30/90/365-day changes. */
+  getProducts(): Promise<ProductSummary[]>;
+  /** One product with each retailer's price history. */
+  getProduct(id: string): Promise<ProductDetail>;
 }
