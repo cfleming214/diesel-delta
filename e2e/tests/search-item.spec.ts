@@ -55,3 +55,18 @@ test('a product opens like a quote: range, scrubbing, retailers, then its ledger
   await expect(sheet.getByRole('heading', { name: 'Data provenance' })).toBeVisible();
   await expect(sheet).toContainText(/Captured.*store ZIP 77002/);
 });
+
+test('typing suggests products and categories; results page in 20s', async ({
+  onboarded: page,
+}) => {
+  await page.getByRole('tab', { name: 'Search' }).click();
+  await expect(page.getByText('Showing 20 of 150')).toBeVisible();
+  await page.getByRole('button', { name: 'Show more' }).click();
+  await expect(page.getByText('Showing 40 of 150')).toBeVisible();
+
+  await page.getByLabel('Search items').fill('heinz');
+  await page.getByRole('button', { name: 'Suggestion: Heinz ketchup, 2 products' }).click();
+  await expect(page.getByLabel('Search items')).toHaveValue('Heinz ketchup');
+  await expect(page.getByRole('button', { name: /^Suggestion: / })).toHaveCount(0);
+  await expect(page.getByText('2 products', { exact: true })).toBeVisible();
+});

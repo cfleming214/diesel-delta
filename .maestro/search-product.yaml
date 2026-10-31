@@ -13,3 +13,8 @@ name: Search a product, open it, change range and retailer
 - assertVisible: 'at Kroger.*'
 - tapOn: 'Close'
 - assertVisible: 'Search items'
+- tapOn: 'Search items'
+- eraseText
+- inputText: 'heinz'
+- tapOn: 'Suggestion: Heinz ketchup.*'
+- assertVisible: '2 products'
