@@ -1,4 +1,4 @@
-# DieselDelta
+# Diesel Data
 
 When diesel falls, do grocery prices follow? An iOS-first Expo app. See `PLAN.md` (product), `FEATURES.md` (features), `BUILD_PLAN.md` (build phases) and `design/handoff/README.md` (screen spec).
 
@@ -140,4 +140,4 @@ Metrics are computed by `supabase/functions/_shared/metrics.ts`, shared by the m
 
 ## Kitchen sink
 
-In development builds, open `dieseldelta://dev/kitchen-sink` (or `/dev/kitchen-sink` on web) to see every primitive for side-by-side review against `design/handoff/DieselDeltaApp.dc.html`.
+In development builds, open `dieseldata://dev/kitchen-sink` (or `/dev/kitchen-sink` on web) to see every primitive for side-by-side review against `design/handoff/DieselDeltaApp.dc.html`.

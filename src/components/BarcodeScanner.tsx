@@ -24,8 +24,8 @@ export function BarcodeScanner({ onScanned }: Props) {
       <View style={styles.gate}>
         <Text variant="bodySmall" color={colors.neutral[300]}>
           {permission.canAskAgain
-            ? 'DieselDelta needs the camera to read barcodes. Nothing is recorded or uploaded.'
-            : 'Camera access is off for DieselDelta. Turn it on in Settings to scan barcodes.'}
+            ? 'Diesel Data needs the camera to read barcodes. Nothing is recorded or uploaded.'
+            : 'Camera access is off for Diesel Data. Turn it on in Settings to scan barcodes.'}
         </Text>
         {permission.canAskAgain ? (
           <Button label="Allow camera" block onPress={requestPermission} />

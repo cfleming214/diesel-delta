@@ -188,7 +188,7 @@ export default function InsightsScreen() {
         />
         <LinkRow
           icon={StarFour}
-          label="DieselDelta Pro"
+          label="Diesel Data Pro"
           value={prefs.isPro ? 'Active' : 'Free plan'}
           onPress={() => router.push('/paywall')}
           last

@@ -49,7 +49,7 @@ describe('Insights', () => {
 
   test('links: methodology sheet, retailers and Pro', async () => {
     await openInsights();
-    expect(screen.getByLabelText('DieselDelta Pro, Free plan')).toBeTruthy();
+    expect(screen.getByLabelText('Diesel Data Pro, Free plan')).toBeTruthy();
     await fireEvent.press(screen.getByText('Methodology and sources'));
     expect(await screen.findByText('Limitations')).toBeTruthy();
     await act(() => fireEvent.press(screen.getByText('Retailer scorecard')));

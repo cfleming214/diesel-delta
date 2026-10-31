@@ -27,7 +27,7 @@ const MOCK_URL = 'http://localhost:54321';
 const MOCK_SERVICE_KEY = 'mock-service-role-key';
 
 export function userAgent(contactUrl: string) {
-  return `DieselDeltaPriceBot/0.1 (+${contactUrl})`;
+  return `DieselDataPriceBot/0.1 (+${contactUrl})`;
 }
 
 /** Adapters available in this build. Real sources (kroger-api, ...) arrive in P3 and P4. */

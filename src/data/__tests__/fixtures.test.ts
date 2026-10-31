@@ -137,7 +137,7 @@ describe('zip lookup', () => {
     expect(ca.dieselSeries).toEqual({ area: 'SCA', name: 'California', level: 'state' });
     await expect(api.lookupZip('7700')).rejects.toThrow('Enter a 5-digit US ZIP code.');
     await expect(api.lookupZip('00901')).rejects.toThrow(
-      'DieselDelta covers ZIP codes in the 50 states and DC.',
+      'Diesel Data covers ZIP codes in the 50 states and DC.',
     );
   });
 });

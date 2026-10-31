@@ -31,7 +31,7 @@ npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | The local mock server (`npm run mock:server`) | Where the bot writes. It needs the service role. |
-| `BOT_CONTACT_URL` | `https://dd.app/bot` | Sent in the User-Agent (`DieselDeltaPriceBot/0.1 (+url)`). Point it at a real page that explains the bot before any live source runs. |
+| `BOT_CONTACT_URL` | `https://dd.app/bot` | Sent in the User-Agent (`DieselDataPriceBot/0.1 (+url)`). Point it at a real page that explains the bot before any live source runs. |
 | `BOT_RAW_DIR` | `price-bot/.data/raw` | Raw responses, purged after 90 days. Production should use object storage. |
 | `MOCK_RETAIL_URL` | `SUPABASE_URL` | Where the simulated retailers live. |
 

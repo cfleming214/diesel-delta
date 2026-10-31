@@ -118,7 +118,7 @@ export function ShareCard({ ref, ...p }: Props) {
         <View style={styles.brand}>
           <GasPump size={13} color={colors.accentRamp[200]} />
           <Text style={styles.kicker} color={colors.accentRamp[200]}>
-            DieselDelta
+            Diesel Data
           </Text>
         </View>
         <Text style={styles.kicker} color={colors.accentRamp[200]}>

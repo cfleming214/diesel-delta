@@ -46,7 +46,7 @@ describe('onboarding', () => {
     await renderRouter('./src/app', { initialUrl: '/onboarding' });
     await act(() => fireEvent.changeText(screen.getByLabelText('Home ZIP code'), '00901'));
     expect(
-      await screen.findByText('DieselDelta covers ZIP codes in the 50 states and DC.'),
+      await screen.findByText('Diesel Data covers ZIP codes in the 50 states and DC.'),
     ).toBeTruthy();
     await act(() => fireEvent.press(screen.getByText('Continue')));
     expect(screen).toHavePathname('/onboarding');

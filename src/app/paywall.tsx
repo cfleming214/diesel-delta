@@ -71,7 +71,7 @@ export default function PaywallScreen() {
         <BackButton close />
       </View>
       <View style={styles.head}>
-        <Kicker>DieselDelta Pro</Kicker>
+        <Kicker>Diesel Data Pro</Kicker>
         <Text style={styles.title} accessibilityRole="header">
           More history, more baskets, local detail.
         </Text>

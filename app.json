@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "DieselDelta",
+    "name": "Diesel Data",
     "slug": "diesel-delta",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "dieseldelta",
+    "scheme": "dieseldata",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#161826",
     "ios": {
@@ -53,7 +53,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "DieselDelta uses the camera to scan product barcodes and grocery receipts. Receipt photos are processed on this device.",
+          "cameraPermission": "Diesel Data uses the camera to scan product barcodes and grocery receipts. Receipt photos are processed on this device.",
           "microphonePermission": false,
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true
@@ -64,7 +64,7 @@
         "expo-media-library",
         {
           "photosPermission": false,
-          "savePhotosPermission": "DieselDelta saves share cards to your photo library.",
+          "savePhotosPermission": "Diesel Data saves share cards to your photo library.",
           "isAccessMediaLocationEnabled": false
         }
       ],
