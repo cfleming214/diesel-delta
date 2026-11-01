@@ -2,20 +2,27 @@ import { expect, test } from '../fixtures';
 
 test.use({ permissions: ['notifications'] });
 
-test('alert settings toggle, adjust tolerance and persist', async ({ onboarded: page }) => {
+test('on the web, alerts are off and explained; tolerance adjusts and persists', async ({
+  onboarded: page,
+}) => {
   await page.getByRole('tab', { name: 'Insights' }).click();
-  const diesel = page.getByRole('switch', { name: 'Diesel crosses $3.25/gal' });
-  const wasOn = await diesel.isChecked();
-  await diesel.click();
-  await expect(diesel).toBeChecked({ checked: !wasOn });
+  // The web build can't show notifications, so the alerts stay off and say where they work.
+  for (const name of [
+    'Diesel crosses $3.25/gal',
+    'A followed item drops in price',
+    'Delta exceeds tolerance',
+  ]) {
+    const toggle = page.getByRole('switch', { name });
+    await expect(toggle).toBeChecked({ checked: false });
+    await expect(toggle).toBeDisabled();
+  }
+  await expect(
+    page.getByText('Alerts arrive as notifications in the iOS and Android app.'),
+  ).toBeVisible();
 
   await page.getByRole('button', { name: 'Increase' }).click();
   await expect(page.getByText(/^Currently \d+\.\d pts, tolerance 4 pts$/)).toBeVisible();
-
   await page.reload();
-  await expect(page.getByRole('switch', { name: 'Diesel crosses $3.25/gal' })).toBeChecked({
-    checked: !wasOn,
-  });
   await expect(page.getByText(/tolerance 4 pts/)).toBeVisible();
 });
 
