@@ -1,5 +1,5 @@
 appId: com.simpledesign.dieseldata
-name: Scan a receipt and enter a price manually
+name: Scan a receipt, enter a price manually, and keep both after a cold start
 ---
 - runFlow: _onboard.yaml
 - tapOn: 'Log'
@@ -26,3 +26,9 @@ name: Scan a receipt and enter a price manually
 - tapOn: 'Save price'
 - assertVisible: 'Price saved'
 - assertVisible: 'Oat milk 64 oz'
+# Logged prices are kept on the device: they survive a cold start.
+- stopApp
+- launchApp
+- tapOn: 'Log'
+- assertVisible: 'Oat milk 64 oz'
+- assertVisible: 'Walmart · .*'

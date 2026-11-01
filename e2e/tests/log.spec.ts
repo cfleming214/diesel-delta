@@ -28,3 +28,30 @@ test('enter a price manually; it stays after a reload', async ({ onboarded: page
   await page.reload();
   await expect(page.getByText('Oat milk 64 oz')).toBeVisible();
 });
+
+test('logged prices survive closing the app and opening it again', async ({
+  onboarded: page,
+  context,
+}) => {
+  await page.getByRole('button', { name: 'Scan receipt' }).click();
+  await page.getByRole('button', { name: 'Capture' }).click();
+  await page.getByRole('button', { name: 'Add 4 prices' }).click();
+  await page.getByRole('button', { name: 'Enter manually' }).click();
+  await page.getByLabel('Item', { exact: true }).fill('Oat milk 64 oz');
+  await page.getByLabel('Price paid').fill('4.29');
+  await page.getByRole('button', { name: 'Walmart' }).click();
+  await page.getByRole('button', { name: 'Save price' }).click();
+  await expect(page.getByText('Oat milk 64 oz')).toBeVisible();
+
+  // A cold start: close the tab, open the app fresh at its home screen.
+  await page.close();
+  const fresh = await context.newPage();
+  await fresh.goto('/');
+  await expect(fresh.getByRole('heading', { name: 'Today' })).toBeVisible();
+  await fresh.getByRole('tab', { name: 'Log' }).click();
+  await expect(fresh.getByText('Oat milk 64 oz')).toBeVisible();
+  await expect(fresh.getByText('$4.29', { exact: true })).toBeVisible();
+  await expect(fresh.getByText(/^Walmart · /)).toBeVisible();
+  // The four scanned lines are still there too: five entries in all.
+  await expect(fresh.getByText(/ · [A-Z][a-z]{2} \d+$/)).toHaveCount(5);
+});
