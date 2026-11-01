@@ -66,6 +66,8 @@ describe('Receipt log', () => {
     await fireEvent.press(screen.getByText('Save price'));
     expect(screen.getByText('Enter an item name.')).toBeTruthy();
     expect(screen.getByText('Enter a price above $0.')).toBeTruthy();
+    // No store is assumed.
+    expect(screen.getByText('Choose the store.')).toBeTruthy();
 
     await fireEvent.changeText(screen.getByLabelText('Item'), 'Heinz ketchup 32 oz');
     await fireEvent.changeText(screen.getByLabelText('Price paid'), '4.99');
@@ -79,6 +81,28 @@ describe('Receipt log', () => {
       item: 'Heinz ketchup 32 oz',
       price: 4.99,
       store: 'Target',
+    });
+  });
+
+  test('the next manual entry starts at the last store used', async () => {
+    useReceipts.getState().add([
+      {
+        item: 'Oat milk',
+        price: 4.29,
+        store: 'Walmart',
+        date: '2026-10-30',
+        comparison: '',
+        differs: false,
+      },
+    ]);
+    await openLog();
+    await fireEvent.press(screen.getByText('Enter manually'));
+    await fireEvent.changeText(screen.getByLabelText('Item'), 'Large eggs 12 ct');
+    await fireEvent.changeText(screen.getByLabelText('Price paid'), '3.59');
+    await fireEvent.press(screen.getByText('Save price'));
+    expect(useReceipts.getState().history[0]).toMatchObject({
+      item: 'Large eggs 12 ct',
+      store: 'Walmart',
     });
   });
 });
