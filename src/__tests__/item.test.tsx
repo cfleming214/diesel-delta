@@ -21,26 +21,26 @@ describe('Item detail', () => {
     expect(screen.getByText('Gouge Gap')).toBeTruthy();
     expect(
       screen.getByText(
-        'Price rose twice while diesel climbed. Diesel has since fallen 13.3% with no price reduction.',
+        'Price rose once this year. Diesel has since fallen 9.0% with no price reduction.',
       ),
     ).toBeTruthy();
     // Shelf-price stat and the chart's high label.
     expect(screen.getAllByText('$3.89')).toHaveLength(2);
-    expect(screen.getByText('$0.47')).toBeTruthy();
-    expect(screen.getByText('−13.3%')).toBeTruthy();
-    // Ledger, newest first.
-    expect(screen.getByText('$3.66 → $3.89')).toBeTruthy();
-    expect(screen.getByText('+6.4%')).toBeTruthy();
-    expect(screen.getByText('Apr 6, 2026 · Diesel $3.97')).toBeTruthy();
-    expect(screen.getAllByText('Fuel-correlated')).toHaveLength(2);
+    expect(screen.getByText('$0.30')).toBeTruthy();
+    expect(screen.getByText('−9.0%')).toBeTruthy();
+    // Ledger, newest first: the same rise the product screen's 1-year change reflects.
+    expect(screen.getByText('$3.59 → $3.89')).toBeTruthy();
+    expect(screen.getByText('+8.4%')).toBeTruthy();
+    expect(screen.getByText('Jan 23, 2026 · Diesel $3.78')).toBeTruthy();
+    expect(screen.getAllByText('Fuel-correlated')).toHaveLength(1);
   });
 
   test('Tracking Fuel item shows a rollback', async () => {
-    await openItem('eggs');
+    await openItem('bread');
     expect(await screen.findByText('Rollback')).toBeTruthy();
-    expect(
-      screen.getByText('Price rose with diesel and was reduced again as diesel fell.'),
-    ).toBeTruthy();
+    expect(screen.getByText('Tracking Fuel')).toBeTruthy();
+    expect(screen.getByText('Price rose and was reduced again as diesel fell.')).toBeTruthy();
+    expect(screen.getByText('$0.00')).toBeTruthy();
   });
 
   test('follow toggles from the header', async () => {
@@ -60,10 +60,12 @@ describe('Item detail', () => {
     expect(screen.getByText('Report a correction with a shelf-tag photo')).toBeTruthy();
   });
 
-  test('unknown ids say so', async () => {
+  test('unknown ids say so and point to Search', async () => {
     await openItem('caviar');
     expect(
-      await screen.findByText('This item is not tracked.', {}, { timeout: 4000 }),
+      await screen.findByText(/^This item isn’t tracked\./, {}, { timeout: 4000 }),
     ).toBeTruthy();
+    await act(() => fireEvent.press(screen.getByText('Search products')));
+    expect(screen).toHavePathname('/search');
   });
 });

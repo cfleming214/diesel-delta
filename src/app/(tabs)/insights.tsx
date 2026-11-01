@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { BookOpen, CaretRight, StarFour, Storefront, type Icon } from '@/ui/icons';
+import { BookOpen, CaretRight, MapPin, StarFour, Storefront, type Icon } from '@/ui/icons';
 import { useMemo, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
@@ -18,7 +18,7 @@ import {
   type FuelArea,
   type RegionKey,
 } from '@/data';
-import { alignSeries, money, pct, sgn, windowInfo, windowRange } from '@/domain';
+import { alignSeries, formatDate, money, pct, sgn, windowInfo, windowRange } from '@/domain';
 import { basketIds, usePrefs, type AlertPrefs } from '@/store/prefs';
 import { push } from '@/lib/push';
 import { useUi } from '@/store/ui';
@@ -114,7 +114,7 @@ export default function InsightsScreen() {
       <View style={styles.sectionTight}>
         <SectionTitle
           title="Delta by region"
-          subtitle={`Your basket against each region's diesel series, ${windowInfo(window).label}`}
+          subtitle={`Your basket against each region's diesel series, ${windowInfo(window).label}${model ? ` to ${formatDate(model.latestDate)}` : ''}`}
         />
         {regionRows.map((r) => {
           const mine = r.key === prefs.region;
@@ -193,6 +193,12 @@ export default function InsightsScreen() {
       </View>
 
       <Card padding={0} gap={0} style={styles.links}>
+        <LinkRow
+          icon={MapPin}
+          label="Location"
+          value={`${prefs.state ?? ''} ${prefs.zip ?? ''}`.trim()}
+          onPress={() => router.push('/onboarding')}
+        />
         <LinkRow
           icon={Storefront}
           label="Retailer scorecard"

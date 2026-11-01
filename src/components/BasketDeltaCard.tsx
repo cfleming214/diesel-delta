@@ -1,11 +1,20 @@
 import { StyleSheet, View } from 'react-native';
 
-import { BASELINES, money, smoney, type Baseline, type BasketAttribution } from '@/domain';
+import {
+  BASELINES,
+  formatDate,
+  money,
+  smoney,
+  type Baseline,
+  type BasketAttribution,
+} from '@/domain';
 import { colors, em, fonts } from '@/theme';
 import { Card, Kicker, Seg, Text } from '@/ui';
 
 type Props = {
   attribution: BasketAttribution;
+  /** The last day of the window: the same as-of date as the Today chart. */
+  asOf?: Date;
   baseline: Baseline;
   onBaselineChange: (baseline: Baseline) => void;
 };
@@ -13,7 +22,7 @@ type Props = {
 const OPTIONS = BASELINES.map((b) => ({ value: b, label: b }));
 
 /** Basket dollar change since the baseline, split into fuel-attributable and no fuel link. */
-export function BasketDeltaCard({ attribution: a, baseline, onBaselineChange }: Props) {
+export function BasketDeltaCard({ attribution: a, asOf, baseline, onBaselineChange }: Props) {
   return (
     <Card padding={16} gap={12}>
       <View style={styles.head}>
@@ -31,7 +40,7 @@ export function BasketDeltaCard({ attribution: a, baseline, onBaselineChange }: 
           {smoney(a.change)}
         </Text>
         <Text variant="bodySmall" numeric color={colors.neutral[400]}>
-          {`${money(a.from)} → ${money(a.to)}`}
+          {`${money(a.from)} → ${money(a.to)}${asOf ? ` on ${formatDate(asOf)}` : ''}`}
         </Text>
       </View>
       <View

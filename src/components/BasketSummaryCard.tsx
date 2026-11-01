@@ -3,13 +3,18 @@ import { CaretRight } from '@/ui/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { PriceChange, ProductSummary } from '@/data';
-import { money } from '@/domain';
+import { formatDate, money } from '@/domain';
 import { colors } from '@/theme';
 import { Card, Text } from '@/ui';
 
 import { CHANGE_LABELS, formatChange } from './priceChange';
 
-type Props = { products: ProductSummary[]; basketIds: string[] };
+type Props = {
+  products: ProductSummary[];
+  basketIds: string[];
+  /** The day the prices are from: the same as-of date the Delta chart ends on. */
+  asOf?: Date;
+};
 
 /**
  * The basket at today's cheapest prices, and how that total moved over 30 days, 90 days and a
@@ -33,7 +38,7 @@ export function basketTotals(products: readonly ProductSummary[], ids: readonly 
   return { count: items.length, now, change };
 }
 
-export function BasketSummaryCard({ products, basketIds }: Props) {
+export function BasketSummaryCard({ products, basketIds, asOf }: Props) {
   const t = basketTotals(products, basketIds);
   const words = { d30: '30 days', d90: '90 days', d365: '1 year' } as const;
   return (
@@ -48,7 +53,7 @@ export function BasketSummaryCard({ products, basketIds }: Props) {
           <View style={styles.flex}>
             <Text variant="section">Your basket</Text>
             <Text variant="caption" color={colors.neutral[400]}>
-              {`${t.count} ${t.count === 1 ? 'item' : 'items'} at today's cheapest prices`}
+              {`${t.count} ${t.count === 1 ? 'item' : 'items'} at the cheapest prices${asOf ? ` on ${formatDate(asOf)}` : ''}`}
             </Text>
           </View>
           <Text numeric style={styles.total}>

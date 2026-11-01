@@ -36,19 +36,42 @@ export const shelf = (p: number) => Math.max(0.29, Math.floor(p * 10) / 10 + 0.0
 const DAY_MS = 86_400_000;
 export const dayNumber = (iso: string) => Math.floor(Date.parse(`${iso}T00:00:00Z`) / DAY_MS);
 
+type Step = { at: number; up: number; back: number | null };
+const schedules = new Map<string, Step[]>();
+
+/** The step changes for one key, drawn once and cached (they don't depend on the day). */
+function schedule(key: string): Step[] {
+  let steps = schedules.get(key);
+  if (!steps) {
+    const end = dayNumber('2026-11-01');
+    steps = [];
+    for (let i = 0; i < 4; i++) {
+      if (rand(`${key}:step:${i}`) > 0.6) continue;
+      const at = end - 365 + Math.floor(rand(`${key}:step-at:${i}`) * 360);
+      const up = 1 + 0.03 + rand(`${key}:step-size:${i}`) * 0.08;
+      const back =
+        rand(`${key}:rollback:${i}`) < 0.35
+          ? at + 21 + Math.floor(rand(`${key}:rollback-at:${i}`) * 90)
+          : null;
+      steps.push({ at, up, back });
+    }
+    schedules.set(key, steps);
+  }
+  return steps;
+}
+
+/** The days a key's step factor can change on (its steps and rollbacks), sorted. */
+export function stepDays(key: string): number[] {
+  const days = schedule(key).flatMap(({ at, back }) => (back == null ? [at] : [at, back]));
+  return [...new Set(days)].sort((a, b) => a - b);
+}
+
 /** Up to 4 step changes in the year before 2026-11-01; about a third roll back later. */
 export function stepFactor(key: string, day: number): number {
-  const end = dayNumber('2026-11-01');
   let f = 1;
-  for (let i = 0; i < 4; i++) {
-    if (rand(`${key}:step:${i}`) > 0.6) continue;
-    const at = end - 365 + Math.floor(rand(`${key}:step-at:${i}`) * 360);
-    const up = 1 + 0.03 + rand(`${key}:step-size:${i}`) * 0.08;
+  for (const { at, up, back } of schedule(key)) {
     if (day >= at) f *= up;
-    if (rand(`${key}:rollback:${i}`) < 0.35) {
-      const back = at + 21 + Math.floor(rand(`${key}:rollback-at:${i}`) * 90);
-      if (day >= back) f /= up;
-    }
+    if (back != null && day >= back) f /= up;
   }
   return f;
 }
