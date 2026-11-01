@@ -126,7 +126,11 @@ export default function TodayScreen() {
       {products ? (
         <>
           {basket.length ? (
-            <BasketSummaryCard products={products} basketIds={basketIds(basket)} />
+            <BasketSummaryCard
+              products={products}
+              basketIds={basketIds(basket)}
+              asOf={model?.latestDate}
+            />
           ) : null}
           <MoversList products={products} />
         </>

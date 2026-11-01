@@ -18,7 +18,7 @@ import {
   type FuelArea,
   type RegionKey,
 } from '@/data';
-import { alignSeries, money, pct, sgn, windowInfo, windowRange } from '@/domain';
+import { alignSeries, formatDate, money, pct, sgn, windowInfo, windowRange } from '@/domain';
 import { basketIds, usePrefs, type AlertPrefs } from '@/store/prefs';
 import { push } from '@/lib/push';
 import { toast } from '@/store/toast';
@@ -111,7 +111,7 @@ export default function InsightsScreen() {
       <View style={styles.sectionTight}>
         <SectionTitle
           title="Delta by region"
-          subtitle={`Your basket against each region's diesel series, ${windowInfo(window).label}`}
+          subtitle={`Your basket against each region's diesel series, ${windowInfo(window).label}${model ? ` to ${formatDate(model.latestDate)}` : ''}`}
         />
         {regionRows.map((r) => {
           const mine = r.key === prefs.region;
