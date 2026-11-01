@@ -29,3 +29,35 @@ test('scorecard and methodology are reachable', async ({ onboarded: page }) => {
   await expect(page.getByRole('dialog')).toContainText('U.S. Energy Information Administration');
   await expect(page.getByRole('dialog')).toContainText('A gap is not proof of intent.');
 });
+
+test('Insights matches Today: window above the chart, and no Reanimated warnings', async ({
+  onboarded: page,
+}) => {
+  const warnings: string[] = [];
+  page.on('console', (m) => {
+    if (/Reanimated/.test(m.text())) warnings.push(m.text());
+  });
+  const order = async () => {
+    const win = (await page
+      .getByRole('tablist', { name: 'Window' })
+      .filter({ visible: true })
+      .boundingBox())!;
+    const chart = (await page
+      .getByText(/^Jul 28$/)
+      .filter({ visible: true })
+      .first()
+      .boundingBox())!;
+    return win.y < chart.y;
+  };
+  expect(await order()).toBe(true);
+
+  await page.getByRole('tab', { name: 'Insights' }).click();
+  await expect(page.getByRole('heading', { name: 'Insights' })).toBeVisible();
+  expect(await order()).toBe(true);
+
+  await page.getByRole('button', { name: 'Methodology and sources' }).click();
+  await expect(page.getByRole('dialog')).toContainText('A gap is not proof of intent.');
+  await page.getByRole('dialog').getByRole('button', { name: 'Close' }).last().click();
+  await expect(page.getByRole('dialog')).toBeHidden();
+  expect(warnings).toEqual([]);
+});
