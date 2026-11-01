@@ -31,7 +31,7 @@ export function priceSteps(values: readonly number[]): PriceStep[] {
 }
 
 /** Diesel for each day of the price history (both end on the fixture "today"). */
-function fuelForHistory(region: RegionKey): number[] {
+export function fuelForHistory(region: RegionKey): number[] {
   return regionalize(FUEL, region).slice(DAYS - HISTORY_DAYS);
 }
 
@@ -50,11 +50,15 @@ export function runBase(steps: readonly PriceStep[], day = Infinity): number | n
   return before[i]!.from;
 }
 
+/** A rise is fuel-led when diesel climbed at least 1% in the 8 weeks before it. */
+export function isFuelLedRise(step: PriceStep, fuel: readonly number[]): boolean {
+  if (!isRise(step)) return false;
+  const before = fuel[Math.max(0, step.day - FUEL_LOOKBACK_DAYS)]!;
+  return pct(before, fuel[step.day]!) >= FUEL_LED_PCT;
+}
+
 function tagFor(step: PriceStep, steps: readonly PriceStep[], fuel: readonly number[]): LedgerTag {
-  if (isRise(step)) {
-    const before = fuel[Math.max(0, step.day - FUEL_LOOKBACK_DAYS)]!;
-    return pct(before, fuel[step.day]!) >= FUEL_LED_PCT ? 'Fuel-correlated' : 'No fuel link';
-  }
+  if (isRise(step)) return isFuelLedRise(step, fuel) ? 'Fuel-correlated' : 'No fuel link';
   const base = runBase(steps, step.day);
   return base == null || step.to <= base ? 'Rollback' : 'Partial rollback';
 }

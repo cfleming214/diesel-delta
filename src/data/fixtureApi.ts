@@ -1,6 +1,6 @@
 import { toISODate } from '@/domain';
 
-import { CATEGORY_PASS_THROUGH, RETAILER_SCORES } from './fixtures/catalog';
+import { CATEGORY_PASS_THROUGH } from './fixtures/catalog';
 import {
   BASKET,
   dateAt,
@@ -14,8 +14,9 @@ import {
 import { AREA_NAMES, PADD_AREA, type FuelArea } from './geo';
 import { describeZip } from './geo/zip';
 import { itemDetailFromHistory, verdictFor } from './itemHistory';
+import { retailerScores } from './retailerScores';
 import { basketCostSeries, isProduct, productDetail, productSummaries } from './products';
-import type { CatalogItem, DataApi, RegionKey } from './types';
+import type { CatalogItem, DataApi, RegionKey, RetailerScore } from './types';
 
 /**
  * Every catalog product priced at its cheapest retailer, so Search, the product screen, the
@@ -39,6 +40,8 @@ function fixtureFuel(area: FuelArea, kind: 'diesel' | 'gas') {
 }
 
 const findItem = catalogItem;
+
+let scores: RetailerScore[] | null = null;
 
 /**
  * Synthetic barcodes for development only (not real product GTINs). Real scans resolve once the
@@ -122,7 +125,8 @@ export const fixtureApi: DataApi = {
   },
 
   async getRetailerScores() {
-    return RETAILER_SCORES;
+    scores ??= retailerScores();
+    return scores;
   },
 
   async getProducts() {
