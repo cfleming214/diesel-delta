@@ -47,13 +47,13 @@ describe('Today', () => {
     expect(screen).toHavePathname('/share');
   });
 
-  test("shows the basket at today's cheapest prices with its 30D, 90D and 1Y change", async () => {
+  test("shows the basket at the chart's as-of prices with its 30D, 90D and 1Y change", async () => {
     usePrefs.getState().reset();
     usePrefs.getState().setLocation('77002', 'TX', 'gulf');
     await renderRouter('./src/app');
     const card = await screen.findByLabelText(/^Your basket, 16 items, \$\d+\.\d\d, 30 days /);
     expect(card).toBeTruthy();
-    expect(screen.getByText("16 items at today's cheapest prices")).toBeTruthy();
+    expect(screen.getByText('16 items at the cheapest prices on Oct 26')).toBeTruthy();
     await act(() => fireEvent.press(card));
     expect(screen).toHavePathname('/basket');
   });

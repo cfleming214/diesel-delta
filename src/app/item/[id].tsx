@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Camera, Info, ShareNetwork, Star } from '@/ui/icons';
+import { Info, ShareNetwork, Star } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -17,13 +17,13 @@ import {
   type LedgerTag,
 } from '@/domain';
 import { usePrefs } from '@/store/prefs';
-import { toast } from '@/store/toast';
 import { colors, fonts } from '@/theme';
 import { Button, Card, IconButton, KVRow, Screen, Sheet, Tag, Text } from '@/ui';
 import { track } from '@/lib/telemetry';
 
 const TAG_COLOR: Record<LedgerTag, string> = {
   'Fuel-correlated': colors.accentRamp[300],
+  'No fuel link': colors.accentRamp[300],
   'Partial rollback': colors.accentRamp[300],
   Rollback: colors.neutral[300],
 };
@@ -68,7 +68,18 @@ export default function ItemScreen() {
     return (
       <Screen contentStyle={styles.content}>
         {top}
-        {error ? <Text color={colors.neutral[400]}>This item is not tracked.</Text> : null}
+        {error ? (
+          <View style={styles.missing}>
+            <Text color={colors.neutral[400]}>
+              This item isn’t tracked. Search the 150 products Diesel Data follows.
+            </Text>
+            <Button
+              label="Search products"
+              variant="secondary"
+              onPress={() => router.replace('/search')}
+            />
+          </View>
+        ) : null}
       </Screen>
     );
   }
@@ -87,7 +98,7 @@ export default function ItemScreen() {
         </Text>
         <Tag label={verdict.label} tone={verdict.tone} size="lg" />
         <Text variant="bodySmall" color={colors.neutral[300]} style={styles.explain}>
-          {verdictExplanation(item.verdict, item.fuelSincePct)}
+          {verdictExplanation(item.verdict, item.fuelSincePct, item.rises)}
         </Text>
       </View>
 
@@ -139,17 +150,6 @@ export default function ItemScreen() {
             <KVRow k="Captured" v={provenance.data.captured} />
             <KVRow k="Method" v={provenance.data.method} />
             <KVRow k="Confidence" v={provenance.data.confidence} />
-            <Button
-              label="Report a correction with a shelf-tag photo"
-              variant="secondary"
-              icon={Camera}
-              block
-              style={styles.report}
-              onPress={() => {
-                setSourcesOpen(false);
-                toast('Corrections open in a later update');
-              }}
-            />
           </>
         ) : null}
       </Sheet>
@@ -171,6 +171,7 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 }
 
 const styles = StyleSheet.create({
+  missing: { gap: 12, alignItems: 'flex-start' },
   content: { gap: 16 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   actions: { flexDirection: 'row', gap: 6 },
@@ -191,5 +192,4 @@ const styles = StyleSheet.create({
   },
   ledgerLine: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   regular: { fontFamily: fonts.regular },
-  report: { marginTop: 8 },
 });

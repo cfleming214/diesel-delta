@@ -13,6 +13,7 @@ import {
   WINDOWS,
 } from '@/domain';
 import { api } from '@/data';
+import { productSummaries } from '@/data/products';
 import { matchCatalog } from '@/data/fixtureApi';
 import { DEFAULT_BASKET_IDS } from '@/data/fixtures/catalog';
 import { BASKET, DAYS, FUEL, GAS, YEAR_START, dateAt } from '@/data/fixtures/series';
@@ -70,11 +71,11 @@ describe('golden: Delta for ZIP 77002', () => {
 
   test('basket attribution (1Y baseline)', () => {
     const a = basketAttribution(BASKET, FUEL, baselineIndex(DAYS, '1Y'));
-    expect(a.from).toBe(96.4);
+    expect(a.from).toBeCloseTo(96.394, 3);
     expect(a.to).toBe(101.52);
-    expect(smoney(a.change)).toBe('+$5.12');
-    expect(smoney(a.fuelAttributable)).toBe('−$0.21');
-    expect(smoney(a.noFuelLink)).toBe('+$5.33');
+    expect(smoney(a.change)).toBe('+$5.13');
+    expect(smoney(a.fuelAttributable)).toBe('−$0.23');
+    expect(smoney(a.noFuelLink)).toBe('+$5.35');
   });
 
   test('regional 90D fuel changes', async () => {
@@ -93,17 +94,44 @@ describe('golden: Delta for ZIP 77002', () => {
 });
 
 describe('items', () => {
-  test('milk (Gouge Gap) model', async () => {
+  test('milk (Gouge Gap) model, from its Walmart price history', async () => {
     const milk = await api.getItem('milk', 'gulf');
-    expect(milk.basePrice).toBeCloseTo(3.4232, 10);
-    expect(milk.unreturned).toBeCloseTo(0.4668, 10);
-    expect(milk.changePct).toBeCloseTo(13.636363636363638, 10);
-    expect(milk.fuelSincePct).toBeCloseTo(-13.320868266147526, 10);
+    expect(milk.verdict).toBe('gouge');
+    expect(milk.store).toBe('Walmart');
+    expect(milk.price).toBe(3.89);
+    expect(milk.basePrice).toBe(3.59);
+    expect(milk.unreturned).toBeCloseTo(0.3, 10);
+    expect(milk.changePct).toBeCloseTo(8.356545961002794, 10);
+    expect(milk.fuelSincePct).toBeCloseTo(-8.977634736131046, 10);
+    expect(milk.rises).toBe(1);
     expect(milk.weeklyPrice).toHaveLength(53);
     expect(milk.spark).toHaveLength(15);
-    expect(milk.ledger.map((l) => l.tag)).toEqual(['Fuel-correlated', 'Fuel-correlated']);
-    expect(milk.ledger[0]!.from).toBeCloseTo(3.6566, 10);
-    expect(formatDate(fromISODate(milk.ledger[1]!.date), true)).toBe('Feb 9, 2026');
+    expect(milk.ledger).toHaveLength(1);
+    expect(milk.ledger[0]).toMatchObject({ from: 3.59, to: 3.89, tag: 'Fuel-correlated' });
+    expect(formatDate(fromISODate(milk.ledger[0]!.date), true)).toBe('Jan 23, 2026');
+  });
+
+  test('every item agrees with its product: store, price and 1-year change', async () => {
+    for (const p of productSummaries()) {
+      const item = await api.getItem(p.id, 'mid');
+      expect([item.id, item.store, item.price]).toEqual([p.id, p.retailer, p.price]);
+      expect(item.changePct).toBeCloseTo(p.change.d365!, 10);
+      expect(item.weeklyPrice.at(-1)).toBe(p.price);
+      // Only items owing a rollback carry an unreturned amount.
+      if (item.verdict === 'track') expect(item.unreturned).toBe(0);
+      else expect(item.unreturned).toBeGreaterThan(0);
+    }
+  });
+
+  test('ledger tags follow diesel and the latest run of rises', async () => {
+    const rice = await api.getItem('rice', 'mid');
+    expect(rice.verdict).toBe('sticky');
+    expect(rice.ledger.map((l) => [l.from, l.to, l.tag])).toEqual([
+      [5.49, 5.19, 'Partial rollback'],
+      [4.99, 5.49, 'No fuel link'],
+      [4.79, 4.99, 'No fuel link'],
+    ]);
+    expect(rice.unreturned).toBeCloseTo(0.4, 10);
   });
 
   test('unknown items reject', async () => {

@@ -38,6 +38,8 @@ type Actions = {
   /** Appends an item (no-op if already in the basket). */
   addToBasket: (id: string) => void;
   removeFromBasket: (id: string) => void;
+  /** Puts a removed entry back at its old position (Undo). No-op if it is back already. */
+  restoreBasketEntry: (entry: BasketEntry, index: number) => void;
   /** Moves the item at `from` to position `to`. */
   moveBasketItem: (from: number, to: number) => void;
   toggleFollow: (id: string) => void;
@@ -54,7 +56,8 @@ export const DEFAULT_PREFS: Prefs = {
   region: null,
   basket: DEFAULT_BASKET_IDS.map((id) => ({ id, weight: 1 })),
   followed: DEFAULT_FOLLOWED_IDS,
-  alerts: { dieselCross: true, followedDrop: true, deltaTolerance: true },
+  // Off until the person turns one on and allows notifications.
+  alerts: { dieselCross: false, followedDrop: false, deltaTolerance: false },
   dieselThreshold: 3.25,
   tolerance: 3,
   isPro: false,
@@ -72,6 +75,13 @@ export const usePrefs = create<Prefs & Actions>()(
           s.basket.some((b) => b.id === id) ? s : { basket: [...s.basket, { id, weight: 1 }] },
         ),
       removeFromBasket: (id) => set((s) => ({ basket: s.basket.filter((b) => b.id !== id) })),
+      restoreBasketEntry: (entry, index) =>
+        set((s) => {
+          if (s.basket.some((b) => b.id === entry.id)) return s;
+          const basket = [...s.basket];
+          basket.splice(Math.min(index, basket.length), 0, entry);
+          return { basket };
+        }),
       moveBasketItem: (from, to) =>
         set((s) => {
           const last = s.basket.length - 1;

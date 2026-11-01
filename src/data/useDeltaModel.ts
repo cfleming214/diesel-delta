@@ -57,6 +57,11 @@ export function useDeltaModel({ window, kind = 'diesel', scope = 'padd' }: Optio
     model,
     isLoading: fuelQ.isLoading || basketQ.isLoading,
     error: fuelQ.error ?? basketQ.error,
+    /** Fetches whichever series failed again. */
+    retry: () => {
+      if (fuelQ.error) void fuelQ.refetch();
+      if (basketQ.error) void basketQ.refetch();
+    },
     basketEmpty: ids.length === 0,
     state,
     area,

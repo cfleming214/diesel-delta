@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View, type ViewStyle } from 'react-native';
 
-import { alpha, colors, radius } from '@/theme';
+import { alpha, colors, layout, radius } from '@/theme';
 
 import { Text } from './Text';
 
@@ -10,11 +10,11 @@ type Props<T extends string | number> = {
   options: readonly SegOption<T>[];
   value: T;
   onChange: (value: T) => void;
-  /** 38pt for the window control; 36pt elsewhere. */
+  /** Option height; never under the 44pt tap target. */
   height?: number;
   style?: ViewStyle;
   accessibilityLabel?: string;
-  /** Small inline control (12pt labels, 4/9 padding) that sizes to its content. */
+  /** Small inline control (12pt labels) that sizes to its content, still 44pt tall to tap. */
   compact?: boolean;
 };
 
@@ -23,7 +23,7 @@ export function Seg<T extends string | number>({
   options,
   value,
   onChange,
-  height = 36,
+  height = layout.hitTarget,
   style,
   accessibilityLabel,
   compact = false,
@@ -40,7 +40,7 @@ export function Seg<T extends string | number>({
             onPress={() => onChange(opt.value)}
             style={({ pressed }) => [
               compact ? styles.optCompact : styles.opt,
-              { minHeight: compact ? 0 : height },
+              { minHeight: Math.max(height, layout.hitTarget) },
               i > 0 && styles.sep,
               selected && styles.selected,
               pressed && !selected && styles.pressed,
@@ -74,7 +74,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
-  optCompact: { paddingVertical: 4, paddingHorizontal: 9 },
+  optCompact: {
+    minWidth: layout.hitTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 9,
+  },
   compactLabel: { fontSize: 12, lineHeight: 16 },
   sep: { borderLeftWidth: 1, borderLeftColor: colors.divider },
   selected: { boxShadow: `inset 0 0 0 1px ${colors.accent}` },
