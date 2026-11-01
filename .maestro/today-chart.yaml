@@ -1,4 +1,4 @@
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 name: Scrub the Today chart, change window, set a lag
 ---
 - runFlow: _onboard.yaml

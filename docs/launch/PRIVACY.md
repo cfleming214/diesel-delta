@@ -40,6 +40,6 @@ The install ID is a random UUID kept in app storage. It is not derived from the 
 
 | Permission | Text shown | Used for |
 | --- | --- | --- |
-| Camera | "DieselDelta uses the camera to scan product barcodes and grocery receipts. Receipt photos are processed on this device." | Barcode search, receipt capture |
-| Add to Photos | "DieselDelta saves share cards to your photo library." | Save image on the share screen |
+| Camera | "Diesel Data uses the camera to scan product barcodes and grocery receipts. Receipt photos are processed on this device." | Barcode search, receipt capture |
+| Add to Photos | "Diesel Data saves share cards to your photo library." | Save image on the share screen |
 | Notifications | System prompt, only when an alert is first turned on | Break alerts |

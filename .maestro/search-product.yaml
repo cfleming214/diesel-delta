@@ -1,4 +1,4 @@
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 name: Search a product, open it, change range and retailer
 ---
 - runFlow: _onboard.yaml

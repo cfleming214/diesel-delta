@@ -3,7 +3,7 @@ dist/
 .expo/
 package-lock.json
 *.md
-supabase/functions/
+supabase/
 dist-e2e/
 test-results/
 playwright-report/

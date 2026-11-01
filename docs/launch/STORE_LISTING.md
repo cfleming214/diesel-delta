@@ -2,7 +2,7 @@
 
 ## Names
 
-- **App name:** DieselDelta
+- **App name:** Diesel Data
 - **Subtitle (iOS, 30 characters max):** Did groceries follow fuel?
 - **Short description (Play, 80 characters max):** See whether your grocery prices fell when diesel did, in one number.
 
@@ -10,7 +10,7 @@
 
 When diesel falls, do grocery prices follow?
 
-Freight runs on diesel, and diesel moves fast. Shelf prices are famously slow to come back down. DieselDelta puts the two side by side and turns the gap into one number: your Delta.
+Freight runs on diesel, and diesel moves fast. Shelf prices are famously slow to come back down. Diesel Data puts the two side by side and turns the gap into one number: your Delta.
 
 - **Today:** see how far diesel and your basket moved over 30, 60 or 90 days or 12 months, with a plain-English verdict.
 - **Chart:** drag across the indexed chart, switch between diesel and gasoline, and slide the lag to test how many weeks shelf prices trail fuel.
@@ -21,7 +21,7 @@ Freight runs on diesel, and diesel moves fast. Shelf prices are famously slow to
 
 Fuel prices come from the U.S. Energy Information Administration's weekly retail series for your state or region. No account is needed, and your ZIP code never leaves your phone.
 
-DieselDelta Pro adds unlimited baskets, history beyond 12 months, state and store-level breakdowns, unlimited alerts, CSV and PNG export, and a home-screen widget. The headline Delta stays free.
+Diesel Data Pro adds unlimited baskets, history beyond 12 months, state and store-level breakdowns, unlimited alerts, CSV and PNG export, and a home-screen widget. The headline Delta stays free.
 
 ## Metadata
 

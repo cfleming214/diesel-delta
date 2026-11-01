@@ -56,20 +56,20 @@ describe('PoliteHttp', () => {
         'User-agent: *',
         'Disallow: /',
         '',
-        'User-agent: DieselDeltaPriceBot',
+        'User-agent: DieselDataPriceBot',
         'User-agent: otherbot',
         'Disallow: /cart',
         'Allow: /cart/public$',
         'Disallow: /*?session=',
       ].join('\n'),
-      'DieselDeltaPriceBot',
+      'DieselDataPriceBot',
     );
     assert.equal(robotsAllows(rules, '/products/1'), true);
     assert.equal(robotsAllows(rules, '/cart/1'), false);
     assert.equal(robotsAllows(rules, '/cart/public'), true);
     assert.equal(robotsAllows(rules, '/p?session=1'), false);
     assert.equal(
-      robotsAllows(parseRobots('User-agent: *\nDisallow: /', 'DieselDeltaPriceBot'), '/x'),
+      robotsAllows(parseRobots('User-agent: *\nDisallow: /', 'DieselDataPriceBot'), '/x'),
       false,
     );
   });

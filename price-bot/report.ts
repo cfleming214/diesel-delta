@@ -817,10 +817,10 @@ export function renderReport(m: ReportModel): string {
 
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DieselDelta Price Report</title>
+<title>Diesel Data Price Report</title>
 <style>${STYLES}</style></head>
 <body><main>
-<h1>DieselDelta Price Report</h1>
+<h1>Diesel Data Price Report</h1>
 <div class="sub">30-day and 1-year price changes to ${esc(longDate(m.to))} · Generated ${esc(new Date(m.generatedAt).toUTCString().replace(' GMT', ' UTC'))}</div>
 ${m.simulated ? `<div class="banner"><b>Simulated data.</b> Every price in this report comes from the mock Kroger, Walmart and Amazon retailers used to develop the price bot (sources: ${esc(m.sources.join(', '))}). They are generated, not real shelf prices, and must not be quoted or published.</div>` : `<div class="sub">Sources: ${esc(m.sources.join(', '))}</div>`}
 <p class="lede">${esc(lede)}</p>
@@ -902,7 +902,7 @@ ${runs}
 <p class="small muted">National shelf price on ${esc(dateLabel(m.to))}; the cheapest retailer (or retailers, when tied) is in bold, and "—" means the retailer doesn't carry it. 30-day and 1-year columns are the average change across retailers.</p>
 ${appendix}
 
-<footer>DieselDelta price bot · ${esc(m.sources.join(', '))} · to ${esc(m.to)}${m.simulated ? ' · SIMULATED DATA' : ''}</footer>
+<footer>Diesel Data price bot · ${esc(m.sources.join(', '))} · to ${esc(m.to)}${m.simulated ? ' · SIMULATED DATA' : ''}</footer>
 </main></body></html>`;
 }
 
@@ -1013,7 +1013,7 @@ export async function writePdf(html: string, path: string) {
       displayHeaderFooter: true,
       headerTemplate: '<span></span>',
       footerTemplate:
-        '<div style="width:100%;font:8px system-ui,sans-serif;color:#898781;padding:0 0.6in;display:flex;justify-content:space-between"><span>DieselDelta Price Report</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
+        '<div style="width:100%;font:8px system-ui,sans-serif;color:#898781;padding:0 0.6in;display:flex;justify-content:space-between"><span>Diesel Data Price Report</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
     });
   } finally {
     await browser.close();

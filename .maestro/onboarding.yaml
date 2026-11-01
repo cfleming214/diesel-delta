@@ -1,4 +1,4 @@
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 name: Onboarding maps a ZIP to its fuel series
 ---
 - launchApp:

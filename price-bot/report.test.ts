@@ -257,7 +257,7 @@ describe('report', () => {
 
   test('renders both horizons with the simulated-data banner and no gaps', () => {
     const html = renderReport(m);
-    assert.match(html, /<title>DieselDelta Price Report<\/title>/);
+    assert.match(html, /<title>Diesel Data Price Report<\/title>/);
     assert.match(html, /Simulated data\./);
     assert.match(html, /30-day change<\/th>/);
     assert.match(html, /Basket cost, daily<\/h3>/);

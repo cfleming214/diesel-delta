@@ -4,7 +4,7 @@ Paste into App Store Connect → App Review Information → Notes.
 
 ---
 
-DieselDelta compares the U.S. EIA's weekly retail diesel price for the user's region with the shelf prices of grocery items, and shows the gap as one number.
+Diesel Data compares the U.S. EIA's weekly retail diesel price for the user's region with the shelf prices of grocery items, and shows the gap as one number.
 
 **No account or sign-in.** On first launch, enter any U.S. ZIP code. Use 77002 (Houston, Gulf Coast series) or 94103 (San Francisco, California state series).
 
@@ -13,7 +13,7 @@ DieselDelta compares the U.S. EIA's weekly retail diesel price for the user's re
 - Chart: move the Lag slider; switch Diesel/Gasoline and U.S./PADD.
 - Basket: tap Edit to remove or reorder; tap + to search for "yogurt" and add it.
 - Log: Scan receipt → Capture; or Enter manually.
-- Insights → DieselDelta Pro: purchases work in the sandbox. Restore purchases is on the same screen.
+- Insights → Diesel Data Pro: purchases work in the sandbox. Restore purchases is on the same screen.
 
 **Permissions**
 - Camera: barcode and receipt scanning. Receipt photos are processed on the device.

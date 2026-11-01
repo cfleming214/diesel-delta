@@ -1,4 +1,4 @@
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 name: Scan a receipt and enter a price manually
 ---
 - runFlow: _onboard.yaml

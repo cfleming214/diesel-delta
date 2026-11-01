@@ -19,7 +19,7 @@ test('restore with no purchase, then buy Pro and see it on Insights', async ({
   onboarded: page,
 }) => {
   await page.getByRole('tab', { name: 'Insights' }).click();
-  await page.getByRole('button', { name: 'DieselDelta Pro, Free plan' }).click();
+  await page.getByRole('button', { name: 'Diesel Data Pro, Free plan' }).click();
   await page.getByRole('button', { name: 'Restore purchases' }).click();
   await expect(page.getByRole('alert')).toHaveText('No previous purchase found');
 
@@ -27,5 +27,5 @@ test('restore with no purchase, then buy Pro and see it on Insights', async ({
   await page.getByRole('button', { name: 'Start Pro · $3.99' }).click();
   await expect(page.getByRole('alert')).toHaveText('Pro unlocked');
   await page.getByRole('tab', { name: 'Insights' }).click();
-  await expect(page.getByRole('button', { name: 'DieselDelta Pro, Active' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Diesel Data Pro, Active' })).toBeVisible();
 });

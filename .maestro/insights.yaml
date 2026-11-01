@@ -1,4 +1,4 @@
-appId: app.dieseldelta
+appId: com.simpledesign.dieseldata
 name: Alert settings, scorecard and methodology
 ---
 - runFlow: _onboard.yaml

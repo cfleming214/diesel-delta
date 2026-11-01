@@ -63,7 +63,7 @@ export default function OnboardingScreen() {
         <View style={styles.brand}>
           <GasPump size={20} color={colors.accent} />
           <Text variant="control" style={styles.brandText}>
-            DieselDelta
+            Diesel Data
           </Text>
         </View>
 
@@ -72,7 +72,7 @@ export default function OnboardingScreen() {
             When diesel falls, do grocery prices follow?
           </Text>
           <Text color={colors.neutral[400]}>
-            DieselDelta compares the regional diesel index with the shelf prices of the items you
+            Diesel Data compares the regional diesel index with the shelf prices of the items you
             buy. Your ZIP sets which fuel series is used.
           </Text>
         </View>
