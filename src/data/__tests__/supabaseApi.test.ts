@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
 import { supabaseApi } from '@/data/supabaseApi';
+import { alignSeries, dateAtIndex } from '@/domain';
 
 const mockRpc = jest.fn<(fn: string, args: object) => Promise<{ data: unknown; error: unknown }>>();
 jest.mock('@/data/supabase', () => ({ getSupabase: () => ({ rpc: mockRpc }) }));
@@ -44,11 +45,18 @@ describe('supabaseApi', () => {
     expect(z).toMatchObject({ currentDiesel: 5.02, asOf: '2026-10-26', state: { abbr: 'CA' } });
   });
 
-  test('grocery data still comes from fixtures, with the basket re-dated to end today', async () => {
+  test('the basket is re-dated to end on the latest diesel observation', async () => {
+    mockRpc.mockResolvedValue({ data: days('2026-10-20', [3.5, 3.5, 3.48, 3.47]), error: null });
+    const fuel = await supabaseApi.getFuelSeries('NUS', 'diesel');
     const b = await supabaseApi.getBasketSeries(['milk']);
-    const end = new Date(`${b.startDate}T00:00:00`);
-    end.setDate(end.getDate() + b.values.length - 1);
-    expect(end.toDateString()).toBe(new Date().toDateString());
+    // Both end on Oct 23, so aligning them keeps the basket's last (today's Search) price.
+    const aligned = alignSeries(fuel, b)!;
+    expect(dateAtIndex(aligned.startDate, aligned.a.length - 1)).toEqual(new Date(2026, 9, 23));
+    expect(aligned.b.at(-1)).toBe(b.values.at(-1));
+    expect(mockRpc.mock.calls.at(-1)![1]).toMatchObject({ p_area: 'NUS', p_kind: 'diesel' });
+  });
+
+  test('grocery data still comes from fixtures', async () => {
     expect((await supabaseApi.getItem('milk', 'gulf')).name).toBe('Whole milk');
     expect(mockRpc).not.toHaveBeenCalled();
   });

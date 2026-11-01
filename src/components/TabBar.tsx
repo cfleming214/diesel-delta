@@ -3,11 +3,11 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Basket, ChartBar, Gauge, MagnifyingGlass, Receipt, type Icon } from '@/ui/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { alpha, colors, glow } from '@/theme';
+import { alpha, colors, glow, layout } from '@/theme';
 import { FadeRule, Text } from '@/ui';
 
-/** Space screens leave at the bottom so content clears the floating tab bar. */
-export const TAB_BAR_CLEARANCE = 110;
+/** Space screens leave at the bottom so content clears the floating tab bar and a toast above it. */
+export const TAB_BAR_CLEARANCE = 150;
 
 export const TABS: Record<string, { label: string; icon: Icon }> = {
   index: { label: 'Today', icon: Gauge },
@@ -16,6 +16,10 @@ export const TABS: Record<string, { label: string; icon: Icon }> = {
   log: { label: 'Log', icon: Receipt },
   insights: { label: 'Insights', icon: ChartBar },
 };
+
+/** The bar's full height for a given bottom safe-area inset. */
+export const tabBarHeight = (bottomInset: number) =>
+  layout.tabBarBody + (bottomInset > 0 ? 28 : 10);
 
 type Props = Pick<BottomTabBarProps, 'state' | 'emitter' | 'navigateToTab' | 'insets'>;
 
@@ -27,7 +31,10 @@ export function TabBar({ state, emitter, navigateToTab, insets }: Props) {
   return (
     <View
       accessibilityRole="tablist"
-      style={[styles.bar, { paddingBottom: insets.bottom > 0 ? 28 : 10 }]}
+      style={[
+        styles.bar,
+        { height: tabBarHeight(insets.bottom), paddingBottom: insets.bottom > 0 ? 28 : 10 },
+      ]}
     >
       <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
       <View style={[StyleSheet.absoluteFill, styles.tint]} />

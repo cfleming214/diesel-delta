@@ -73,30 +73,39 @@ export function Sheet({ visible, onClose, title, children }: Props) {
                 accessibilityLabel="Close"
               />
             </Animated.View>
+            {/* The slide-in and the drag offset live on separate views: Reanimated warns when a
+                layout animation and an animated transform share one. */}
             <Animated.View
               entering={SlideInDown.duration(240)}
               exiting={SlideOutDown.duration(200)}
-              style={[
-                styles.panel,
-                { maxHeight: height * 0.8, paddingBottom: insets.bottom + 12 },
-                dragStyle,
-              ]}
-              accessibilityViewIsModal
+              style={styles.dock}
             >
-              <GestureDetector gesture={pan}>
-                <View style={styles.head}>
-                  <View style={styles.grabber} />
-                  <View style={styles.titleRow}>
-                    <Text variant="section" accessibilityRole="header" style={styles.title}>
-                      {title}
-                    </Text>
-                    <IconButton icon={X} accessibilityLabel="Close" onPress={onClose} />
+              <Animated.View
+                style={[
+                  styles.panel,
+                  { maxHeight: height * 0.8, paddingBottom: insets.bottom + 12 },
+                  dragStyle,
+                ]}
+                accessibilityViewIsModal
+              >
+                <GestureDetector gesture={pan}>
+                  <View style={styles.head}>
+                    <View style={styles.grabber} />
+                    <View style={styles.titleRow}>
+                      <Text variant="section" accessibilityRole="header" style={styles.title}>
+                        {title}
+                      </Text>
+                      <IconButton icon={X} accessibilityLabel="Close" onPress={onClose} />
+                    </View>
                   </View>
-                </View>
-              </GestureDetector>
-              <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
-                {children}
-              </ScrollView>
+                </GestureDetector>
+                <ScrollView
+                  contentContainerStyle={styles.body}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {children}
+                </ScrollView>
+              </Animated.View>
             </Animated.View>
           </>
         ) : null}
@@ -108,11 +117,8 @@ export function Sheet({ visible, onClose, title, children }: Props) {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   backdrop: { backgroundColor: alpha(colors.neutral[900], 0.65) },
+  dock: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   panel: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,

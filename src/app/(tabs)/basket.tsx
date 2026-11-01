@@ -5,11 +5,12 @@ import { StyleSheet, View } from 'react-native';
 
 import { BASKET_ROW_HEIGHT, BasketItemRow } from '@/components/BasketItemRow';
 import { BasketDeltaCard } from '@/components/BasketDeltaCard';
+import { LoadError } from '@/components/LoadError';
 import { ReorderableList } from '@/components/ReorderableList';
 import { SwipeToRemove } from '@/components/SwipeToRemove';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
 import { fuelArea, useBasketSeries, useFuelSeries, useItems, type ItemDetail } from '@/data';
-import { alignSeries, basketAttribution, baselineIndex } from '@/domain';
+import { alignSeries, basketAttribution, baselineIndex, dateAtIndex } from '@/domain';
 import { basketIds, usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
 import { useUi } from '@/store/ui';
@@ -22,7 +23,8 @@ export default function BasketScreen() {
   const state = usePrefs((s) => s.state);
   const basket = usePrefs((s) => s.basket);
   const followed = usePrefs((s) => s.followed);
-  const { removeFromBasket, moveBasketItem, toggleFollow } = usePrefs.getState();
+  const { removeFromBasket, restoreBasketEntry, moveBasketItem, toggleFollow } =
+    usePrefs.getState();
   const baseline = useUi((s) => s.basketBaseline);
   const setBaseline = useUi((s) => s.setBasketBaseline);
   const [editing, setEditing] = useState(false);
@@ -37,15 +39,24 @@ export default function BasketScreen() {
     const aligned = alignSeries(basketSeries.data, fuel.data);
     if (!aligned) return null;
     const start = baselineIndex(aligned.a.length, baseline);
-    return start >= 0 ? basketAttribution(aligned.a, aligned.b, start) : null;
+    if (start < 0) return null;
+    return {
+      ...basketAttribution(aligned.a, aligned.b, start),
+      asOf: dateAtIndex(aligned.startDate, aligned.a.length - 1),
+    };
   }, [fuel.data, basketSeries.data, baseline, ids.length]);
 
   const loaded = items.filter((i): i is ItemDetail => i != null);
   const open = (id: string) => router.push({ pathname: '/item/[id]', params: { id } });
   const remove = (item: ItemDetail) => {
+    const index = basket.findIndex((b) => b.id === item.id);
+    const entry = basket[index];
     removeFromBasket(item.id);
     track('basket_remove', { item: item.id, mode: editing ? 'edit' : 'swipe' });
-    toast(`${item.name} removed`);
+    toast(
+      `${item.name} removed`,
+      entry ? { label: 'Undo', onPress: () => restoreBasketEntry(entry, index) } : undefined,
+    );
   };
 
   const row = (item: ItemDetail, rowEditing: boolean) => (
@@ -83,9 +94,19 @@ export default function BasketScreen() {
         }
       />
 
+      {!attribution && (fuel.error || basketSeries.error) ? (
+        <LoadError
+          message="The basket delta could not be loaded."
+          onRetry={() => {
+            if (fuel.error) void fuel.refetch();
+            if (basketSeries.error) void basketSeries.refetch();
+          }}
+        />
+      ) : null}
       {attribution ? (
         <BasketDeltaCard
           attribution={attribution}
+          asOf={attribution.asOf}
           baseline={baseline}
           onBaselineChange={setBaseline}
         />

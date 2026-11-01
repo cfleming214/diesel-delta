@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { BookOpen, CaretRight, StarFour, Storefront, type Icon } from '@/ui/icons';
+import { BookOpen, CaretRight, MapPin, StarFour, Storefront, type Icon } from '@/ui/icons';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ChartExplorer } from '@/components/ChartExplorer';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
@@ -18,14 +18,16 @@ import {
   type FuelArea,
   type RegionKey,
 } from '@/data';
-import { alignSeries, money, pct, sgn, windowInfo, windowRange } from '@/domain';
+import { alignSeries, formatDate, money, pct, sgn, windowInfo, windowRange } from '@/domain';
 import { basketIds, usePrefs, type AlertPrefs } from '@/store/prefs';
 import { push } from '@/lib/push';
-import { toast } from '@/store/toast';
 import { useUi } from '@/store/ui';
 import { colors } from '@/theme';
 import { Card, KVRow, Screen, Sheet, Stepper, Text, Toggle } from '@/ui';
 import { track } from '@/lib/telemetry';
+
+/** Alerts are delivered as device notifications, which the web build can't show. */
+const CAN_NOTIFY = Platform.OS !== 'web';
 
 const REGION_ROWS: RegionKey[] = ['gulf', 'east', 'mid', 'rocky', 'west', 'nat'];
 const REGION_AREAS: FuelArea[] = REGION_ROWS.map((r) => PADD_AREA[r]);
@@ -34,6 +36,7 @@ export default function InsightsScreen() {
   const prefs = usePrefs();
   const window = useUi((s) => s.window);
   const [methodology, setMethodology] = useState(false);
+  const [notificationsBlocked, setNotificationsBlocked] = useState(false);
   const passThrough = useCategoryPassThrough(prefs.region).data ?? [];
   const { model } = useDeltaModel({ window });
   const basket = useBasketSeries(useMemo(() => basketIds(prefs.basket), [prefs.basket])).data;
@@ -111,7 +114,7 @@ export default function InsightsScreen() {
       <View style={styles.sectionTight}>
         <SectionTitle
           title="Delta by region"
-          subtitle={`Your basket against each region's diesel series, ${windowInfo(window).label}`}
+          subtitle={`Your basket against each region's diesel series, ${windowInfo(window).label}${model ? ` to ${formatDate(model.latestDate)}` : ''}`}
         />
         {regionRows.map((r) => {
           const mine = r.key === prefs.region;
@@ -152,17 +155,28 @@ export default function InsightsScreen() {
             </View>
             <Toggle
               value={prefs.alerts[a.key]}
+              disabled={!CAN_NOTIFY}
               onChange={async (on) => {
+                // Ask for notifications before switching on, so an alert is never on but silent.
+                if (on && !(await push.request())) {
+                  setNotificationsBlocked(true);
+                  return;
+                }
+                setNotificationsBlocked(false);
                 prefs.setAlert(a.key, on);
                 track('alert_toggle', { kind: a.key, on });
-                if (on && !(await push.request())) {
-                  toast('Turn on notifications in Settings to get alerts');
-                }
               }}
               accessibilityLabel={a.title}
             />
           </View>
         ))}
+        {!CAN_NOTIFY || notificationsBlocked ? (
+          <Text variant="caption" color={colors.neutral[400]} style={styles.alertNote}>
+            {CAN_NOTIFY
+              ? 'Notifications are off for Diesel Data. Allow them in Settings, then turn the alert on again.'
+              : 'Alerts arrive as notifications in the iOS and Android app.'}
+          </Text>
+        ) : null}
         <View style={styles.tolerance}>
           <Text variant="bodySmall" style={styles.alertTitle}>
             Delta tolerance
@@ -179,6 +193,12 @@ export default function InsightsScreen() {
       </View>
 
       <Card padding={0} gap={0} style={styles.links}>
+        <LinkRow
+          icon={MapPin}
+          label="Location"
+          value={`${prefs.state ?? ''} ${prefs.zip ?? ''}`.trim()}
+          onPress={() => router.push('/onboarding')}
+        />
         <LinkRow
           icon={Storefront}
           label="Retailer scorecard"
@@ -275,6 +295,7 @@ const styles = StyleSheet.create({
   regionDelta: { width: 72, textAlign: 'right' },
   flex: { flex: 1 },
   alertsTitle: { marginBottom: 6 },
+  alertNote: { marginTop: 4 },
   alertRow: {
     flexDirection: 'row',
     alignItems: 'center',
