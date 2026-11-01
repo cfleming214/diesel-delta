@@ -3,7 +3,6 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
 import { usePrefs } from '@/store/prefs';
-import { useToast } from '@/store/toast';
 
 const mockLast = { current: null as unknown };
 const mockPermissions = { granted: false, canAskAgain: false };
@@ -33,13 +32,13 @@ describe('notifications', () => {
     expect(await screen.findByText('Whole milk')).toBeTruthy();
   });
 
-  test('turning an alert on asks for permission and explains a refusal', async () => {
+  test('turning an alert on asks for permission; a refusal leaves it off and says why', async () => {
     usePrefs.getState().setAlert('dieselCross', false);
     await renderRouter('./src/app', { initialUrl: '/insights' });
     await fireEvent.press(await screen.findByLabelText('Diesel crosses $3.25/gal'));
-    await waitFor(() =>
-      expect(useToast.getState().message).toBe('Turn on notifications in Settings to get alerts'),
-    );
-    expect(usePrefs.getState().alerts.dieselCross).toBe(true);
+    expect(
+      await screen.findByText(/^Notifications are off for Diesel Data\. Allow them in Settings/),
+    ).toBeTruthy();
+    expect(usePrefs.getState().alerts.dieselCross).toBe(false);
   });
 });

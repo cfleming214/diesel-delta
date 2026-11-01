@@ -65,6 +65,8 @@ export const layout = {
   /** Gap between the safe area and the first content. */
   contentTop: 6,
   hitTarget: 44,
+  /** Floating tab bar height above its bottom padding (10, or 28 with a home indicator). */
+  tabBarBody: 56,
   /** Freestanding rules fade to transparent over this many points at each end. */
   ruleFade: 48,
 } as const;

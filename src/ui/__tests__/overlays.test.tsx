@@ -2,7 +2,7 @@ import { afterEach, describe, expect, jest, test } from '@jest/globals';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { TOAST_MS, toast, useToast } from '@/store/toast';
+import { TOAST_ACTION_MS, TOAST_MS, toast, useToast } from '@/store/toast';
 import { KVRow, Sheet, Text, ToastHost } from '@/ui';
 
 const metrics = {
@@ -24,6 +24,17 @@ describe('toast', () => {
     await act(() => jest.advanceTimersByTime(TOAST_MS - 1));
     expect(screen.getByText('Price saved')).toBeTruthy();
     await act(() => jest.advanceTimersByTime(1));
+    expect(useToast.getState().message).toBeNull();
+  });
+
+  test('an action toast stays 5s, and pressing the action runs it and closes the toast', async () => {
+    jest.useFakeTimers();
+    const undo = jest.fn();
+    await render(<ToastHost />);
+    await act(() => toast('Whole milk removed', { label: 'Undo', onPress: undo }));
+    await act(() => jest.advanceTimersByTime(TOAST_ACTION_MS - 1));
+    await fireEvent.press(screen.getByRole('button', { name: 'Undo' }));
+    expect(undo).toHaveBeenCalledTimes(1);
     expect(useToast.getState().message).toBeNull();
   });
 

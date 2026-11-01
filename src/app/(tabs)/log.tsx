@@ -87,6 +87,7 @@ export default function LogScreen() {
       {mode === 'manual' ? (
         <ManualEntry
           catalog={catalog}
+          lastStore={history.find((h) => (STORES as readonly string[]).includes(h.store))?.store}
           onSave={(entry) => {
             add([entry]);
             setMode(null);
@@ -135,21 +136,25 @@ type Entry = Parameters<ReturnType<typeof useReceipts.getState>['add']>[0][numbe
 
 function ManualEntry({
   catalog,
+  lastStore,
   onSave,
 }: {
   catalog: { name: string; size: string; price: number }[];
+  /** The store of the latest logged price, preselected so repeat entries take one tap less. */
+  lastStore?: string;
   onSave: (entry: Entry) => void;
 }) {
   const [item, setItem] = useState('');
   const [price, setPrice] = useState('');
-  const [store, setStore] = useState<string>(STORES[0]!);
-  const [errors, setErrors] = useState<{ item?: boolean; price?: boolean }>({});
+  // No store is assumed on first use: a wrong default would also skew the listed-price check.
+  const [store, setStore] = useState<string | null>(lastStore ?? null);
+  const [errors, setErrors] = useState<{ item?: boolean; price?: boolean; store?: boolean }>({});
   const value = useMemo(() => Number.parseFloat(price), [price]);
 
   const save = () => {
-    const errs = { item: !item.trim(), price: !(value > 0) };
+    const errs = { item: !item.trim(), price: !(value > 0), store: store == null };
     setErrors(errs);
-    if (errs.item || errs.price) return;
+    if (errs.item || errs.price || store == null) return;
     const line = { text: item.trim(), price: value };
     const cmp = compareToListed(value, listedPriceFor(line, catalog));
     onSave({
@@ -184,7 +189,7 @@ function ManualEntry({
           invalid={errors.price}
         />
       </Field>
-      <Field label="Store">
+      <Field label="Store" error={errors.store ? 'Choose the store.' : undefined}>
         <View style={styles.stores} accessibilityRole="radiogroup">
           {STORES.map((s) => (
             <Button
@@ -194,7 +199,10 @@ function ManualEntry({
               height={36}
               color={s === store ? colors.accent : undefined}
               style={s === store ? styles.storeOn : undefined}
-              onPress={() => setStore(s)}
+              onPress={() => {
+                setStore(s);
+                setErrors((e) => ({ ...e, store: false }));
+              }}
             />
           ))}
         </View>

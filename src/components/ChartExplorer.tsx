@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { LagChart } from '@/components/LagChart';
+import { LoadError } from '@/components/LoadError';
 import { localSeries, useDeltaModel, type FuelScope, type FuelSeriesKind } from '@/data';
 import {
   bestLag,
@@ -51,7 +52,12 @@ export function ChartExplorer() {
   // The local option exists only where EIA publishes a series finer than the PADD.
   const local = state ? localSeries(state, series) : null;
   const scope: FuelScope = chosenScope === 'state' && !local ? 'padd' : chosenScope;
-  const { model, seriesName: areaName } = useDeltaModel({ window, kind: series, scope });
+  const {
+    model,
+    error,
+    retry,
+    seriesName: areaName,
+  } = useDeltaModel({ window, kind: series, scope });
   const [scrub, setScrub] = useState<number | null>(null);
 
   const scopeName = scope === 'national' ? 'National' : (areaName?.split(' (')[0] ?? '');
@@ -89,7 +95,9 @@ export function ChartExplorer() {
   };
 
   let readout = null;
-  if (model && indexed) {
+  if (!model && error) {
+    readout = <LoadError message="The chart could not be loaded." onRetry={retry} />;
+  } else if (model && indexed) {
     const k = Math.min(scrub ?? indexed.basket.length - 1, indexed.basket.length - 1);
     const day = model.start + k;
     const b = indexed.basket[k]!;
