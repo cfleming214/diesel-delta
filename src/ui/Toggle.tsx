@@ -2,20 +2,27 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, layout } from '@/theme';
 
-type Props = { value: boolean; onChange: (value: boolean) => void; accessibilityLabel: string };
+type Props = {
+  value: boolean;
+  onChange: (value: boolean) => void;
+  accessibilityLabel: string;
+  disabled?: boolean;
+};
 
 /**
  * 46×28 switch inside a 46×44 tap area. On: accent-800 track, accent border, accent-300 knob.
- * Off: neutral-900, neutral-600 knob.
+ * Off: neutral-900, neutral-600 knob. Disabled: dimmed and announced as disabled.
  */
-export function Toggle({ value, onChange, accessibilityLabel }: Props) {
+export function Toggle({ value, onChange, accessibilityLabel, disabled = false }: Props) {
   return (
     <Pressable
       accessibilityRole="switch"
       accessibilityLabel={accessibilityLabel}
       aria-checked={value}
+      accessibilityState={{ checked: value, disabled }}
+      disabled={disabled}
       onPress={() => onChange(!value)}
-      style={styles.target}
+      style={[styles.target, disabled && styles.disabled]}
     >
       <View
         style={[
@@ -46,6 +53,7 @@ export function Toggle({ value, onChange, accessibilityLabel }: Props) {
 
 const styles = StyleSheet.create({
   target: { minWidth: layout.hitTarget, minHeight: layout.hitTarget, justifyContent: 'center' },
+  disabled: { opacity: 0.4 },
   track: {
     width: 46,
     height: 28,

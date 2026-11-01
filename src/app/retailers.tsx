@@ -6,13 +6,24 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { BackButton } from '@/components/BackButton';
 import { useRetailerScores } from '@/data';
 import { colors, radius } from '@/theme';
-import { Screen, Text } from '@/ui';
+import { Screen, Seg, Text } from '@/ui';
 
 /** Chains rolling back at least this share of fuel-driven increases get an accent grade. */
 const GOOD_ROLLBACK = 45;
 
+type Sort = 'grade' | 'items';
+const SORT_OPTIONS = [
+  { value: 'grade' as const, label: 'Grade' },
+  { value: 'items' as const, label: 'Items tracked' },
+];
+
 export default function RetailersScreen() {
-  const retailers = useRetailerScores().data ?? [];
+  const [sort, setSort] = useState<Sort>('grade');
+  const retailers = [...(useRetailerScores().data ?? [])].sort((a, b) =>
+    sort === 'grade'
+      ? b.rollbackPct - a.rollbackPct || a.name.localeCompare(b.name)
+      : b.itemsTracked - a.itemsTracked || a.name.localeCompare(b.name),
+  );
   const [open, setOpen] = useState<string | null>(null);
 
   return (
@@ -25,10 +36,11 @@ export default function RetailersScreen() {
           Retailer scorecard
         </Text>
         <Text variant="bodySmall" color={colors.neutral[400]}>
-          Share of fuel-driven increases rolled back after diesel fell, category-weighted median
-          across each chain&apos;s tracked items.
+          Share of each chain&apos;s fuel-driven price rises (diesel up at least 1% in the 8 weeks
+          before) that a later cut fully reversed, across the products it carries.
         </Text>
       </View>
+      <Seg value={sort} onChange={setSort} options={SORT_OPTIONS} accessibilityLabel="Sort by" />
 
       <View>
         {retailers.map((r) => {
@@ -101,7 +113,8 @@ export default function RetailersScreen() {
         })}
       </View>
       <Text variant="caption" color={colors.neutral[500]}>
-        Updated daily. Open JSON endpoint available on the API tier.
+        Grades: A from 80% rolled back, B from 65%, C from 50%, D from 35%, F below. Categories with
+        fewer than 3 fuel-driven rises are left out.
       </Text>
     </Screen>
   );

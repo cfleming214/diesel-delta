@@ -7,20 +7,39 @@ import { usePrefs } from '@/store/prefs';
 describe('Retailer scorecard', () => {
   beforeEach(() => usePrefs.getState().setLocation('77002', 'TX', 'gulf'));
 
-  test('lists chains with grades and expands one at a time', async () => {
+  test('lists the tracked chains by grade and expands one at a time', async () => {
     await renderRouter('./src/app', { initialUrl: '/retailers' });
-    const costco = await screen.findByLabelText(
-      'Grade B+, Costco, 212 items tracked, 64% rolled back',
+    const kroger = await screen.findByLabelText(
+      'Grade D−, Kroger, 144 items tracked, 38% rolled back',
     );
-    expect(screen.getByText('Albertsons')).toBeTruthy();
-    expect(screen.queryByLabelText('Produce 78%')).toBeNull();
+    const labels = () =>
+      screen.getAllByRole('button', { name: /^Grade / }).map((b) => b.props.accessibilityLabel);
+    expect(labels()).toEqual([
+      'Grade D−, Kroger, 144 items tracked, 38% rolled back',
+      'Grade D−, Amazon, 145 items tracked, 37% rolled back',
+      'Grade F, Walmart, 146 items tracked, 28% rolled back',
+    ]);
+    expect(screen.queryByLabelText('Personal care 57%')).toBeNull();
 
-    await fireEvent.press(costco);
-    expect(screen.getByLabelText('Produce 78%')).toBeTruthy();
-    expect(costco.props.accessibilityState).toEqual({ expanded: true });
+    await fireEvent.press(kroger);
+    expect(screen.getByLabelText('Personal care 57%')).toBeTruthy();
+    expect(kroger.props.accessibilityState).toEqual({ expanded: true });
 
-    await fireEvent.press(screen.getByText('Kroger'));
-    expect(screen.queryByLabelText('Produce 78%')).toBeNull();
-    expect(screen.getByLabelText('Produce 62%')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Walmart'));
+    expect(screen.queryByLabelText('Personal care 57%')).toBeNull();
+    expect(screen.getByLabelText('Snacks 56%')).toBeTruthy();
+  });
+
+  test('sorts by items tracked', async () => {
+    await renderRouter('./src/app', { initialUrl: '/retailers' });
+    await screen.findByText('Kroger');
+    await fireEvent.press(screen.getByText('Items tracked'));
+    expect(
+      screen.getAllByRole('button', { name: /^Grade / }).map((b) => b.props.accessibilityLabel),
+    ).toEqual([
+      'Grade F, Walmart, 146 items tracked, 28% rolled back',
+      'Grade D−, Amazon, 145 items tracked, 37% rolled back',
+      'Grade D−, Kroger, 144 items tracked, 38% rolled back',
+    ]);
   });
 });

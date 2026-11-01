@@ -11,7 +11,7 @@ test.beforeEach(async ({ onboarded: page }) => {
 test('remove an item in edit mode and see the basket delta recompute', async ({
   onboarded: page,
 }) => {
-  const delta = page.getByText(/^\$\d+\.\d\d → \$\d+\.\d\d$/);
+  const delta = page.getByText(/^\$\d+\.\d\d → \$\d+\.\d\d on \w+ \d+$/);
   const before = await delta.textContent();
   await page.getByRole('button', { name: 'Edit' }).click();
   await page.getByRole('button', { name: 'Remove Paper towels' }).click();
