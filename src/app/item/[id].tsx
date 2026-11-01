@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Camera, Info, ShareNetwork, Star } from '@/ui/icons';
+import { Info, ShareNetwork, Star } from '@/ui/icons';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -17,7 +17,6 @@ import {
   type LedgerTag,
 } from '@/domain';
 import { usePrefs } from '@/store/prefs';
-import { toast } from '@/store/toast';
 import { colors, fonts } from '@/theme';
 import { Button, Card, IconButton, KVRow, Screen, Sheet, Tag, Text } from '@/ui';
 import { track } from '@/lib/telemetry';
@@ -151,17 +150,6 @@ export default function ItemScreen() {
             <KVRow k="Captured" v={provenance.data.captured} />
             <KVRow k="Method" v={provenance.data.method} />
             <KVRow k="Confidence" v={provenance.data.confidence} />
-            <Button
-              label="Report a correction with a shelf-tag photo"
-              variant="secondary"
-              icon={Camera}
-              block
-              style={styles.report}
-              onPress={() => {
-                setSourcesOpen(false);
-                toast('Corrections open in a later update');
-              }}
-            />
           </>
         ) : null}
       </Sheet>
@@ -204,5 +192,4 @@ const styles = StyleSheet.create({
   },
   ledgerLine: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   regular: { fontFamily: fonts.regular },
-  report: { marginTop: 8 },
 });

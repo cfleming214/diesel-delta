@@ -57,7 +57,8 @@ describe('Item detail', () => {
     expect(await screen.findByText('Data provenance')).toBeTruthy();
     expect(await screen.findByText('Walmart listed price, Whole milk 1 gal')).toBeTruthy();
     expect(screen.getByText('Oct 28, 2026 at 04:12 CT · store ZIP 77002')).toBeTruthy();
-    expect(screen.getByText('Report a correction with a shelf-tag photo')).toBeTruthy();
+    // Corrections aren't built yet, so there is no button promising them.
+    expect(screen.queryByText('Report a correction with a shelf-tag photo')).toBeNull();
   });
 
   test('unknown ids say so and point to Search', async () => {
