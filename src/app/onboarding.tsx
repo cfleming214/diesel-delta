@@ -4,10 +4,12 @@ import { GasPump, MapPin } from '@/ui/icons';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
+import { BackButton } from '@/components/BackButton';
 import { LoadError } from '@/components/LoadError';
 import { api, queryKeys, useZipLookup, ZIP_ERROR, ZIP_UNSUPPORTED, type ZipLookup } from '@/data';
 import { formatDate, fromISODate, money } from '@/domain';
 import { usePrefs } from '@/store/prefs';
+import { toast } from '@/store/toast';
 import { alpha, colors, em, layout } from '@/theme';
 import { Button, Card, Input, Kicker, Screen, Text } from '@/ui';
 import { track } from '@/lib/telemetry';
@@ -22,8 +24,14 @@ function seriesLine(found: ZipLookup) {
   return `${found.state.name} has no state diesel series; using ${s.name}`;
 }
 
+/**
+ * First launch asks for a ZIP. Opened again later (Insights → Location) it changes the ZIP and
+ * keeps everything else: basket, follows, logged prices and Pro.
+ */
 export default function OnboardingScreen() {
-  const [zip, setZip] = useState('');
+  const current = usePrefs((s) => s.zip);
+  const changing = current != null;
+  const [zip, setZip] = useState(current ?? '');
   const [error, setError] = useState(false);
   const lookup = useZipLookup(zip);
   const queryClient = useQueryClient();
@@ -47,6 +55,12 @@ export default function OnboardingScreen() {
       return;
     }
     setLocation(zip, result.state.abbr, result.region.key);
+    if (changing) {
+      if (zip !== current) toast(`Location set to ${result.state.abbr} ${zip}`);
+      if (router.canGoBack()) router.back();
+      else router.replace('/insights');
+      return;
+    }
     track('onboarding_complete', {
       state: result.state.abbr,
       region: result.region.key,
@@ -68,22 +82,37 @@ export default function OnboardingScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <Screen paddingX={layout.onboardingX} contentStyle={styles.content}>
-        <View style={styles.brand}>
-          <GasPump size={20} color={colors.accent} />
-          <Text variant="control" style={styles.brandText}>
-            Diesel Data
-          </Text>
-        </View>
+        {changing ? (
+          <View style={styles.change}>
+            <BackButton />
+            <Text variant="title" accessibilityRole="header">
+              Change your ZIP
+            </Text>
+            <Text color={colors.neutral[400]}>
+              Your ZIP sets which fuel series every chart uses. Your basket, followed items and
+              logged prices stay as they are.
+            </Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.brand}>
+              <GasPump size={20} color={colors.accent} />
+              <Text variant="control" style={styles.brandText}>
+                Diesel Data
+              </Text>
+            </View>
 
-        <View style={styles.intro}>
-          <Text variant="display" accessibilityRole="header">
-            When diesel falls, do grocery prices follow?
-          </Text>
-          <Text color={colors.neutral[400]}>
-            Diesel Data compares the regional diesel index with the shelf prices of the items you
-            buy. Your ZIP sets which fuel series is used.
-          </Text>
-        </View>
+            <View style={styles.intro}>
+              <Text variant="display" accessibilityRole="header">
+                When diesel falls, do grocery prices follow?
+              </Text>
+              <Text color={colors.neutral[400]}>
+                Diesel Data compares the regional diesel index with the shelf prices of the items
+                you buy. Your ZIP sets which fuel series is used.
+              </Text>
+            </View>
+          </>
+        )}
 
         <View style={styles.field}>
           <Text variant="caption" color={alpha(colors.text, 0.7)} nativeID="zip-label">
@@ -144,7 +173,13 @@ export default function OnboardingScreen() {
         ) : null}
 
         <View style={styles.footer}>
-          <Button label="Continue" height={50} large block onPress={onContinue} />
+          <Button
+            label={changing ? 'Save' : 'Continue'}
+            height={50}
+            large
+            block
+            onPress={onContinue}
+          />
           <Text variant="caption" color={colors.neutral[500]} style={styles.center}>
             Source: U.S. EIA weekly retail diesel. No account required.
           </Text>
@@ -160,6 +195,7 @@ const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 22 },
   brandText: { fontSize: 15 },
   intro: { gap: 12, marginTop: 40 },
+  change: { gap: 12, marginTop: 12 },
   field: { gap: 5 },
   zip: { fontSize: 20, letterSpacing: em(0.12, 20) },
   card: { paddingHorizontal: 16 },
