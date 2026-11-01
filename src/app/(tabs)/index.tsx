@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { BasketSummaryCard } from '@/components/BasketSummaryCard';
+import { LoadError } from '@/components/LoadError';
 import { DeltaHeader } from '@/components/DeltaHeader';
 import { LagChart } from '@/components/LagChart';
 import { MoversList } from '@/components/MoversList';
@@ -23,7 +24,7 @@ export default function TodayScreen() {
   const zip = usePrefs((s) => s.zip);
   const window = useUi((s) => s.window);
   const setWindow = useUi((s) => s.setWindow);
-  const { model, error, state, basketEmpty } = useDeltaModel({ window });
+  const { model, error, retry, state, basketEmpty } = useDeltaModel({ window });
   const basket = usePrefs((s) => s.basket);
   const products = useProducts().data;
   const [scrub, setScrub] = useState<number | null>(null);
@@ -91,11 +92,7 @@ export default function TodayScreen() {
       </Text>
     );
   } else if (error) {
-    body = (
-      <Text color={colors.neutral[400]}>
-        Prices could not be loaded. Check your connection and try again.
-      </Text>
-    );
+    body = <LoadError message="Prices could not be loaded." onRetry={retry} />;
   }
 
   return (

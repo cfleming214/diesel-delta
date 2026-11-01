@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { BASKET_ROW_HEIGHT, BasketItemRow } from '@/components/BasketItemRow';
 import { BasketDeltaCard } from '@/components/BasketDeltaCard';
+import { LoadError } from '@/components/LoadError';
 import { ReorderableList } from '@/components/ReorderableList';
 import { SwipeToRemove } from '@/components/SwipeToRemove';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
@@ -87,6 +88,15 @@ export default function BasketScreen() {
         }
       />
 
+      {!attribution && (fuel.error || basketSeries.error) ? (
+        <LoadError
+          message="The basket delta could not be loaded."
+          onRetry={() => {
+            if (fuel.error) void fuel.refetch();
+            if (basketSeries.error) void basketSeries.refetch();
+          }}
+        />
+      ) : null}
       {attribution ? (
         <BasketDeltaCard
           attribution={attribution}

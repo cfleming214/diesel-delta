@@ -180,7 +180,8 @@ describe('Product detail', () => {
     await renderRouter('./src/app', { initialUrl: '/product/caviar' });
     // After the query's two retries.
     expect(
-      await screen.findByText('This product could not be loaded.', {}, { timeout: 8000 }),
+      await screen.findByText(/^This product could not be loaded\./, {}, { timeout: 8000 }),
     ).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
   }, 15_000);
 });
