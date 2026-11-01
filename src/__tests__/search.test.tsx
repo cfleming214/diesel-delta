@@ -176,12 +176,14 @@ describe('Product detail', () => {
     expect(screen.getByText('Add to basket')).toBeTruthy();
   });
 
-  test('unknown products say so', async () => {
+  test('unknown products say so at once and point to Search', async () => {
     await renderRouter('./src/app', { initialUrl: '/product/caviar' });
-    // After the query's two retries.
+    // Not found isn't retried, so this shows without waiting out query retries.
     expect(
-      await screen.findByText(/^This product could not be loaded\./, {}, { timeout: 8000 }),
+      await screen.findByText(/^This product isn’t tracked\./, {}, { timeout: 1500 }),
     ).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Retry' })).toBeTruthy();
-  }, 15_000);
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    await act(() => fireEvent.press(screen.getByText('Search products')));
+    expect(screen).toHavePathname('/search');
+  });
 });

@@ -8,7 +8,7 @@ import { LoadError } from '@/components/LoadError';
 import { ProductAvatar } from '@/components/ProductAvatar';
 import { ProductPriceChart } from '@/components/ProductPriceChart';
 import { CHANGE_LABELS, formatChange, RETAILER_STYLE } from '@/components/priceChange';
-import { useProduct, type RetailerPriceHistory } from '@/data';
+import { isNotFound, useProduct, type RetailerPriceHistory } from '@/data';
 import { dateAtIndex, formatDate, money } from '@/domain';
 import { basketIds, usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
@@ -50,7 +50,18 @@ export default function ProductScreen() {
       <Screen>
         <IconButton icon={X} accessibilityLabel="Close" onPress={close} />
         <View style={styles.missing}>
-          {error ? (
+          {isNotFound(error) ? (
+            <View style={styles.notFound}>
+              <Text color={colors.neutral[400]}>
+                This product isn’t tracked. Search the 150 products Diesel Data follows.
+              </Text>
+              <Button
+                label="Search products"
+                variant="secondary"
+                onPress={() => router.replace('/search')}
+              />
+            </View>
+          ) : error ? (
             <LoadError message="This product could not be loaded." onRetry={() => void refetch()} />
           ) : (
             <Text color={colors.neutral[400]}>Loading…</Text>
@@ -225,6 +236,7 @@ const styles = StyleSheet.create({
   content: { gap: 16 },
   top: { flexDirection: 'row', justifyContent: 'flex-end' },
   missing: { marginTop: 24 },
+  notFound: { gap: 12, alignItems: 'flex-start' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   flex: { flex: 1 },
   name: { fontSize: 24, lineHeight: 30 },

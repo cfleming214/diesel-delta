@@ -11,6 +11,7 @@ import {
   regionalize,
   START_DATE,
 } from './fixtures/series';
+import { NotFoundError } from './errors';
 import { AREA_NAMES, PADD_AREA, type FuelArea } from './geo';
 import { describeZip } from './geo/zip';
 import { itemDetailFromHistory, verdictFor } from './itemHistory';
@@ -27,7 +28,7 @@ const PRODUCTS = productSummaries();
 
 const catalogItem = (id: string): CatalogItem => {
   const p = PRODUCTS.find((c) => c.id === id);
-  if (!p) throw new Error(`Unknown item ${id}`);
+  if (!p) throw new NotFoundError(`Unknown item ${id}`);
   const { name, size, category, retailer: store, price } = p;
   return { id, name, size, category, store, price, verdict: verdictFor(id) };
 };
@@ -134,7 +135,7 @@ export const fixtureApi: DataApi = {
   },
 
   async getProduct(id) {
-    if (!isProduct(id)) throw new Error(`Unknown product ${id}`);
+    if (!isProduct(id)) throw new NotFoundError(`Unknown product ${id}`);
     return productDetail(id);
   },
 };
