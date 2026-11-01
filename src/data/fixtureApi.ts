@@ -20,6 +20,7 @@ import {
   weeklyFuel,
   YEAR_START,
 } from './fixtures/series';
+import { NotFoundError } from './errors';
 import { AREA_NAMES, PADD_AREA, type FuelArea } from './geo';
 import { describeZip } from './geo/zip';
 import {
@@ -56,7 +57,7 @@ function fixtureFuel(area: FuelArea, kind: 'diesel' | 'gas') {
 
 function findItem(id: string): CatalogItem {
   const item = FULL_CATALOG.find((c) => c.id === id);
-  if (!item) throw new Error(`Unknown item ${id}`);
+  if (!item) throw new NotFoundError(`Unknown item ${id}`);
   return item;
 }
 
@@ -195,7 +196,7 @@ export const fixtureApi: DataApi = {
   },
 
   async getProduct(id) {
-    if (!isProduct(id)) throw new Error(`Unknown product ${id}`);
+    if (!isProduct(id)) throw new NotFoundError(`Unknown product ${id}`);
     return productDetail(id);
   },
 };

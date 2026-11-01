@@ -52,7 +52,10 @@ export function ProductPriceChart({
     onIndexChange(Math.max(0, Math.min(n - 1, i)));
   };
 
-  const ticks = [yLo + (yHi - yLo) * 0.15, (yLo + yHi) / 2, yHi - (yHi - yLo) * 0.15];
+  // Gridlines at the lowest price, the midpoint and the highest price, so every line sits on or
+  // between labelled levels.
+  const ticks = lo === hi ? [lo] : [lo, (lo + hi) / 2, hi];
+  const labels = endLabels(series, y, plotH + PAD.top);
 
   return (
     <View
@@ -126,6 +129,18 @@ export function ProductPriceChart({
           ) : null}
         </Svg>
       ) : null}
+      {width > 0 && n > 1
+        ? labels.map((l) => (
+            <Text
+              key={l.retailer}
+              variant="caption"
+              color={l.color}
+              style={[styles.lineLabel, { top: l.top, right: PAD.right + 4 }]}
+            >
+              {l.retailer}
+            </Text>
+          ))
+        : null}
       {width > 0
         ? ticks.map((t) => (
             <Text
@@ -143,6 +158,30 @@ export function ProductPriceChart({
   );
 }
 
+const LABEL_H = 14;
+
+/**
+ * A name label for each line, just above its last point at the right edge, nudged apart so two
+ * close lines' labels don't overlap.
+ */
+function endLabels(series: Series[], y: (v: number) => number, bottom: number) {
+  const placed = series
+    .filter((s) => s.values.length > 0)
+    .map((s) => ({
+      retailer: s.retailer,
+      color: (RETAILER_STYLE[s.retailer] ?? { color: colors.accent }).color,
+      top: y(s.values.at(-1)!) - LABEL_H - 2,
+    }))
+    .sort((a, b) => a.top - b.top);
+  for (let i = 1; i < placed.length; i++) {
+    placed[i]!.top = Math.max(placed[i]!.top, placed[i - 1]!.top + LABEL_H);
+  }
+  const overflow = placed.length ? placed.at(-1)!.top + LABEL_H - bottom : 0;
+  if (overflow > 0) for (const p of placed) p.top -= overflow;
+  return placed.map((p) => ({ ...p, top: Math.max(0, p.top) }));
+}
+
 const styles = StyleSheet.create({
+  lineLabel: { position: 'absolute', fontSize: 11, lineHeight: LABEL_H, textAlign: 'right' },
   tick: { position: 'absolute', right: 0, fontSize: 11, width: PAD.right - 4, textAlign: 'right' },
 });
