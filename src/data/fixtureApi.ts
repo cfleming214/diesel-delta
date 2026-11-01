@@ -1,12 +1,6 @@
-import { pct, toISODate } from '@/domain';
+import { toISODate } from '@/domain';
 
-import {
-  CATALOG,
-  CATEGORY_PASS_THROUGH,
-  FUEL_FALLING_WEEKS,
-  LEDGER_TEMPLATES,
-  RETAILER_SCORES,
-} from './fixtures/catalog';
+import { CATEGORY_PASS_THROUGH } from './fixtures/catalog';
 import {
   BASKET,
   dateAt,
@@ -14,38 +8,29 @@ import {
   GAS,
   AREA_FIXTURE,
   REGION_ORDER,
-  REGIONS,
   regionalize,
   START_DATE,
-  weeklyFuel,
-  YEAR_START,
 } from './fixtures/series';
 import { AREA_NAMES, PADD_AREA, type FuelArea } from './geo';
 import { describeZip } from './geo/zip';
-import {
-  basketCostSeries,
-  isProduct,
-  productDetail,
-  productSummaries,
-  verdictFromChange,
-} from './products';
-import type { CatalogItem, DataApi, ItemDetail, RegionKey } from './types';
+import { itemDetailFromHistory, verdictFor } from './itemHistory';
+import { retailerScores } from './retailerScores';
+import { basketCostSeries, isProduct, productDetail, productSummaries } from './products';
+import type { CatalogItem, DataApi, RegionKey, RetailerScore } from './types';
 
-const WEEKS = 52;
 /**
- * Every catalog product as a catalog item, priced at its cheapest retailer, so Search, the product
- * screen and the basket agree. The 22 prototype items keep their curated verdicts (their ledger
- * templates); the rest take a verdict from their 1-year change.
+ * Every catalog product priced at its cheapest retailer, so Search, the product screen, the
+ * basket and item detail agree. Verdicts come from each item's own price history, which is costly
+ * to build, so `catalogItem` adds them only for the items a caller returns.
  */
-const FULL_CATALOG: CatalogItem[] = productSummaries().map((p) => ({
-  id: p.id,
-  name: p.name,
-  size: p.size,
-  category: p.category,
-  store: p.retailer,
-  price: p.price,
-  verdict: CATALOG.find((c) => c.id === p.id)?.verdict ?? verdictFromChange(p.change),
-}));
+const PRODUCTS = productSummaries();
+
+const catalogItem = (id: string): CatalogItem => {
+  const p = PRODUCTS.find((c) => c.id === id);
+  if (!p) throw new Error(`Unknown item ${id}`);
+  const { name, size, category, retailer: store, price } = p;
+  return { id, name, size, category, store, price, verdict: verdictFor(id) };
+};
 
 const publicRegion = (key: RegionKey) => ({ key, name: AREA_NAMES[PADD_AREA[key]] });
 
@@ -54,55 +39,9 @@ function fixtureFuel(area: FuelArea, kind: 'diesel' | 'gas') {
   return regionalize(kind === 'diesel' ? FUEL : GAS, key).map((v) => v * factor);
 }
 
-function findItem(id: string): CatalogItem {
-  const item = FULL_CATALOG.find((c) => c.id === id);
-  if (!item) throw new Error(`Unknown item ${id}`);
-  return item;
-}
+const findItem = catalogItem;
 
-/** Builds the 12-month item model from its verdict's ledger template (prototype `itemModel`). */
-export function buildItemDetail(item: CatalogItem, region: RegionKey): ItemDetail {
-  const changes = LEDGER_TEMPLATES[item.verdict].map(([week, a, b, tag]) => ({
-    week,
-    from: item.price * a,
-    to: item.price * b,
-    tag,
-  }));
-  const basePrice = changes[0]!.from;
-  const lastRise = changes.filter((c) => c.to > c.from).pop()!;
-
-  const weeklyPrice: number[] = [];
-  const weeklyFuelSeries: number[] = [];
-  for (let w = 0; w <= WEEKS; w++) {
-    let v = basePrice;
-    for (const c of changes) if (w >= c.week) v = c.to;
-    weeklyPrice.push(v);
-    weeklyFuelSeries.push(weeklyFuel(w));
-  }
-
-  return {
-    ...item,
-    basePrice,
-    unreturned: item.price - basePrice,
-    changePct: pct(basePrice, item.price),
-    fuelSincePct: pct(weeklyFuel(lastRise.week), weeklyFuel(WEEKS)),
-    weeklyPrice,
-    weeklyFuel: weeklyFuelSeries,
-    changeWeeks: changes.map((c) => c.week),
-    fuelFallingWeeks: FUEL_FALLING_WEEKS,
-    ledger: changes
-      .slice()
-      .reverse()
-      .map((c) => ({
-        date: toISODate(dateAt(YEAR_START + c.week * 7)),
-        from: c.from,
-        to: c.to,
-        fuelPrice: weeklyFuel(c.week) * REGIONS[region].level,
-        tag: c.tag,
-      })),
-    spark: weeklyPrice.filter((_, w) => w % 4 === 0).concat([weeklyPrice[WEEKS]!]),
-  };
-}
+let scores: RetailerScore[] | null = null;
 
 /**
  * Synthetic barcodes for development only (not real product GTINs). Real scans resolve once the
@@ -120,15 +59,14 @@ const LINK = /https?:|www\.|\.com/;
 export function matchCatalog(query: string): { items: CatalogItem[]; resolvedFromLink: boolean } {
   const q = query.trim().toLowerCase();
   if (!q) return { items: [], resolvedFromLink: false };
-  if (LINK.test(q))
-    return { items: FULL_CATALOG.filter((c) => c.id === 'ketchup'), resolvedFromLink: true };
+  if (LINK.test(q)) return { items: [catalogItem('ketchup')], resolvedFromLink: true };
   const words = q.split(/\s+/);
-  const items = FULL_CATALOG.filter((c) => {
-    const hay = `${c.name} ${c.size} ${c.category} ${c.store}`.toLowerCase();
+  const matches = PRODUCTS.filter((c) => {
+    const hay = `${c.name} ${c.size} ${c.category} ${c.retailer}`.toLowerCase();
     const compact = hay.replace(/\s/g, '');
     return words.every((w) => hay.includes(w) || compact.includes(w));
   });
-  return { items, resolvedFromLink: false };
+  return { items: matches.map((c) => catalogItem(c.id)), resolvedFromLink: false };
 }
 
 export const fixtureApi: DataApi = {
@@ -156,7 +94,7 @@ export const fixtureApi: DataApi = {
   },
 
   async getCatalog() {
-    return FULL_CATALOG;
+    return PRODUCTS.map((p) => catalogItem(p.id));
   },
 
   async searchCatalog(query) {
@@ -169,7 +107,7 @@ export const fixtureApi: DataApi = {
   },
 
   async getItem(id, region) {
-    return buildItemDetail(findItem(id), region);
+    return itemDetailFromHistory(findItem(id), region);
   },
 
   async getProvenance(id, zip) {
@@ -187,7 +125,8 @@ export const fixtureApi: DataApi = {
   },
 
   async getRetailerScores() {
-    return RETAILER_SCORES;
+    scores ??= retailerScores();
+    return scores;
   },
 
   async getProducts() {

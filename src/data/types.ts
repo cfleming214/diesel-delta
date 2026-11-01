@@ -35,14 +35,16 @@ export type LedgerEntry = {
 };
 
 export type ItemDetail = CatalogItem & {
-  /** Price before the first tracked increase. */
+  /** Price 12 months ago. */
   basePrice: number;
-  /** Current price minus the base price. */
+  /** How far today's price sits above the price before this year's first increase (0 if none). */
   unreturned: number;
   /** % change over 12 months. */
   changePct: number;
-  /** Diesel % change since the last price increase. */
+  /** Diesel % change since the last price increase (since the window start if none). */
   fuelSincePct: number;
+  /** Price increases in the past 12 months. */
+  rises: number;
   /** 53 weekly points (12 months) of shelf price and of diesel. */
   weeklyPrice: number[];
   weeklyFuel: number[];

@@ -1,6 +1,6 @@
-import type { LedgerTag, Verdict } from '@/domain';
+import type { Verdict } from '@/domain';
 
-import type { CatalogItem, CategoryPassThrough, RetailerScore, Store } from '../types';
+import type { CatalogItem, CategoryPassThrough, Store } from '../types';
 
 type Row = [
   id: string,
@@ -53,25 +53,6 @@ export const CATALOG: CatalogItem[] = ROWS.map(
 export const DEFAULT_BASKET_IDS: string[] = ROWS.filter((r) => r[7]).map((r) => r[0]);
 export const DEFAULT_FOLLOWED_IDS = ['milk', 'chicken', 'ketchup'];
 
-/** Price-change ledger template per verdict: [week, priceFactorBefore, priceFactorAfter, tag]. */
-export const LEDGER_TEMPLATES: Record<Verdict, [number, number, number, LedgerTag][]> = {
-  gouge: [
-    [15, 0.88, 0.94, 'Fuel-correlated'],
-    [23, 0.94, 1, 'Fuel-correlated'],
-  ],
-  track: [
-    [18, 0.98, 1.07, 'Fuel-correlated'],
-    [42, 1.07, 1, 'Rollback'],
-  ],
-  sticky: [
-    [18, 0.9, 1.02, 'Fuel-correlated'],
-    [46, 1.02, 1, 'Partial rollback'],
-  ],
-};
-
-/** Week range shaded as "Fuel falling" on item charts. */
-export const FUEL_FALLING_WEEKS: [number, number] = [22, 52];
-
 export const CATEGORY_PASS_THROUGH: CategoryPassThrough[] = [
   { category: 'Produce', pct: 71 },
   { category: 'Bakery', pct: 33 },
@@ -81,26 +62,5 @@ export const CATEGORY_PASS_THROUGH: CategoryPassThrough[] = [
   { category: 'Frozen', pct: 9 },
   { category: 'Household', pct: 6 },
 ];
-
-const RETAILER_CATEGORIES = ['Produce', 'Dry goods', 'Frozen', 'Household'];
-
-const RETAILER_ROWS: [Store, string, number, number, number[]][] = [
-  ['Costco', 'B+', 64, 212, [78, 61, 52, 40]],
-  ['Walmart', 'C+', 47, 418, [66, 44, 31, 22]],
-  ['Kroger', 'C', 41, 396, [62, 38, 27, 19]],
-  ['Amazon', 'C−', 36, 287, [48, 35, 22, 30]],
-  ['Target', 'D+', 29, 344, [51, 24, 18, 12]],
-  ['Albertsons', 'D', 24, 301, [44, 20, 14, 9]],
-];
-
-export const RETAILER_SCORES: RetailerScore[] = RETAILER_ROWS.map(
-  ([name, grade, rollbackPct, itemsTracked, cats]) => ({
-    name,
-    grade,
-    rollbackPct,
-    itemsTracked,
-    categories: cats.map((pct, k) => ({ category: RETAILER_CATEGORIES[k]!, pct })),
-  }),
-);
 
 export const STORES: Store[] = ['Kroger', 'Walmart', 'Target', 'Costco', 'Albertsons', 'Amazon'];
