@@ -1,7 +1,7 @@
 // Fixture products: the price bot's 150-item catalog, priced at Kroger, Walmart and Amazon by the
 // shared deterministic simulation (fixtures/priceSim.ts). Generated data for development: the live
 // source replaces it once the bot collects real prices.
-import { toISODate, type Verdict } from '@/domain';
+import { toISODate } from '@/domain';
 
 import { PRODUCT_SEEDS } from './fixtures/products.gen';
 import {
@@ -92,7 +92,12 @@ export function productSummaries(): ProductSummary[] {
   return summaries;
 }
 
+const details = new Map<string, ProductDetail>();
+
+/** One product with each retailer's daily history (cached: the history is costly to build). */
 export function productDetail(id: string): ProductDetail {
+  const cached = details.get(id);
+  if (cached) return cached;
   const seed = seeds.get(id);
   if (!seed) throw new Error(`Unknown product ${id}`);
   const today = dayNumber(PRODUCTS_AS_OF);
@@ -107,7 +112,9 @@ export function productDetail(id: string): ProductDetail {
       return { retailer, price, change: c, history: { startDate: toISODate(start), values } };
     })
     .sort((a, b) => a.price - b.price);
-  return { ...summarize(seed), asOf: PRODUCTS_AS_OF, retailers };
+  const detail = { ...summarize(seed), asOf: PRODUCTS_AS_OF, retailers };
+  details.set(id, detail);
+  return detail;
 }
 
 export const isProduct = (id: string) => seeds.has(id);
@@ -130,10 +137,4 @@ export function basketCostSeries(ids: readonly string[], days: number): number[]
     const day = today - (days - 1) + i;
     return items.reduce((sum, { seed, r }) => sum + nationalPrice(seed, r, day), 0);
   });
-}
-
-/** A verdict from the 1-year change, for products without a curated fixture verdict. */
-export function verdictFromChange(c: PriceChange): Verdict {
-  const y = c.d365 ?? 0;
-  return y >= 8 ? 'gouge' : y >= 3 ? 'sticky' : 'track';
 }

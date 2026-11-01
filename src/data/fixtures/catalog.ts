@@ -1,4 +1,4 @@
-import type { LedgerTag, Verdict } from '@/domain';
+import type { Verdict } from '@/domain';
 
 import type { CatalogItem, CategoryPassThrough, RetailerScore, Store } from '../types';
 
@@ -52,25 +52,6 @@ export const CATALOG: CatalogItem[] = ROWS.map(
 
 export const DEFAULT_BASKET_IDS: string[] = ROWS.filter((r) => r[7]).map((r) => r[0]);
 export const DEFAULT_FOLLOWED_IDS = ['milk', 'chicken', 'ketchup'];
-
-/** Price-change ledger template per verdict: [week, priceFactorBefore, priceFactorAfter, tag]. */
-export const LEDGER_TEMPLATES: Record<Verdict, [number, number, number, LedgerTag][]> = {
-  gouge: [
-    [15, 0.88, 0.94, 'Fuel-correlated'],
-    [23, 0.94, 1, 'Fuel-correlated'],
-  ],
-  track: [
-    [18, 0.98, 1.07, 'Fuel-correlated'],
-    [42, 1.07, 1, 'Rollback'],
-  ],
-  sticky: [
-    [18, 0.9, 1.02, 'Fuel-correlated'],
-    [46, 1.02, 1, 'Partial rollback'],
-  ],
-};
-
-/** Week range shaded as "Fuel falling" on item charts. */
-export const FUEL_FALLING_WEEKS: [number, number] = [22, 52];
 
 export const CATEGORY_PASS_THROUGH: CategoryPassThrough[] = [
   { category: 'Produce', pct: 71 },
