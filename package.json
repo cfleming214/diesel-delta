@@ -28,6 +28,7 @@
     "bot:test": "tsx --tsconfig price-bot/tsconfig.json --test price-bot/*.test.ts",
     "bot:typecheck": "tsc -p price-bot/tsconfig.json",
     "bot": "tsx --tsconfig price-bot/tsconfig.json price-bot/cli.ts",
+    "brand:render": "node scripts/render-brand.cjs",
     "products:gen": "tsx --tsconfig price-bot/tsconfig.json scripts/gen-products.ts"
   },
   "dependencies": {
