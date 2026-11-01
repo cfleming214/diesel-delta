@@ -23,6 +23,7 @@ import { track } from '@/lib/telemetry';
 
 const TAG_COLOR: Record<LedgerTag, string> = {
   'Fuel-correlated': colors.accentRamp[300],
+  'No fuel link': colors.accentRamp[300],
   'Partial rollback': colors.accentRamp[300],
   Rollback: colors.neutral[300],
 };
@@ -67,7 +68,18 @@ export default function ItemScreen() {
     return (
       <Screen contentStyle={styles.content}>
         {top}
-        {error ? <Text color={colors.neutral[400]}>This item is not tracked.</Text> : null}
+        {error ? (
+          <View style={styles.missing}>
+            <Text color={colors.neutral[400]}>
+              This item isn’t tracked. Search the 150 products Diesel Data follows.
+            </Text>
+            <Button
+              label="Search products"
+              variant="secondary"
+              onPress={() => router.replace('/search')}
+            />
+          </View>
+        ) : null}
       </Screen>
     );
   }
@@ -86,7 +98,7 @@ export default function ItemScreen() {
         </Text>
         <Tag label={verdict.label} tone={verdict.tone} size="lg" />
         <Text variant="bodySmall" color={colors.neutral[300]} style={styles.explain}>
-          {verdictExplanation(item.verdict, item.fuelSincePct)}
+          {verdictExplanation(item.verdict, item.fuelSincePct, item.rises)}
         </Text>
       </View>
 
@@ -159,6 +171,7 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
 }
 
 const styles = StyleSheet.create({
+  missing: { gap: 12, alignItems: 'flex-start' },
   content: { gap: 16 },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   actions: { flexDirection: 'row', gap: 6 },

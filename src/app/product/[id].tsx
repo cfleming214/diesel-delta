@@ -4,10 +4,11 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 
+import { LoadError } from '@/components/LoadError';
 import { ProductAvatar } from '@/components/ProductAvatar';
 import { ProductPriceChart } from '@/components/ProductPriceChart';
 import { CHANGE_LABELS, formatChange, RETAILER_STYLE } from '@/components/priceChange';
-import { useProduct, type RetailerPriceHistory } from '@/data';
+import { isNotFound, useProduct, type RetailerPriceHistory } from '@/data';
 import { dateAtIndex, formatDate, money } from '@/domain';
 import { basketIds, usePrefs } from '@/store/prefs';
 import { toast } from '@/store/toast';
@@ -31,7 +32,7 @@ const rangeWords: Record<Range, string> = { 30: '30 days', 90: '90 days', 365: '
  */
 export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: p, error } = useProduct(id);
+  const { data: p, error, refetch } = useProduct(id);
   const [range, setRange] = useState<Range>(90);
   const [scrub, setScrub] = useState<number | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -48,9 +49,24 @@ export default function ProductScreen() {
     return (
       <Screen>
         <IconButton icon={X} accessibilityLabel="Close" onPress={close} />
-        <Text color={colors.neutral[400]} style={styles.missing}>
-          {error ? 'This product could not be loaded.' : 'Loading…'}
-        </Text>
+        <View style={styles.missing}>
+          {isNotFound(error) ? (
+            <View style={styles.notFound}>
+              <Text color={colors.neutral[400]}>
+                This product isn’t tracked. Search the 150 products Diesel Data follows.
+              </Text>
+              <Button
+                label="Search products"
+                variant="secondary"
+                onPress={() => router.replace('/search')}
+              />
+            </View>
+          ) : error ? (
+            <LoadError message="This product could not be loaded." onRetry={() => void refetch()} />
+          ) : (
+            <Text color={colors.neutral[400]}>Loading…</Text>
+          )}
+        </View>
       </Screen>
     );
   }
@@ -220,6 +236,7 @@ const styles = StyleSheet.create({
   content: { gap: 16 },
   top: { flexDirection: 'row', justifyContent: 'flex-end' },
   missing: { marginTop: 24 },
+  notFound: { gap: 12, alignItems: 'flex-start' },
   header: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   flex: { flex: 1 },
   name: { fontSize: 24, lineHeight: 30 },

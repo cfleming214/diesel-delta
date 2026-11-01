@@ -238,6 +238,11 @@ export default function SearchScreen() {
         )}
         onEndReached={showMore}
         onEndReachedThreshold={0.5}
+        // Render new pages a few rows per frame so scrolling never stalls on a 20-row append.
+        initialNumToRender={10}
+        maxToRenderPerBatch={4}
+        updateCellsBatchingPeriod={32}
+        windowSize={7}
         ListFooterComponent={
           results.length > SEARCH_PAGE_SIZE ? (
             <View style={styles.footer}>

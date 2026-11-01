@@ -36,4 +36,12 @@ describe('app navigation', () => {
     expect(screen).toHavePathname('/item/milk');
     expect(await screen.findByText('Whole milk')).toBeTruthy();
   });
+
+  test('an unknown link shows the app’s not-found screen with a way back', async () => {
+    await renderRouter('./src/app', { initialUrl: '/nope/route' });
+    expect(await screen.findByText('Page not found')).toBeTruthy();
+    expect(screen.queryByText('Sitemap')).toBeNull();
+    await act(() => fireEvent.press(screen.getByText('Go to Today')));
+    expect(screen).toHavePathname('/');
+  });
 });

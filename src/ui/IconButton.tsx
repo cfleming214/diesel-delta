@@ -1,5 +1,5 @@
 import type { Icon, IconWeight } from '@/ui/icons';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { alpha, colors, layout, radius } from '@/theme';
 
@@ -15,7 +15,7 @@ type Props = {
   weight?: IconWeight;
 };
 
-/** 44×44 icon button, radius 8. */
+/** Icon button, radius 8. Smaller sizes draw smaller but still take a 44×44 tap area. */
 export function IconButton({
   icon: IconCmp,
   accessibilityLabel,
@@ -32,22 +32,33 @@ export function IconButton({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      hitSlop={Math.max(0, (layout.hitTarget - size) / 2)}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        { width: size, height: size, borderColor: primary ? colors.accent : colors.divider },
-        pressed && {
-          backgroundColor: primary ? alpha(colors.accent, 0.22) : alpha(colors.text, 0.14),
-        },
-      ]}
+      style={styles.target}
     >
-      <IconCmp size={iconSize} color={fg} weight={weight} />
+      {({ pressed }) => (
+        <View
+          style={[
+            styles.base,
+            { width: size, height: size, borderColor: primary ? colors.accent : colors.divider },
+            pressed && {
+              backgroundColor: primary ? alpha(colors.accent, 0.22) : alpha(colors.text, 0.14),
+            },
+          ]}
+        >
+          <IconCmp size={iconSize} color={fg} weight={weight} />
+        </View>
+      )}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
+  target: {
+    minWidth: layout.hitTarget,
+    minHeight: layout.hitTarget,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   base: {
     alignItems: 'center',
     justifyContent: 'center',
