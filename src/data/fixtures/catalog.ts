@@ -1,6 +1,6 @@
 import type { Verdict } from '@/domain';
 
-import type { CatalogItem, CategoryPassThrough, RetailerScore, Store } from '../types';
+import type { CatalogItem, CategoryPassThrough, Store } from '../types';
 
 type Row = [
   id: string,
@@ -62,26 +62,5 @@ export const CATEGORY_PASS_THROUGH: CategoryPassThrough[] = [
   { category: 'Frozen', pct: 9 },
   { category: 'Household', pct: 6 },
 ];
-
-const RETAILER_CATEGORIES = ['Produce', 'Dry goods', 'Frozen', 'Household'];
-
-const RETAILER_ROWS: [Store, string, number, number, number[]][] = [
-  ['Costco', 'B+', 64, 212, [78, 61, 52, 40]],
-  ['Walmart', 'C+', 47, 418, [66, 44, 31, 22]],
-  ['Kroger', 'C', 41, 396, [62, 38, 27, 19]],
-  ['Amazon', 'C−', 36, 287, [48, 35, 22, 30]],
-  ['Target', 'D+', 29, 344, [51, 24, 18, 12]],
-  ['Albertsons', 'D', 24, 301, [44, 20, 14, 9]],
-];
-
-export const RETAILER_SCORES: RetailerScore[] = RETAILER_ROWS.map(
-  ([name, grade, rollbackPct, itemsTracked, cats]) => ({
-    name,
-    grade,
-    rollbackPct,
-    itemsTracked,
-    categories: cats.map((pct, k) => ({ category: RETAILER_CATEGORIES[k]!, pct })),
-  }),
-);
 
 export const STORES: Store[] = ['Kroger', 'Walmart', 'Target', 'Costco', 'Albertsons', 'Amazon'];
