@@ -1,13 +1,15 @@
 import { router } from 'expo-router';
 import { Barcode, Link, MagnifyingGlass } from '@/ui/icons';
 import { useEffect, useMemo, useState } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 
 import { BarcodeScanner } from '@/components/BarcodeScanner';
 import { ProductRow } from '@/components/ProductRow';
 import { TAB_BAR_CLEARANCE } from '@/components/TabBar';
 import {
+  SEARCH_PAGE_SIZE,
   SEARCH_SUGGESTIONS,
+  searchSuggestions,
   useBarcodeLookup,
   filterProducts,
   useCatalogSearch,
@@ -27,13 +29,18 @@ const LINK = /https?:|www\.|\.com/i;
 
 /**
  * Search tab: every tracked product, filtered as you type (or by barcode, or a pasted retailer
- * link). Each row shows the cheapest price, its 30-day, 90-day and 1-year change and a basket
- * button; tapping a row opens the product's price history.
+ * link), with auto-fill suggestions while typing. Results load 20 at a time as you scroll. Each
+ * row shows the cheapest price, its 30-day, 90-day and 1-year change and a basket button; tapping
+ * a row opens the product's price history.
  */
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [scanning, setScanning] = useState(false);
   const [scanMiss, setScanMiss] = useState<string | null>(null);
+  /** True once a suggestion is picked or the search submitted, until the text changes again. */
+  const [committed, setCommitted] = useState(false);
+  /** Pages of results shown. */
+  const [pages, setPages] = useState(1);
   const basket = usePrefs((s) => s.basket);
   const lookupBarcode = useBarcodeLookup();
   const products = useProducts().data;
@@ -52,6 +59,21 @@ export default function SearchScreen() {
     return filterProducts(products, q);
   }, [products, q, isLink, linkSearch.data]);
 
+  const suggestions =
+    products && !committed && !isLink && !scanning ? searchSuggestions(products, q) : [];
+  const shown = results.slice(0, pages * SEARCH_PAGE_SIZE);
+  const hasMore = shown.length < results.length;
+  const showMore = () => {
+    if (hasMore) setPages((n) => n + 1);
+  };
+
+  /** Fills the box with a query and runs it (chips, suggestions, scans). */
+  const fill = (text: string) => {
+    setQuery(text);
+    setCommitted(true);
+    setPages(1);
+  };
+
   // One search event per settled query (debounced), with the outcome only, not the text.
   const settled = q && products ? results.length : null;
   useEffect(() => {
@@ -67,7 +89,7 @@ export default function SearchScreen() {
     track('barcode_scan', { matched: item != null });
     if (item) {
       setScanMiss(null);
-      setQuery(`${item.name} ${item.size}`);
+      fill(`${item.name} ${item.size}`);
     } else {
       setScanMiss(code);
     }
@@ -99,9 +121,12 @@ export default function SearchScreen() {
           value={query}
           onChangeText={(t) => {
             setQuery(t);
+            setCommitted(false);
+            setPages(1);
             setScanning(false);
             setScanMiss(null);
           }}
+          onSubmitEditing={() => setCommitted(true)}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
@@ -117,6 +142,26 @@ export default function SearchScreen() {
           }}
         />
       </View>
+
+      {suggestions.length ? (
+        <View style={styles.suggestions} accessibilityLabel="Suggestions">
+          {suggestions.map((sg) => (
+            <Pressable
+              key={`${sg.kind}:${sg.text}`}
+              accessibilityRole="button"
+              accessibilityLabel={`Suggestion: ${sg.text}, ${sg.kind === 'category' ? 'category, ' : ''}${sg.count} ${sg.count === 1 ? 'product' : 'products'}`}
+              onPress={() => fill(sg.text)}
+              style={({ pressed }) => [styles.suggestion, pressed && styles.pressed]}
+            >
+              <MagnifyingGlass size={16} color={colors.neutral[400]} />
+              <Highlighted text={sg.text} query={q} />
+              <Text variant="caption" color={colors.neutral[400]}>
+                {sg.kind === 'category' ? `Category · ${sg.count}` : String(sg.count)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
 
       {scanning ? (
         <View style={styles.block}>
@@ -149,7 +194,7 @@ export default function SearchScreen() {
               label={s.startsWith('http') ? 'Paste a link' : s}
               variant="secondary"
               height={34}
-              onPress={() => setQuery(s)}
+              onPress={() => fill(s)}
             />
           ))}
         </View>
@@ -177,7 +222,7 @@ export default function SearchScreen() {
   return (
     <Screen>
       <FlatList
-        data={results}
+        data={shown}
         keyExtractor={(p) => p.id}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
@@ -191,6 +236,22 @@ export default function SearchScreen() {
             onToggleBasket={() => toggle(item)}
           />
         )}
+        onEndReached={showMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          results.length > SEARCH_PAGE_SIZE ? (
+            <View style={styles.footer}>
+              <Text variant="caption" numeric color={colors.neutral[400]}>
+                {hasMore
+                  ? `Showing ${shown.length} of ${results.length}`
+                  : `Showing all ${results.length}`}
+              </Text>
+              {hasMore ? (
+                <Button label="Show more" variant="secondary" height={36} onPress={showMore} />
+              ) : null}
+            </View>
+          ) : undefined
+        }
         ListEmptyComponent={
           q && products && (!isLink || linkSearch.data) ? (
             <Text color={colors.neutral[400]} style={styles.empty}>
@@ -203,6 +264,19 @@ export default function SearchScreen() {
   );
 }
 
+/** The suggestion text with the typed part in the accent color. */
+function Highlighted({ text, query }: { text: string; query: string }) {
+  const i = text.toLowerCase().indexOf(query.toLowerCase());
+  if (i < 0 || !query) return <Text style={styles.flex}>{text}</Text>;
+  return (
+    <Text style={styles.flex} numberOfLines={1}>
+      {text.slice(0, i)}
+      <Text color={colors.accentRamp[300]}>{text.slice(i, i + query.length)}</Text>
+      {text.slice(i + query.length)}
+    </Text>
+  );
+}
+
 const styles = StyleSheet.create({
   header: { gap: 12, paddingBottom: 6 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -212,4 +286,23 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   resolved: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   empty: { paddingVertical: 24, fontSize: 14 },
+  flex: { flex: 1 },
+  suggestions: {
+    borderWidth: 1,
+    borderColor: colors.divider,
+    borderRadius: 8,
+    backgroundColor: colors.surface,
+    overflow: 'hidden',
+  },
+  suggestion: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 44,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.rowRule,
+  },
+  pressed: { opacity: 0.7 },
+  footer: { alignItems: 'center', gap: 8, paddingVertical: 16 },
 });
