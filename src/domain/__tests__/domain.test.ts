@@ -202,11 +202,18 @@ describe('basket', () => {
 
 describe('verdict', () => {
   test('explanations', () => {
-    expect(verdictExplanation('gouge', -13.32)).toBe(
-      'Price rose twice while diesel climbed. Diesel has since fallen 13.3% with no price reduction.',
+    expect(verdictExplanation('gouge', -13.32, 2)).toBe(
+      'Price rose twice this year. Diesel has since fallen 13.3% with no price reduction.',
     );
-    expect(verdictExplanation('track', -5)).toBe(
-      'Price rose with diesel and was reduced again as diesel fell.',
+    expect(verdictExplanation('sticky', -9.66, 1)).toBe(
+      'Price rose once this year and was only partly reduced after diesel fell 9.7%.',
     );
+    expect(verdictExplanation('track', -10.6, 1)).toBe(
+      'Price rose and was reduced again as diesel fell.',
+    );
+    expect(verdictExplanation('track', 0.7, 3)).toBe(
+      'Price rose 3 times this year. Diesel is up 0.7% since, so no rollback is due yet.',
+    );
+    expect(verdictExplanation('track', -2.2, 0)).toBe('Price has not risen in the past 12 months.');
   });
 });

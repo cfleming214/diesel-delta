@@ -27,7 +27,7 @@ describe('Basket', () => {
     await openBasket();
     expect(screen.getByText('16 items · weighted by purchase frequency')).toBeTruthy();
     expect(screen.getByText('+$4.00')).toBeTruthy();
-    expect(screen.getByText('$64.24 → $68.24')).toBeTruthy();
+    expect(screen.getByText('$64.24 → $68.24 on Oct 26')).toBeTruthy();
     expect(screen.getByText('Fuel-attributable −$0.15')).toBeTruthy();
     expect(screen.getByText('No fuel link +$4.15')).toBeTruthy();
 

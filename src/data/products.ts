@@ -1,7 +1,7 @@
 // Fixture products: the price bot's 150-item catalog, priced at Kroger, Walmart and Amazon by the
 // shared deterministic simulation (fixtures/priceSim.ts). Generated data for development: the live
 // source replaces it once the bot collects real prices.
-import { toISODate, type Verdict } from '@/domain';
+import { toISODate } from '@/domain';
 
 import { PRODUCT_SEEDS } from './fixtures/products.gen';
 import {
@@ -11,6 +11,7 @@ import {
   RETAILER_FACTOR,
   shelf,
   SIM_RETAILERS,
+  stepDays,
   stepFactor,
   type SimRetailer,
 } from './fixtures/priceSim';
@@ -53,6 +54,22 @@ function nationalPrice(seed: ProductSeed, r: SimRetailer, day: number) {
   );
 }
 
+/**
+ * Daily prices from `firstDay` for `days` days. Prices only move on step days, so each is computed
+ * once per step and carried forward (the same values as calling nationalPrice for every day).
+ */
+function dailyPrices(seed: ProductSeed, r: SimRetailer, firstDay: number, days: number) {
+  const changes = stepDays(`${r}:${seed[0]}`);
+  const out = new Array<number>(days);
+  let price = nationalPrice(seed, r, firstDay);
+  for (let i = 0; i < days; i++) {
+    const day = firstDay + i;
+    if (i > 0 && changes.includes(day)) price = nationalPrice(seed, r, day);
+    out[i] = price;
+  }
+  return out;
+}
+
 const change = (from: number, to: number) => ((to - from) / from) * 100;
 
 function retailerPrice(seed: ProductSeed, r: SimRetailer) {
@@ -92,7 +109,12 @@ export function productSummaries(): ProductSummary[] {
   return summaries;
 }
 
+const details = new Map<string, ProductDetail>();
+
+/** One product with each retailer's daily history (cached: the history is costly to build). */
 export function productDetail(id: string): ProductDetail {
+  const cached = details.get(id);
+  if (cached) return cached;
   const seed = seeds.get(id);
   if (!seed) throw new Error(`Unknown product ${id}`);
   const today = dayNumber(PRODUCTS_AS_OF);
@@ -101,13 +123,13 @@ export function productDetail(id: string): ProductDetail {
   const retailers: RetailerPriceHistory[] = SIM_RETAILERS.filter((r) => isCarried(r, id))
     .map((r) => {
       const { retailer, price, change: c } = retailerPrice(seed, r);
-      const values = Array.from({ length: HISTORY_DAYS }, (_, i) =>
-        nationalPrice(seed, r, today - (HISTORY_DAYS - 1) + i),
-      );
+      const values = dailyPrices(seed, r, today - (HISTORY_DAYS - 1), HISTORY_DAYS);
       return { retailer, price, change: c, history: { startDate: toISODate(start), values } };
     })
     .sort((a, b) => a.price - b.price);
-  return { ...summarize(seed), asOf: PRODUCTS_AS_OF, retailers };
+  const detail = { ...summarize(seed), asOf: PRODUCTS_AS_OF, retailers };
+  details.set(id, detail);
+  return detail;
 }
 
 export const isProduct = (id: string) => seeds.has(id);
@@ -126,14 +148,7 @@ export function basketCostSeries(ids: readonly string[], days: number): number[]
     const summary = byId.get(id);
     return seed && summary ? [{ seed, r: SIM[summary.retailer]! }] : [];
   });
-  return Array.from({ length: days }, (_, i) => {
-    const day = today - (days - 1) + i;
-    return items.reduce((sum, { seed, r }) => sum + nationalPrice(seed, r, day), 0);
-  });
-}
-
-/** A verdict from the 1-year change, for products without a curated fixture verdict. */
-export function verdictFromChange(c: PriceChange): Verdict {
-  const y = c.d365 ?? 0;
-  return y >= 8 ? 'gouge' : y >= 3 ? 'sticky' : 'track';
+  const first = today - (days - 1);
+  const series = items.map(({ seed, r }) => dailyPrices(seed, r, first, days));
+  return Array.from({ length: days }, (_, i) => series.reduce((sum, s) => sum + s[i]!, 0));
 }

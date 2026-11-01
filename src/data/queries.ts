@@ -1,5 +1,6 @@
 import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 
+import { retryUnlessNotFound } from './errors';
 import { api } from './api';
 import type { FuelArea } from './geo';
 import type { FuelSeriesKind, RegionKey } from './types';
@@ -51,6 +52,7 @@ export function useBasketSeries(ids: readonly string[]) {
 const itemQuery = (id: string, region: RegionKey) => ({
   queryKey: queryKeys.item(id, region),
   queryFn: () => api.getItem(id, region),
+  retry: retryUnlessNotFound,
 });
 
 export function useItem(id: string, region: RegionKey | null) {
@@ -131,5 +133,6 @@ export function useProduct(id: string) {
     queryKey: queryKeys.product(id),
     queryFn: () => api.getProduct(id),
     staleTime: SIX_HOURS,
+    retry: retryUnlessNotFound,
   });
 }

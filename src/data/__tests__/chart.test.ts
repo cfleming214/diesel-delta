@@ -50,7 +50,7 @@ describe('lagChartGeometry', () => {
   });
 });
 
-// Golden values from the prototype's `itemModel` chart for Whole milk (362×170).
+// Whole milk (362×170): one rise in week 13 of its Walmart history; diesel peaks in week 23.
 describe('itemChartGeometry', () => {
   test('milk', async () => {
     const milk = await api.getItem('milk', 'gulf');
@@ -58,14 +58,11 @@ describe('itemChartGeometry', () => {
     expect(g.fuelPath.startsWith('M0.0 133.7L7.0 132.7L13.9 122.9L20.9 120.2L27.8 11')).toBe(true);
     expect(g.fuelPath).toHaveLength(594);
     expect(g.pricePath.startsWith('M0 158.0L7.0 158.0L7.0 158.0')).toBe(true);
-    expect(g.band.x).toBeCloseTo(153.15384615384616, 8);
-    expect(g.band.width).toBeCloseTo(208.84615384615384, 8);
-    expect(g.marks.map((m) => [m.x, m.y])).toEqual([
-      [104.42307692307692, 85],
-      [160.1153846153846, 12],
-    ]);
+    expect(g.band.x).toBeCloseTo(160.1153846153846, 8);
+    expect(g.band.width).toBeCloseTo(201.8846153846154, 8);
+    expect(g.marks.map((m) => [m.x, m.y])).toEqual([[90.5, 12]]);
     expect(g.price.hi.toFixed(2)).toBe('3.89');
-    expect(g.price.lo.toFixed(2)).toBe('3.42');
+    expect(g.price.lo.toFixed(2)).toBe('3.59');
     expect(g.fuel.hi.toFixed(2)).toBe('3.97');
     expect(g.fuel.lo.toFixed(2)).toBe('3.41');
   });

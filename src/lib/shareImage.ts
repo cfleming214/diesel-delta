@@ -12,17 +12,22 @@ export async function captureCard(
   return captureRef(view, { format: 'png', quality: 1, result: 'tmpfile', ...size });
 }
 
-/** Saves an image file to Photos, asking for add-only access. Returns false if denied. */
-export async function saveToPhotos(uri: string): Promise<boolean> {
+/** Where a saved image went (the web build downloads it instead), or why it couldn't be saved. */
+export type SaveResult = 'photos' | 'downloaded' | 'denied';
+/** What sharing did: opened a share sheet, copied the link instead (web), or neither. */
+export type ShareResult = 'shared' | 'copied' | 'cancelled' | 'unavailable';
+
+/** Saves an image file to Photos, asking for add-only access. */
+export async function saveImage(uri: string): Promise<SaveResult> {
   const { granted } = await requestPermissionsAsync(true);
-  if (!granted) return false;
+  if (!granted) return 'denied';
   await Asset.create(uri);
-  return true;
+  return 'photos';
 }
 
-/** Opens the native share sheet for an image. Returns false where sharing is unavailable. */
-export async function shareImage(uri: string, title: string): Promise<boolean> {
-  if (!(await Sharing.isAvailableAsync())) return false;
+/** Opens the native share sheet for an image. `link` is used only by the web fallback. */
+export async function shareImage(uri: string, title: string, _link: string): Promise<ShareResult> {
+  if (!(await Sharing.isAvailableAsync())) return 'unavailable';
   await Sharing.shareAsync(uri, { mimeType: 'image/png', dialogTitle: title, UTI: 'public.png' });
-  return true;
+  return 'shared';
 }

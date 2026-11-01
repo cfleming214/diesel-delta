@@ -56,7 +56,8 @@ export const DEFAULT_PREFS: Prefs = {
   region: null,
   basket: DEFAULT_BASKET_IDS.map((id) => ({ id, weight: 1 })),
   followed: DEFAULT_FOLLOWED_IDS,
-  alerts: { dieselCross: true, followedDrop: true, deltaTolerance: true },
+  // Off until the person turns one on and allows notifications.
+  alerts: { dieselCross: false, followedDrop: false, deltaTolerance: false },
   dieselThreshold: 3.25,
   tolerance: 3,
   isPro: false,
