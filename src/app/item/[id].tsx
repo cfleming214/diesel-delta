@@ -24,6 +24,7 @@ import { track } from '@/lib/telemetry';
 
 const TAG_COLOR: Record<LedgerTag, string> = {
   'Fuel-correlated': colors.accentRamp[300],
+  'No fuel link': colors.accentRamp[300],
   'Partial rollback': colors.accentRamp[300],
   Rollback: colors.neutral[300],
 };
@@ -98,7 +99,7 @@ export default function ItemScreen() {
         </Text>
         <Tag label={verdict.label} tone={verdict.tone} size="lg" />
         <Text variant="bodySmall" color={colors.neutral[300]} style={styles.explain}>
-          {verdictExplanation(item.verdict, item.fuelSincePct)}
+          {verdictExplanation(item.verdict, item.fuelSincePct, item.rises)}
         </Text>
       </View>
 
