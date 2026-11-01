@@ -46,6 +46,7 @@ test-results/
 playwright-report/
 load/reports/
 price-bot/.data/
+.shots/
 
 # Local EAS build artifacts
 *.ipa

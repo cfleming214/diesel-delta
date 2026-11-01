@@ -10,20 +10,25 @@ describe('app navigation', () => {
   test('opens on Today and switches tabs from the tab bar', async () => {
     await renderRouter('./src/app');
     expect(await screen.findByText('TX 77002 · Oct 26, 2026')).toBeTruthy();
-    for (const tab of ['Today', 'Chart', 'Basket', 'Log', 'Insights']) {
+    for (const tab of ['Today', 'Search', 'Basket', 'Log', 'Insights']) {
       expect(screen.getByRole('tab', { name: tab })).toBeTruthy();
     }
 
     await act(() => fireEvent.press(screen.getByLabelText('Basket')));
     expect(screen.getByText('16 items · weighted by purchase frequency')).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: 'Chart' })).toBeNull();
   });
 
-  test('pushes Search from Today and goes back', async () => {
+  test('Search is a tab; a product opens over it and closes back to it', async () => {
     await renderRouter('./src/app');
-    await act(() => fireEvent.press(screen.getByLabelText('Search')));
+    await act(() => fireEvent.press(screen.getByRole('tab', { name: 'Search' })));
     expect(screen).toHavePathname('/search');
-    await act(() => fireEvent.press(screen.getByLabelText('Back')));
-    expect(screen).toHavePathname('/');
+    await act(async () =>
+      fireEvent.press(await screen.findByLabelText(/^Whole milk 1 gal, \$3\.89 at Walmart/)),
+    );
+    expect(screen).toHavePathname('/product/milk');
+    await act(() => fireEvent.press(screen.getByLabelText('Close')));
+    expect(screen).toHavePathname('/search');
   });
 
   test('deep links to an item', async () => {

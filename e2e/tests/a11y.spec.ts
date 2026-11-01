@@ -4,12 +4,12 @@ import { expect, test } from '../fixtures';
 
 const SCREENS = [
   '/',
-  '/chart',
   '/basket',
   '/log',
   '/insights',
   '/search',
   '/item/milk',
+  '/product/milk',
   '/share',
   '/paywall',
   '/retailers',

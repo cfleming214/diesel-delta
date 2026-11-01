@@ -6,7 +6,7 @@ import { TabBar } from '@/components/TabBar';
 
 type Props = ComponentProps<typeof TabBar>;
 
-const routes = ['index', 'chart', 'basket', 'log', 'insights'].map((name) => ({
+const routes = ['index', 'search', 'basket', 'log', 'insights'].map((name) => ({
   key: `${name}-key`,
   name,
 }));
@@ -29,7 +29,7 @@ describe('TabBar', () => {
     await render(<TabBar {...props} />);
     expect(screen.getAllByRole('tab').map((t) => t.props.accessibilityLabel)).toEqual([
       'Today',
-      'Chart',
+      'Search',
       'Basket',
       'Log',
       'Insights',
@@ -40,8 +40,8 @@ describe('TabBar', () => {
   test('navigates on press unless the event is prevented', async () => {
     const a = setup();
     await render(<TabBar {...a.props} />);
-    await fireEvent.press(screen.getByLabelText('Chart'));
-    expect(a.navigateToTab).toHaveBeenCalledWith('chart-key');
+    await fireEvent.press(screen.getByLabelText('Basket'));
+    expect(a.navigateToTab).toHaveBeenCalledWith('basket-key');
 
     const b = setup(true);
     await render(<TabBar {...b.props} />);

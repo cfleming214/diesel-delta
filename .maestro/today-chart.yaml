@@ -9,10 +9,16 @@ name: Scrub the Today chart, change window, set a lag
 - assertVisible: '.*Gap at Oct 26.*'
 - tapOn: '30D'
 - assertVisible: '.*over 30 days.*'
-- tapOn: 'Chart'
+- tapOn: 'Insights'
 - assertVisible: 'Lag: none'
 - swipe:
     from:
       id: 'lag-slider'
     direction: RIGHT
 - assertVisible: "Lag: \\d+ weeks?"
+- tapOn: 'Today'
+- scrollUntilVisible:
+    element: 'Nationwide movers'
+- assertVisible: 'Nationwide movers'
+- tapOn: 'Pause movers'
+- assertVisible: 'Paused.*'
