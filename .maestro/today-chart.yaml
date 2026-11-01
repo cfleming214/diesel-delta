@@ -16,3 +16,9 @@ name: Scrub the Today chart, change window, set a lag
       id: 'lag-slider'
     direction: RIGHT
 - assertVisible: "Lag: \\d+ weeks?"
+- tapOn: 'Today'
+- scrollUntilVisible:
+    element: 'Nationwide movers'
+- assertVisible: 'Nationwide movers'
+- tapOn: 'Pause movers'
+- assertVisible: 'Paused.*'

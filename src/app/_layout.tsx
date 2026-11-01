@@ -42,7 +42,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
           <Stack.Screen name="item/[id]" />
-          <Stack.Screen name="search" />
+          <Stack.Screen name="product/[id]" options={{ presentation: 'modal' }} />
           <Stack.Screen name="retailers" />
           <Stack.Screen name="share" options={{ presentation: 'modal' }} />
           <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />

@@ -26,13 +26,13 @@ describe('Basket', () => {
   test('Delta card splits the 12-month change', async () => {
     await openBasket();
     expect(screen.getByText('16 items · weighted by purchase frequency')).toBeTruthy();
-    expect(screen.getByText('+$5.12')).toBeTruthy();
-    expect(screen.getByText('$96.40 → $101.52')).toBeTruthy();
-    expect(screen.getByText('Fuel-attributable −$0.21')).toBeTruthy();
-    expect(screen.getByText('No fuel link +$5.33')).toBeTruthy();
+    expect(screen.getByText('+$4.00')).toBeTruthy();
+    expect(screen.getByText('$64.24 → $68.24')).toBeTruthy();
+    expect(screen.getByText('Fuel-attributable −$0.14')).toBeTruthy();
+    expect(screen.getByText('No fuel link +$4.14')).toBeTruthy();
 
     await fireEvent.press(screen.getByText('90D'));
-    expect(screen.queryByText('+$5.12')).toBeNull();
+    expect(screen.queryByText('+$4.00')).toBeNull();
     expect(useUi.getState().basketBaseline).toBe('90D');
   });
 

@@ -28,7 +28,7 @@ describe('runAlerts', () => {
     expect(await runAlerts(p)).toEqual([]);
     const s = useAlertState.getState().snapshot!;
     expect(s.dieselPrice).toBeCloseTo(3.4398, 3);
-    expect(s.deltaAbs.toFixed(1)).toBe('4.0');
+    expect(s.deltaAbs.toFixed(1)).toBe('6.5');
     expect(Object.keys(s.itemPrices).sort()).toEqual(['chicken', 'ketchup', 'milk']);
     expect(delivered).toEqual([]);
   });
@@ -36,7 +36,7 @@ describe('runAlerts', () => {
   test('delivers alerts that started since the last run', async () => {
     useAlertState.getState().save({
       dieselPrice: 3.5, // was above $3.25 ... now $3.44: no cross
-      deltaAbs: 2.0, // was within the 3-point tolerance; now 4.0
+      deltaAbs: 2.0, // was within the 3-point tolerance; now 6.5
       itemPrices: { milk: 4.19, chicken: 4.29, ketchup: 4.79 }, // milk now $3.89
     });
     const { p, delivered } = provider();

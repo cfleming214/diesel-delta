@@ -38,6 +38,8 @@ export const MinusCircle: Icon =
   require('phosphor-react-native/src/icons/MinusCircle').MinusCircleIcon;
 export const PencilSimple: Icon =
   require('phosphor-react-native/src/icons/PencilSimple').PencilSimpleIcon;
+export const Pause: Icon = require('phosphor-react-native/src/icons/Pause').PauseIcon;
+export const Play: Icon = require('phosphor-react-native/src/icons/Play').PlayIcon;
 export const Plus: Icon = require('phosphor-react-native/src/icons/Plus').PlusIcon;
 export const Receipt: Icon = require('phosphor-react-native/src/icons/Receipt').ReceiptIcon;
 export const ShareNetwork: Icon =
@@ -47,4 +49,6 @@ export const Star: Icon = require('phosphor-react-native/src/icons/Star').StarIc
 export const StarFour: Icon = require('phosphor-react-native/src/icons/StarFour').StarFourIcon;
 export const Storefront: Icon =
   require('phosphor-react-native/src/icons/Storefront').StorefrontIcon;
+export const TrendDown: Icon = require('phosphor-react-native/src/icons/TrendDown').TrendDownIcon;
+export const TrendUp: Icon = require('phosphor-react-native/src/icons/TrendUp').TrendUpIcon;
 export const X: Icon = require('phosphor-react-native/src/icons/X').XIcon;

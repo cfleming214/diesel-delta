@@ -1,6 +1,6 @@
 import { BlurView } from 'expo-blur';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Basket, ChartBar, Gauge, Receipt, type Icon } from '@/ui/icons';
+import { Basket, ChartBar, Gauge, MagnifyingGlass, Receipt, type Icon } from '@/ui/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { alpha, colors, glow } from '@/theme';
@@ -11,6 +11,7 @@ export const TAB_BAR_CLEARANCE = 110;
 
 export const TABS: Record<string, { label: string; icon: Icon }> = {
   index: { label: 'Today', icon: Gauge },
+  search: { label: 'Search', icon: MagnifyingGlass },
   basket: { label: 'Basket', icon: Basket },
   log: { label: 'Log', icon: Receipt },
   insights: { label: 'Insights', icon: ChartBar },

@@ -6,7 +6,7 @@ import { TabBar } from '@/components/TabBar';
 
 type Props = ComponentProps<typeof TabBar>;
 
-const routes = ['index', 'basket', 'log', 'insights'].map((name) => ({
+const routes = ['index', 'search', 'basket', 'log', 'insights'].map((name) => ({
   key: `${name}-key`,
   name,
 }));
@@ -24,11 +24,12 @@ function setup(defaultPrevented = false) {
 }
 
 describe('TabBar', () => {
-  test('renders the four tabs with Today selected', async () => {
+  test('renders the five tabs with Today selected', async () => {
     const { props } = setup();
     await render(<TabBar {...props} />);
     expect(screen.getAllByRole('tab').map((t) => t.props.accessibilityLabel)).toEqual([
       'Today',
+      'Search',
       'Basket',
       'Log',
       'Insights',

@@ -46,12 +46,15 @@ test('drag to reorder persists across a reload', async ({ onboarded: page }) => 
   await expect(rows(page).first()).toHaveAccessibleName(/^Large eggs/);
 });
 
-test('add an item from search and follow it from its detail page', async ({ onboarded: page }) => {
+test('add a product from the Search tab and follow it from its detail page', async ({
+  onboarded: page,
+}) => {
   await page.getByRole('button', { name: 'Add item' }).click();
   await page.getByLabel('Search items').fill('yogurt');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('button', { name: 'Add Greek yogurt to basket' }).click();
   await expect(page.getByRole('alert')).toHaveText('Greek yogurt added to basket');
-  await page.getByRole('button', { name: 'Back' }).click();
+  await expect(page.getByRole('button', { name: 'Remove Greek yogurt from basket' })).toBeVisible();
+  await page.getByRole('tab', { name: 'Basket' }).click();
   await expect(page.getByText('17 items · weighted by purchase frequency')).toBeVisible();
 
   await page.getByRole('button', { name: /^Greek yogurt · 32 oz/ }).click();

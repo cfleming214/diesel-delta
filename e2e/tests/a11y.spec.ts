@@ -9,6 +9,7 @@ const SCREENS = [
   '/insights',
   '/search',
   '/item/milk',
+  '/product/milk',
   '/share',
   '/paywall',
   '/retailers',

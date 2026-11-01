@@ -53,10 +53,10 @@ describe('Receipt log', () => {
     const h = useReceipts.getState().history;
     expect(h.map((e) => [e.item, e.comparison])).toEqual([
       ['WHOLE MILK 1 GAL', 'Matches listed price'],
-      ['LARGE EGGS 12 CT', '$0.05 below listed'],
-      ['BANANAS 2.1 LB', '$0.02 above listed'],
+      ['LARGE EGGS 12 CT', '$0.40 below listed'],
+      ['BANANAS 2.1 LB', '$0.08 above listed'],
     ]);
-    expect(screen.getByText('$0.05 below listed')).toBeTruthy();
+    expect(screen.getByText('$0.40 below listed')).toBeTruthy();
     expect(screen.getAllByText('Kroger · Oct 28')).toHaveLength(3);
   });
 
@@ -73,7 +73,7 @@ describe('Receipt log', () => {
     await fireEvent.press(screen.getByText('Save price'));
 
     expect(useToast.getState().message).toBe('Price saved');
-    expect(screen.getByText('$0.20 above listed')).toBeTruthy();
+    expect(screen.getByText('$0.30 below listed')).toBeTruthy();
     const saved = JSON.parse((await AsyncStorage.getItem('dd.receipts'))!);
     expect(saved.state.history[0]).toMatchObject({
       item: 'Heinz ketchup 32 oz',

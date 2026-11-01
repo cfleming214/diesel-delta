@@ -1,5 +1,5 @@
 appId: app.dieseldelta
-name: Remove, add and follow basket items
+name: Remove, add from the Search tab and follow basket items
 ---
 - runFlow: _onboard.yaml
 - tapOn: 'Basket'
@@ -12,9 +12,9 @@ name: Remove, add and follow basket items
 - tapOn: 'Add item'
 - tapOn: 'Search items'
 - inputText: 'yogurt'
-- tapOn: 'Add'
+- tapOn: 'Add Greek yogurt to basket'
 - assertVisible: 'Greek yogurt added to basket'
-- tapOn: 'Back'
+- tapOn: 'Basket'
 - assertVisible: '16 items · weighted by purchase frequency'
 - tapOn: 'Greek yogurt · 32 oz.*'
 - tapOn: 'Follow'
