@@ -22,7 +22,8 @@ export default function BasketScreen() {
   const state = usePrefs((s) => s.state);
   const basket = usePrefs((s) => s.basket);
   const followed = usePrefs((s) => s.followed);
-  const { removeFromBasket, moveBasketItem, toggleFollow } = usePrefs.getState();
+  const { removeFromBasket, restoreBasketEntry, moveBasketItem, toggleFollow } =
+    usePrefs.getState();
   const baseline = useUi((s) => s.basketBaseline);
   const setBaseline = useUi((s) => s.setBasketBaseline);
   const [editing, setEditing] = useState(false);
@@ -43,9 +44,14 @@ export default function BasketScreen() {
   const loaded = items.filter((i): i is ItemDetail => i != null);
   const open = (id: string) => router.push({ pathname: '/item/[id]', params: { id } });
   const remove = (item: ItemDetail) => {
+    const index = basket.findIndex((b) => b.id === item.id);
+    const entry = basket[index];
     removeFromBasket(item.id);
     track('basket_remove', { item: item.id, mode: editing ? 'edit' : 'swipe' });
-    toast(`${item.name} removed`);
+    toast(
+      `${item.name} removed`,
+      entry ? { label: 'Undo', onPress: () => restoreBasketEntry(entry, index) } : undefined,
+    );
   };
 
   const row = (item: ItemDetail, rowEditing: boolean) => (

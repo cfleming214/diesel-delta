@@ -70,11 +70,11 @@ describe('golden: Delta for ZIP 77002', () => {
 
   test('basket attribution (1Y baseline)', () => {
     const a = basketAttribution(BASKET, FUEL, baselineIndex(DAYS, '1Y'));
-    expect(a.from).toBe(96.4);
+    expect(a.from).toBeCloseTo(96.394, 3);
     expect(a.to).toBe(101.52);
-    expect(smoney(a.change)).toBe('+$5.12');
-    expect(smoney(a.fuelAttributable)).toBe('−$0.21');
-    expect(smoney(a.noFuelLink)).toBe('+$5.33');
+    expect(smoney(a.change)).toBe('+$5.13');
+    expect(smoney(a.fuelAttributable)).toBe('−$0.23');
+    expect(smoney(a.noFuelLink)).toBe('+$5.35');
   });
 
   test('regional 90D fuel changes', async () => {

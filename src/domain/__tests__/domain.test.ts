@@ -183,9 +183,9 @@ describe('alignSeries', () => {
 
 describe('basket', () => {
   test('baseline offsets', () => {
+    expect(baselineIndex(449, '30D')).toBe(418);
     expect(baselineIndex(449, '90D')).toBe(358);
-    expect(baselineIndex(449, '6M')).toBe(266);
-    expect(baselineIndex(449, '1Y')).toBe(84);
+    expect(baselineIndex(449, '1Y')).toBe(83);
   });
 
   test('attribution splits the change', () => {

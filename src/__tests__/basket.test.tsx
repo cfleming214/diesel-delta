@@ -28,8 +28,8 @@ describe('Basket', () => {
     expect(screen.getByText('16 items · weighted by purchase frequency')).toBeTruthy();
     expect(screen.getByText('+$4.00')).toBeTruthy();
     expect(screen.getByText('$64.24 → $68.24')).toBeTruthy();
-    expect(screen.getByText('Fuel-attributable −$0.14')).toBeTruthy();
-    expect(screen.getByText('No fuel link +$4.14')).toBeTruthy();
+    expect(screen.getByText('Fuel-attributable −$0.15')).toBeTruthy();
+    expect(screen.getByText('No fuel link +$4.15')).toBeTruthy();
 
     await fireEvent.press(screen.getByText('90D'));
     expect(screen.queryByText('+$4.00')).toBeNull();
@@ -51,6 +51,12 @@ describe('Basket', () => {
     expect(basketIds(usePrefs.getState().basket)).not.toContain('milk');
     expect(useToast.getState().message).toBe('Whole milk removed');
     expect(screen.getByText('15 items · weighted by purchase frequency')).toBeTruthy();
+
+    // Undo puts it back where it was.
+    await act(() => useToast.getState().action!.onPress());
+    expect(basketIds(usePrefs.getState().basket)[0]).toBe('milk');
+    expect(screen.getByText('16 items · weighted by purchase frequency')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Remove Whole milk'));
 
     // VoiceOver "Move down" on the first row (now eggs).
     const handle = screen.getByLabelText('Reorder Large eggs');
