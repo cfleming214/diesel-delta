@@ -4,12 +4,16 @@ import { GasPump, MapPin } from '@/ui/icons';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
-import { api, queryKeys, useZipLookup, ZIP_ERROR, type ZipLookup } from '@/data';
+import { LoadError } from '@/components/LoadError';
+import { api, queryKeys, useZipLookup, ZIP_ERROR, ZIP_UNSUPPORTED, type ZipLookup } from '@/data';
 import { formatDate, fromISODate, money } from '@/domain';
 import { usePrefs } from '@/store/prefs';
 import { alpha, colors, em, layout } from '@/theme';
 import { Button, Card, Input, Kicker, Screen, Text } from '@/ui';
 import { track } from '@/lib/telemetry';
+
+const isZipError = (e: unknown) =>
+  e instanceof Error && (e.message === ZIP_ERROR || e.message === ZIP_UNSUPPORTED);
 
 /** Which EIA diesel series the ZIP uses. EIA publishes state-level diesel only for California. */
 function seriesLine(found: ZipLookup) {
@@ -37,8 +41,9 @@ export default function OnboardingScreen() {
         queryFn: () => api.lookupZip(zip),
         retry: false,
       });
-    } catch {
-      setError(true);
+    } catch (e) {
+      // A bad ZIP marks the field; a failed fuel lookup shows its own message with Retry.
+      if (isZipError(e)) setError(true);
       return;
     }
     setLocation(zip, result.state.abbr, result.region.key);
@@ -51,8 +56,11 @@ export default function OnboardingScreen() {
   };
 
   const found = zip.length === 5 ? lookup.data : undefined;
-  // Valid-looking ZIPs outside the 50 states and DC (territories, military) explain themselves.
-  const lookupError = zip.length === 5 && lookup.error ? lookup.error.message : null;
+  // Valid-looking ZIPs outside the 50 states and DC (territories, military) explain themselves;
+  // anything else is a failed fuel lookup, said in plain words with a Retry.
+  const failed = zip.length === 5 ? lookup.error : null;
+  const lookupError = failed && isZipError(failed) ? failed.message : null;
+  const loadFailed = failed != null && !isZipError(failed);
 
   return (
     <KeyboardAvoidingView
@@ -107,6 +115,13 @@ export default function OnboardingScreen() {
             </Text>
           ) : null}
         </View>
+
+        {loadFailed ? (
+          <LoadError
+            message="Fuel prices could not be loaded."
+            onRetry={() => void lookup.refetch()}
+          />
+        ) : null}
 
         {found ? (
           <Card padding={14} gap={10} style={styles.card}>

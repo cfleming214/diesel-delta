@@ -61,8 +61,15 @@ test('typing suggests products and categories; results page in 20s', async ({
 }) => {
   await page.getByRole('tab', { name: 'Search' }).click();
   await expect(page.getByText('Showing 20 of 150')).toBeVisible();
-  await page.getByRole('button', { name: 'Show more' }).click();
-  await expect(page.getByText('Showing 40 of 150')).toBeVisible();
+  // Show more sits under the floating tab bar once scrolled into view, so a pointer click can land
+  // on the tab bar; press it from the keyboard instead. Focusing it scrolls the list, which may
+  // already load the next page, so check that the press adds exactly one more page.
+  const footer = page.getByText(/^Showing \d+ of 150$/);
+  await page.getByRole('button', { name: 'Show more' }).focus();
+  await page.waitForTimeout(300);
+  const before = Number((await footer.innerText()).match(/\d+/)![0]);
+  await page.keyboard.press('Enter');
+  await expect(footer).toHaveText(`Showing ${before + 20} of 150`);
 
   await page.getByLabel('Search items').fill('heinz');
   await page.getByRole('button', { name: 'Suggestion: Heinz ketchup, 2 products' }).click();
