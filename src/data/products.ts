@@ -11,6 +11,7 @@ import {
   RETAILER_FACTOR,
   shelf,
   SIM_RETAILERS,
+  stepDays,
   stepFactor,
   type SimRetailer,
 } from './fixtures/priceSim';
@@ -51,6 +52,22 @@ function nationalPrice(seed: ProductSeed, r: SimRetailer, day: number) {
   return (
     Math.round(shelf(ref * RETAILER_FACTOR[r] * noise * stepFactor(`${r}:${id}`, day)) * 100) / 100
   );
+}
+
+/**
+ * Daily prices from `firstDay` for `days` days. Prices only move on step days, so each is computed
+ * once per step and carried forward (the same values as calling nationalPrice for every day).
+ */
+function dailyPrices(seed: ProductSeed, r: SimRetailer, firstDay: number, days: number) {
+  const changes = stepDays(`${r}:${seed[0]}`);
+  const out = new Array<number>(days);
+  let price = nationalPrice(seed, r, firstDay);
+  for (let i = 0; i < days; i++) {
+    const day = firstDay + i;
+    if (i > 0 && changes.includes(day)) price = nationalPrice(seed, r, day);
+    out[i] = price;
+  }
+  return out;
 }
 
 const change = (from: number, to: number) => ((to - from) / from) * 100;
@@ -106,9 +123,7 @@ export function productDetail(id: string): ProductDetail {
   const retailers: RetailerPriceHistory[] = SIM_RETAILERS.filter((r) => isCarried(r, id))
     .map((r) => {
       const { retailer, price, change: c } = retailerPrice(seed, r);
-      const values = Array.from({ length: HISTORY_DAYS }, (_, i) =>
-        nationalPrice(seed, r, today - (HISTORY_DAYS - 1) + i),
-      );
+      const values = dailyPrices(seed, r, today - (HISTORY_DAYS - 1), HISTORY_DAYS);
       return { retailer, price, change: c, history: { startDate: toISODate(start), values } };
     })
     .sort((a, b) => a.price - b.price);
@@ -133,8 +148,7 @@ export function basketCostSeries(ids: readonly string[], days: number): number[]
     const summary = byId.get(id);
     return seed && summary ? [{ seed, r: SIM[summary.retailer]! }] : [];
   });
-  return Array.from({ length: days }, (_, i) => {
-    const day = today - (days - 1) + i;
-    return items.reduce((sum, { seed, r }) => sum + nationalPrice(seed, r, day), 0);
-  });
+  const first = today - (days - 1);
+  const series = items.map(({ seed, r }) => dailyPrices(seed, r, first, days));
+  return Array.from({ length: days }, (_, i) => series.reduce((sum, s) => sum + s[i]!, 0));
 }

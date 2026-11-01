@@ -60,6 +60,12 @@ function schedule(key: string): Step[] {
   return steps;
 }
 
+/** The days a key's step factor can change on (its steps and rollbacks), sorted. */
+export function stepDays(key: string): number[] {
+  const days = schedule(key).flatMap(({ at, back }) => (back == null ? [at] : [at, back]));
+  return [...new Set(days)].sort((a, b) => a - b);
+}
+
 /** Up to 4 step changes in the year before 2026-11-01; about a third roll back later. */
 export function stepFactor(key: string, day: number): number {
   let f = 1;
