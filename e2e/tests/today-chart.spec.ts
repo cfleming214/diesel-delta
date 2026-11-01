@@ -71,3 +71,32 @@ test('Today shows the basket total and 9 nationwide movers that can be paused', 
     .click();
   await expect(page.getByText('By retailer')).toBeVisible();
 });
+
+test('the chart, basket card, Insights and Basket agree on one as-of date and total', async ({
+  onboarded: page,
+}) => {
+  // Today: the 90-day basket change in the chart sentence matches the card's 90D.
+  const card = page.getByRole('button', { name: /^Your basket, 16 items, / });
+  const label = (await card.getAttribute('aria-label'))!;
+  const total = label.match(/(\$\d+\.\d\d)/)![1]!;
+  const card90 = label.match(/90 days ([+−-]?\d+\.\d)%/)![1]!.replace('−', '-');
+  const sentence = await page.getByText(/^Diesel (rose|fell) .* over 90 days\./).innerText();
+  const chart90 = sentence.match(/basket (rose|fell) (\d+\.\d)%/)!;
+  expect(`${chart90[1] === 'fell' ? '-' : '+'}${chart90[2]}`).toBe(
+    card90.startsWith('-') ? card90 : `+${card90.replace('+', '')}`,
+  );
+  const asOf = (await page.getByText(/^16 items at the cheapest prices on /).innerText()).replace(
+    '16 items at the cheapest prices on ',
+    '',
+  );
+
+  // Insights: the chart header shows the same basket total, and the region table the same date.
+  await page.getByRole('tab', { name: 'Insights' }).click();
+  await expect(page.getByText(new RegExp(`^Basket \\${total} · `))).toBeVisible();
+  await expect(page.getByText(new RegExp(`diesel series, 90 days to ${asOf}$`))).toBeVisible();
+
+  // Basket: the 90D Basket Delta ends at the same total on the same day.
+  await page.getByRole('tab', { name: 'Basket' }).click();
+  await page.getByRole('tablist', { name: 'Baseline' }).getByRole('tab', { name: '90D' }).click();
+  await expect(page.getByText(new RegExp(`→ \\${total} on ${asOf}$`))).toBeVisible();
+});

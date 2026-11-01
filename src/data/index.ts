@@ -26,3 +26,4 @@ export {
 } from './productSearch';
 export * from './highlights';
 export { useDeltaModel } from './useDeltaModel';
+export { isNotFound, NotFoundError } from './errors';

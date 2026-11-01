@@ -7,17 +7,24 @@ export const VERDICTS: Record<Verdict, { label: string; tone: 'accent' | 'outlin
     track: { label: 'Tracking Fuel', tone: 'neutral' },
   };
 
-export type LedgerTag = 'Fuel-correlated' | 'Partial rollback' | 'Rollback';
+export type LedgerTag = 'Fuel-correlated' | 'No fuel link' | 'Partial rollback' | 'Rollback';
+
+/** Diesel must have fallen at least this much (%) since a price rise before a rollback is due. */
+export const ROLLBACK_DUE_PCT = -5;
 
 /** One-line explanation under the verdict tag on Item detail. */
-export function verdictExplanation(verdict: Verdict, fuelSincePct: number): string {
-  const fell = Math.abs(fuelSincePct).toFixed(1);
+export function verdictExplanation(verdict: Verdict, fuelSincePct: number, rises: number): string {
+  const moved = Math.abs(fuelSincePct).toFixed(1);
+  const times = rises === 1 ? 'once' : rises === 2 ? 'twice' : `${rises} times`;
   switch (verdict) {
     case 'gouge':
-      return `Price rose twice while diesel climbed. Diesel has since fallen ${fell}% with no price reduction.`;
+      return `Price rose ${times} this year. Diesel has since fallen ${moved}% with no price reduction.`;
     case 'sticky':
-      return `Price rose with diesel and was only partly reduced after diesel fell ${fell}%.`;
+      return `Price rose ${times} this year and was only partly reduced after diesel fell ${moved}%.`;
     case 'track':
-      return 'Price rose with diesel and was reduced again as diesel fell.';
+      if (rises === 0) return 'Price has not risen in the past 12 months.';
+      if (fuelSincePct > ROLLBACK_DUE_PCT)
+        return `Price rose ${times} this year. Diesel is ${fuelSincePct >= 0 ? 'up' : 'down'} ${moved}% since, so no rollback is due yet.`;
+      return 'Price rose and was reduced again as diesel fell.';
   }
 }
