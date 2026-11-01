@@ -176,7 +176,6 @@ export function ChartExplorer() {
           accessibilityLabel="Scope"
         />
       </View>
-      {readout}
       <Seg
         height={38}
         value={window}
@@ -188,6 +187,7 @@ export function ChartExplorer() {
         options={WINDOW_OPTIONS}
         accessibilityLabel="Window"
       />
+      {readout}
       <View style={styles.lag}>
         <View style={styles.lagRow}>
           <Text variant="control" style={styles.lagLabel}>{`Lag: ${lagLabel(lagWeeks)}`}</Text>
