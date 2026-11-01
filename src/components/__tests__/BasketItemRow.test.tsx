@@ -16,7 +16,8 @@ describe('BasketItemRow', () => {
     expect(screen.getByText('Gouge Gap')).toBeTruthy();
     expect(screen.getByText('Walmart')).toBeTruthy();
     expect(screen.getByText('$3.89')).toBeTruthy();
-    expect(screen.getByText('+13.6%')).toBeTruthy();
+    // Same 1-year change as the product screen shows for Walmart.
+    expect(screen.getByText('+8.4%')).toBeTruthy();
     expect(screen.queryByLabelText('Remove Whole milk')).toBeNull();
 
     await fireEvent.press(screen.getByText('Whole milk · 1 gal'));
