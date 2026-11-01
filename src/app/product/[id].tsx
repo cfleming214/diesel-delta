@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
 
+import { LoadError } from '@/components/LoadError';
 import { ProductAvatar } from '@/components/ProductAvatar';
 import { ProductPriceChart } from '@/components/ProductPriceChart';
 import { CHANGE_LABELS, formatChange, RETAILER_STYLE } from '@/components/priceChange';
@@ -31,7 +32,7 @@ const rangeWords: Record<Range, string> = { 30: '30 days', 90: '90 days', 365: '
  */
 export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { data: p, error } = useProduct(id);
+  const { data: p, error, refetch } = useProduct(id);
   const [range, setRange] = useState<Range>(90);
   const [scrub, setScrub] = useState<number | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -48,9 +49,13 @@ export default function ProductScreen() {
     return (
       <Screen>
         <IconButton icon={X} accessibilityLabel="Close" onPress={close} />
-        <Text color={colors.neutral[400]} style={styles.missing}>
-          {error ? 'This product could not be loaded.' : 'Loading…'}
-        </Text>
+        <View style={styles.missing}>
+          {error ? (
+            <LoadError message="This product could not be loaded." onRetry={() => void refetch()} />
+          ) : (
+            <Text color={colors.neutral[400]}>Loading…</Text>
+          )}
+        </View>
       </Screen>
     );
   }
