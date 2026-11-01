@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, test } from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { push } from '@/lib/push';
 import { usePrefs } from '@/store/prefs';
 import { useUi } from '@/store/ui';
 
@@ -36,13 +37,36 @@ describe('Insights', () => {
     }
   });
 
-  test('alert toggles and tolerance update prefs', async () => {
+  test('alerts start off and turn on only once notifications are allowed', async () => {
     await openInsights();
     expect(screen.getByText('Diesel crosses $3.25/gal')).toBeTruthy();
     expect(screen.getByText('Gulf Coast (PADD 3) retail diesel, weekly')).toBeTruthy();
     expect(screen.getByText('3 items followed')).toBeTruthy();
-    await fireEvent.press(screen.getByLabelText('A followed item drops in price'));
+    const followed = screen.getByLabelText('A followed item drops in price');
+    expect(followed.props.accessibilityState).toMatchObject({ checked: false });
+
+    // Declined: the alert stays off and the screen says how to allow notifications.
+    const request = jest.spyOn(push, 'request').mockResolvedValueOnce(false);
+    await act(() => fireEvent.press(followed));
+    expect(request).toHaveBeenCalled();
     expect(usePrefs.getState().alerts.followedDrop).toBe(false);
+    expect(
+      screen.getByText(/^Notifications are off for Diesel Data\. Allow them in Settings/),
+    ).toBeTruthy();
+
+    // Allowed: it turns on, and the note goes away.
+    request.mockResolvedValueOnce(true);
+    await act(() => fireEvent.press(followed));
+    expect(usePrefs.getState().alerts.followedDrop).toBe(true);
+    expect(screen.queryByText(/^Notifications are off/)).toBeNull();
+
+    // Turning off never asks.
+    request.mockClear();
+    await act(() => fireEvent.press(followed));
+    expect(usePrefs.getState().alerts.followedDrop).toBe(false);
+    expect(request).not.toHaveBeenCalled();
+    request.mockRestore();
+
     await fireEvent.press(screen.getByLabelText('Increase'));
     expect(usePrefs.getState().tolerance).toBe(4);
     expect(await screen.findByText(/tolerance 4 pts/)).toBeTruthy();

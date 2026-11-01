@@ -20,6 +20,10 @@ describe('runAlerts', () => {
   beforeEach(() => {
     usePrefs.getState().reset();
     usePrefs.getState().setLocation('77002', 'TX', 'gulf');
+    // Alerts start off; these tests are about delivery, so switch them all on.
+    for (const k of ['dieselCross', 'followedDrop', 'deltaTolerance'] as const) {
+      usePrefs.getState().setAlert(k, true);
+    }
     useAlertState.getState().reset();
   });
 
@@ -52,5 +56,19 @@ describe('runAlerts', () => {
     expect(await runAlerts(p)).toHaveLength(1);
     expect(delivered).toEqual([]);
     expect(useAlertState.getState().snapshot?.deltaAbs).toBeGreaterThan(3);
+  });
+
+  test('a new install has every alert off, so nothing is delivered', async () => {
+    usePrefs.getState().reset();
+    usePrefs.getState().setLocation('77002', 'TX', 'gulf');
+    expect(usePrefs.getState().alerts).toEqual({
+      dieselCross: false,
+      followedDrop: false,
+      deltaTolerance: false,
+    });
+    useAlertState.getState().save({ dieselPrice: 3.5, deltaAbs: 2, itemPrices: { milk: 4.19 } });
+    const { p, delivered } = provider();
+    expect(await runAlerts(p)).toEqual([]);
+    expect(delivered).toEqual([]);
   });
 });
