@@ -1,11 +1,12 @@
 import { pct } from './format';
 
-export const BASELINES = ['90D', '6M', '1Y'] as const;
+/** The same 30D, 90D and 1Y ranges as the rest of the app. */
+export const BASELINES = ['30D', '90D', '1Y'] as const;
 export type Baseline = (typeof BASELINES)[number];
 export const DEFAULT_BASELINE: Baseline = '1Y';
 
-/** Days back from the latest point for each baseline (prototype offsets). */
-const BASELINE_DAYS: Record<Baseline, number> = { '90D': 90, '6M': 182, '1Y': 364 };
+/** Days back from the latest point for each baseline (as the products' 30D/90D/1Y changes). */
+const BASELINE_DAYS: Record<Baseline, number> = { '30D': 30, '90D': 90, '1Y': 365 };
 
 export const baselineIndex = (length: number, baseline: Baseline) =>
   length - 1 - BASELINE_DAYS[baseline];

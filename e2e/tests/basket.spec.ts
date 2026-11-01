@@ -15,11 +15,37 @@ test('remove an item in edit mode and see the basket delta recompute', async ({
   const before = await delta.textContent();
   await page.getByRole('button', { name: 'Edit' }).click();
   await page.getByRole('button', { name: 'Remove Paper towels' }).click();
-  await expect(page.getByRole('alert')).toHaveText('Paper towels removed');
+  await expect(page.getByRole('alert')).toContainText('Paper towels removed');
   await expect(page.getByText('15 items · weighted by purchase frequency')).toBeVisible();
   await expect(delta).not.toHaveText(before!);
   await page.getByRole('button', { name: 'Done' }).click();
   await expect(page.getByRole('button', { name: /^Paper towels/ })).toHaveCount(0);
+});
+
+test('Undo puts a removed item back; the toast sits above the tab bar', async ({
+  onboarded: page,
+}) => {
+  await page.getByRole('tab', { name: 'Basket' }).click();
+  await page.getByRole('button', { name: 'Edit' }).click();
+  await page.getByRole('button', { name: 'Remove Whole milk' }).click();
+  await expect(page.getByText('15 items · weighted by purchase frequency')).toBeVisible();
+
+  const toast = (await page.getByRole('alert').boundingBox())!;
+  const bar = (await page.getByRole('tablist').filter({ hasText: 'Today' }).boundingBox())!;
+  expect(toast.y + toast.height).toBeLessThanOrEqual(bar.y);
+
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.getByText('16 items · weighted by purchase frequency')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Remove Whole milk' })).toBeVisible();
+  await expect(page.getByRole('alert')).toBeHidden();
+});
+
+test('the Basket Delta uses the same 30D, 90D and 1Y ranges as the rest of the app', async ({
+  onboarded: page,
+}) => {
+  await page.getByRole('tab', { name: 'Basket' }).click();
+  const ranges = page.getByRole('tablist', { name: 'Baseline' }).getByRole('tab');
+  await expect(ranges).toHaveText(['30D', '90D', '1Y']);
 });
 
 test('swipe a row left to reveal Remove', async ({ onboarded: page }) => {
