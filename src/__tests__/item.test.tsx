@@ -60,10 +60,12 @@ describe('Item detail', () => {
     expect(screen.getByText('Report a correction with a shelf-tag photo')).toBeTruthy();
   });
 
-  test('unknown ids say so', async () => {
+  test('unknown ids say so and point to Search', async () => {
     await openItem('caviar');
     expect(
-      await screen.findByText('This item is not tracked.', {}, { timeout: 4000 }),
+      await screen.findByText(/^This item isn’t tracked\./, {}, { timeout: 4000 }),
     ).toBeTruthy();
+    await act(() => fireEvent.press(screen.getByText('Search products')));
+    expect(screen).toHavePathname('/search');
   });
 });

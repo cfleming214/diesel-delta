@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, test } from '@jest/globals';
+import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { renderRouter } from 'expo-router/testing-library';
 
+import { api } from '@/data';
 import { usePrefs } from '@/store/prefs';
 
 describe('onboarding', () => {
@@ -51,5 +52,28 @@ describe('onboarding', () => {
     await act(() => fireEvent.press(screen.getByText('Continue')));
     expect(screen).toHavePathname('/onboarding');
     expect(usePrefs.getState().zip).toBeNull();
+  });
+
+  test('a failed fuel lookup says so in plain words and retries', async () => {
+    const lookup = jest
+      .spyOn(api, 'lookupZip')
+      .mockRejectedValueOnce(
+        new Error('Fuel prices could not be loaded: TypeError: Failed to fetch'),
+      );
+    await renderRouter('./src/app', { initialUrl: '/onboarding' });
+    await act(() => fireEvent.changeText(screen.getByLabelText('Home ZIP code'), '77002'));
+    expect(
+      await screen.findByText(
+        'Fuel prices could not be loaded. Check your connection and try again.',
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText(/TypeError/)).toBeNull();
+    // The field isn't marked as a bad ZIP.
+    expect(screen.queryByText('Enter a 5-digit US ZIP code.')).toBeNull();
+
+    await act(() => fireEvent.press(screen.getByRole('button', { name: 'Retry' })));
+    expect(await screen.findByText('Gulf Coast (PADD 3)')).toBeTruthy();
+    expect(lookup).toHaveBeenCalledTimes(2);
+    lookup.mockRestore();
   });
 });
