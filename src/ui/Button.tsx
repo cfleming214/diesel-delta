@@ -1,7 +1,7 @@
 import type { Icon } from '@/ui/icons';
 import { Pressable, StyleSheet, type ViewStyle } from 'react-native';
 
-import { alpha, colors, radius, type } from '@/theme';
+import { alpha, colors, layout, radius, type } from '@/theme';
 
 import { Text } from './Text';
 
@@ -60,7 +60,8 @@ export function Button({
         variant === 'primary' && styles.primary,
         variant === 'secondary' && styles.secondary,
         variant === 'ghost' && styles.ghost,
-        { minHeight: height },
+        // Never under the 44pt tap target, whatever height is asked for.
+        { minHeight: Math.max(height, layout.hitTarget), minWidth: layout.hitTarget },
         block && styles.block,
         pressed && { backgroundColor: pressedBg[variant] },
         disabled && styles.disabled,
