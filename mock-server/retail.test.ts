@@ -33,7 +33,7 @@ describe('mock retailers', () => {
   test('carry most of the catalog, plus decoys that are not catalog items', () => {
     for (const r of ['kroger', 'walmart', 'amazon'] as const) {
       const real = mock.products[r].filter((p) => p.itemId);
-      assert.ok(real.length >= 140 && real.length < 150, `${r} carries ${real.length}`);
+      assert.ok(real.length >= 158 && real.length < 168, `${r} carries ${real.length}`);
       assert.ok(
         mock.products[r].some((p) => !p.itemId),
         `${r} has decoys`,

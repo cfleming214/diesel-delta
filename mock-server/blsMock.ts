@@ -1,7 +1,9 @@
 // A stand-in for download.bls.gov/pub/time.series/ap/. ap.item and ap.series are real BLS files
-// (public domain), trimmed to the U.S. and Census-region food series and with series titles
-// removed (fixtures/bls/). ap.data.3.Food is synthesized from them: monthly prices from 2016 to each
-// series' last published month, with October 2025 missing as in the real file.
+// (public domain), trimmed to the U.S. and Census-region food and fuel series and with series
+// titles removed (fixtures/bls/). The three data files are synthesized from them: monthly prices
+// from 2016 to each series' last published month, with October 2025 missing as in the real files.
+// Each series goes in the file BLS puts it in: five-character item codes are fuels (72xxx household
+// fuels, 74xxx gasoline), six-character codes are food.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -17,11 +19,18 @@ function unit(s: string): number {
   return (h >>> 0) / 2 ** 32;
 }
 
-function synthesizeData(series: string): string {
+type DataFile = 'ap.data.3.Food' | 'ap.data.2.Gasoline' | 'ap.data.1.HouseholdFuels';
+
+function fileFor(item: string): DataFile {
+  if (item.length === 6) return 'ap.data.3.Food';
+  return item.startsWith('74') ? 'ap.data.2.Gasoline' : 'ap.data.1.HouseholdFuels';
+}
+
+function synthesizeData(series: string, file: DataFile): string {
   const out = ['series_id        \tyear\tperiod\t       value\tfootnote_codes'];
   for (const line of series.split('\n').slice(1)) {
     const [id, , item, , , by, bp, ey, ep] = line.split('\t');
-    if (!id || !item || !ey || !ep) continue;
+    if (!id || !item || !ey || !ep || fileFor(item) !== file) continue;
     const begin = Math.max(Number(by) * 12 + Number(bp!.slice(1)) - 1, FIRST_YEAR * 12);
     const end = Number(ey) * 12 + Number(ep.slice(1)) - 1;
     // Base price from the item, so regions of one item sit close together.
@@ -49,7 +58,9 @@ function load(): Record<string, string> {
   files = {
     'ap.item': readFileSync(join(DIR, 'ap.item'), 'utf8'),
     'ap.series': series,
-    'ap.data.3.Food': synthesizeData(series),
+    'ap.data.3.Food': synthesizeData(series, 'ap.data.3.Food'),
+    'ap.data.2.Gasoline': synthesizeData(series, 'ap.data.2.Gasoline'),
+    'ap.data.1.HouseholdFuels': synthesizeData(series, 'ap.data.1.HouseholdFuels'),
   };
   return files;
 }

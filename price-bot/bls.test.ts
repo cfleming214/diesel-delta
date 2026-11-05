@@ -3,7 +3,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { after, before, describe, test } from 'node:test';
 
-import { blsPriceForSize, parseBlsUnit, parseData, parseItems, parseSeries } from './adapters/bls';
+import {
+  blsPriceForSize,
+  parseBlsUnit,
+  parseData,
+  parseItems,
+  parseSeries,
+  splitSeriesId,
+} from './adapters/bls';
 import { planBls, runBls } from './bls';
 import { type CanonicalItem, loadCatalog } from './catalog';
 import { startInProcessMock, userAgent } from './cli';
@@ -14,7 +21,8 @@ import { memoryRawStore } from './raw';
 const FIXTURES = join(__dirname, '..', 'mock-server', 'fixtures', 'bls');
 const realItems = parseItems(readFileSync(join(FIXTURES, 'ap.item'), 'utf8'));
 const realSeries = parseSeries(readFileSync(join(FIXTURES, 'ap.series'), 'utf8'));
-const catalog = loadCatalog();
+// The BLS ingest is the one place that loads the fuel benchmarks too.
+const catalog = loadCatalog({ benchmarks: true });
 const item = (over: Partial<CanonicalItem>): CanonicalItem => ({ ...catalog[0]!, ...over });
 
 describe('BLS files', () => {
@@ -58,6 +66,13 @@ describe('BLS files', () => {
     ]);
   });
 
+  test('series IDs carry six-character food codes and five-character fuel codes', () => {
+    assert.deepEqual(splitSeriesId('APU0000709112'), { areaCode: '0000', itemCode: '709112' });
+    assert.deepEqual(splitSeriesId('APU00007471A'), { areaCode: '0000', itemCode: '7471A' });
+    assert.deepEqual(splitSeriesId('APU040072610'), { areaCode: '0400', itemCode: '72610' });
+    assert.equal(splitSeriesId('APU00007261'), null);
+  });
+
   test('rejects a file that is not a BLS AP file (e.g. an error page)', () => {
     assert.throws(() => parseSeries('<html>Access Denied</html>'), /not a BLS AP file/);
   });
@@ -78,8 +93,11 @@ describe('BLS units', () => {
       ['Potato chips, per 16 oz.', { qty: 16, unit: 'oz' }],
       ['All soft drinks, per 2 liters (67.6 oz)', { qty: 2, unit: 'l' }],
       ['Wine, red and white table, per 1 liter (33.8 oz)', { qty: 1, unit: 'l' }],
-      ['Electricity per KWH', null],
-      ['Utility (piped) gas per therm', null],
+      ['Gasoline, unleaded regular, per gallon/3.785 liters', { qty: 1, unit: 'gal' }],
+      ['Fuel oil #2 per gallon (3.785 liters)', { qty: 1, unit: 'gal' }],
+      ['Electricity per KWH', { qty: 1, unit: 'kwh' }],
+      ['Utility (piped) gas per therm', { qty: 1, unit: 'therm' }],
+      ['Crude oil, per barrel', null],
     ];
     for (const [name, want] of cases) assert.deepEqual(parseBlsUnit(name), want, name);
   });
@@ -96,7 +114,10 @@ describe('planBls', () => {
   test('every catalog mapping is a current national series in a compatible unit', () => {
     const plan = planBls(catalog, { items: realItems, series: realSeries });
     assert.deepEqual(plan.problems, []);
-    assert.ok(catalog.filter((i) => i.blsSeriesId).length >= 30);
+    assert.ok(catalog.filter((i) => i.blsSeriesId).length >= 55);
+    // Fuels load from the same plan: every grade and utility, U.S. and all four regions.
+    const fuels = plan.series.filter((s) => s.itemCode.length === 5);
+    assert.equal(fuels.length, 40);
   });
 
   test('loads every region that has the item, and reports bad mappings', () => {
@@ -163,6 +184,18 @@ describe('runBls against the mock', () => {
       .single();
     assert.equal(milk.unit, 'gal');
     assert.equal(milk.region, 'nat');
+    // Fuels come from the Gasoline and Household Fuels files.
+    const { data: power } = await db.client
+      .from('bls_series')
+      .select('*')
+      .eq('id', 'APU000072610')
+      .single();
+    assert.equal(power.unit, 'kwh');
+    const { count: gasMonths } = await db.client
+      .from('bls_prices')
+      .select('*', { count: 'exact', head: true })
+      .eq('series_id', 'APU000074714');
+    assert.ok(gasMonths! > 100, `regular gasoline months: ${gasMonths}`);
     const { data: gap } = await db.client
       .from('bls_prices')
       .select('*')

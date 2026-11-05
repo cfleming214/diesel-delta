@@ -1,11 +1,16 @@
 // BLS Average Price Data (the `bls-ap` source): monthly all-outlet averages for about 70 food items,
-// for the U.S. and the four Census regions. It is a benchmark rather than a retailer, so it does
-// not implement SourceAdapter. It reads three public-domain bulk files from
-// download.bls.gov/pub/time.series/ap/ (layout described in ap.txt there), all through PoliteHttp:
+// gasoline grades and household fuels, for the U.S. and the four Census regions. It is a benchmark
+// rather than a retailer, so it does not implement SourceAdapter. It reads five public-domain bulk
+// files from download.bls.gov/pub/time.series/ap/ (layout described in ap.txt there), all through
+// PoliteHttp:
 //
-//   ap.item         item codes and names; the name states the unit ("per lb. (453.6 gm)")
-//   ap.series       one row per series: area, item, first and last published month
-//   ap.data.3.Food  every monthly value for the food series, 1980 onwards
+//   ap.item                   item codes and names; the name states the unit ("per lb. (453.6 gm)")
+//   ap.series                 one row per series: area, item, first and last published month
+//   ap.data.3.Food            every monthly value for the food series, 1980 onwards
+//   ap.data.2.Gasoline        the same for gasoline and diesel
+//   ap.data.1.HouseholdFuels  the same for fuel oil, electricity and piped gas
+//
+// Food item codes have six characters (709112); fuel codes have five (74714, 7471A).
 //
 // The files are tab-separated with CRLF line endings, and IDs are padded with spaces. A missing
 // value is written "-" with a footnote code (e.g. X: the 2025 lapse in appropriations).
@@ -42,7 +47,7 @@ const isArea = (a: string): a is BlsAreaCode => a in BLS_AREAS;
 
 /** `APU0000709112` → area 0000, item 709112. */
 export function splitSeriesId(id: string): { areaCode: string; itemCode: string } | null {
-  const m = /^APU([0-9A-Z]{4})([0-9A-Z]{6})$/.exec(id);
+  const m = /^APU([0-9A-Z]{4})([0-9A-Z]{5,6})$/.exec(id);
   return m ? { areaCode: m[1]!, itemCode: m[2]! } : null;
 }
 
@@ -87,7 +92,7 @@ export function parseSeries(text: string): BlsSeries[] {
 export function parseData(text: string, wanted: Set<string>): BlsValue[] {
   const out: BlsValue[] = [];
   for (const line of text.split(/\r?\n/)) {
-    // Faster than rows(): the Food file is ~150k lines and we keep a small share of them.
+    // Faster than rows(): the data files are ~150k lines each and we keep a small share of them.
     const tab = line.indexOf('\t');
     if (tab < 0) continue;
     const seriesId = line.slice(0, tab).trim();
@@ -104,15 +109,16 @@ export function parseData(text: string, wanted: Set<string>): BlsValue[] {
 /**
  * What one quoted price buys, from BLS's item name: "per lb. (453.6 gm)" → 1 lb,
  * "per 1/2 gal. (1.9 lit)" → 0.5 gal, "per doz." → 12 ct, "per 12 oz. (354.9 ml)" → 12 fl oz,
- * "(cost per pound/453.6 grams)" → 1 lb, "per 2 liters (67.6 oz)" → 2 l. Ounces are fluid when
- * BLS gives a metric volume next to them. Returns null for anything else (therms, KWH, ...).
+ * "(cost per pound/453.6 grams)" → 1 lb, "per 2 liters (67.6 oz)" → 2 l, "per gallon/3.785 liters"
+ * → 1 gal, "per KWH" → 1 kwh, "per therm" → 1 therm. Ounces are fluid when BLS gives a metric
+ * volume next to them. Returns null for anything else.
  */
 export function parseBlsUnit(itemName: string): Size | null {
   const at = itemName.toLowerCase().lastIndexOf('per ');
   if (at < 0) return null;
   const text = itemName.slice(at + 4).toLowerCase();
   const m =
-    /^(1\/2|one-half|\d+(?:\.\d+)?)?\s*(lb|pound|ounces?|oz|gal(?:lon)?|doz|liters?|liter)\b/.exec(
+    /^(1\/2|one-half|\d+(?:\.\d+)?)?\s*(lb|pound|ounces?|oz|gal(?:lon)?|doz|liters?|liter|kwh|therm)\b/.exec(
       text,
     );
   if (!m) return null;
@@ -122,6 +128,7 @@ export function parseBlsUnit(itemName: string): Size | null {
   if (word.startsWith('gal')) return { qty, unit: 'gal' };
   if (word === 'doz') return { qty: qty * 12, unit: 'ct' };
   if (word.startsWith('liter')) return { qty, unit: 'l' };
+  if (word === 'kwh' || word === 'therm') return { qty, unit: word };
   const fluid = /\b(ml|lit|liters?)\b/.test(text);
   return { qty, unit: fluid ? 'fl_oz' : 'oz' };
 }
@@ -137,9 +144,12 @@ export function blsPriceForSize(price: number, blsUnit: Size, itemSize: Size): n
 
 export type BlsFiles = { items: Map<string, string>; series: BlsSeries[]; data: string };
 
+/** The monthly data files, one per BLS item group. */
+export const BLS_DATA_FILES = ['ap.data.3.Food', 'ap.data.2.Gasoline', 'ap.data.1.HouseholdFuels'];
+
 /**
- * Downloads the three files. ap.data.3.Food is ~6 MB and is only parsed for the series the
- * caller wants (parseData), so it is returned as text.
+ * Downloads the five files. The data files are 4–6 MB each and are only parsed for the series the
+ * caller wants (parseData), so they are returned as one text.
  */
 export async function fetchBlsFiles(
   ctx: FetchContext,
@@ -152,7 +162,7 @@ export async function fetchBlsFiles(
     const res = await ctx.http.get({
       sourceId: BLS_SOURCE_ID,
       host: origin.host,
-      // BLS asks bulk users to keep the request rate low; three files a month needs no speed.
+      // BLS asks bulk users to keep the request rate low; five files a month needs no speed.
       minIntervalMs: opts.minIntervalMs ?? 5000,
       url,
       robotsUrl: `${origin.origin}/robots.txt`,
@@ -163,6 +173,7 @@ export async function fetchBlsFiles(
   };
   const items = parseItems(await get('ap.item'));
   const series = parseSeries(await get('ap.series'));
-  const data = await get('ap.data.3.Food');
-  return { items, series, data };
+  const data: string[] = [];
+  for (const file of BLS_DATA_FILES) data.push(await get(file));
+  return { items, series, data: data.join('\n') };
 }

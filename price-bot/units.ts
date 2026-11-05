@@ -12,11 +12,14 @@ export const UNITS = [
   'roll',
   'each',
   'sq_ft',
+  'kwh',
+  'therm',
 ] as const;
 export type Unit = (typeof UNITS)[number];
 
 /** Base dimension a unit measures. Prices are only compared within one dimension. */
-export type Dimension = 'mass_g' | 'volume_ml' | 'count' | 'each' | 'area_sq_ft';
+export type Dimension =
+  'mass_g' | 'volume_ml' | 'count' | 'each' | 'area_sq_ft' | 'energy_kwh' | 'energy_therm';
 
 const TO_BASE: Record<Unit, [Dimension, number]> = {
   oz: ['mass_g', 28.349523125],
@@ -30,6 +33,10 @@ const TO_BASE: Record<Unit, [Dimension, number]> = {
   roll: ['count', 1],
   each: ['each', 1],
   sq_ft: ['area_sq_ft', 1],
+  // Utility prices (BLS benchmarks only). Kept apart: a therm of gas and a kWh of electricity
+  // are priced separately, so they are never compared.
+  kwh: ['energy_kwh', 1],
+  therm: ['energy_therm', 1],
 };
 
 export type Size = { qty: number; unit: Unit };

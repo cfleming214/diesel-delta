@@ -33,6 +33,19 @@ deli_turkey,Deli turkey,Meat,16,oz,package,0.1,cheapest_comparable,,7.49,,0
 hot_dogs,Hot dogs,Meat,16,oz,package,0.1,cheapest_comparable,,3.99,,0
 salmon,Salmon fillet,Meat,1,lb,lb,0,cheapest_comparable,,10.99,,0
 shrimp,Frozen shrimp,Meat,2,lb,package,0.1,cheapest_comparable,,15.99,,0
+ground_chuck,Ground chuck,Meat,1,lb,lb,0,cheapest_comparable,,6.48,APU0000703111,0
+ground_beef_all,Ground beef (all types),Meat,1,lb,lb,0,cheapest_comparable,,7.06,APU0000FC1101,0
+round_roast,Round roast,Meat,1,lb,lb,0,cheapest_comparable,,8.80,APU0000703311,0
+beef_roast_all,Beef roast (all cuts),Meat,1,lb,lb,0,cheapest_comparable,,9.10,APU0000FC2101,0
+stew_beef,Beef stew meat,Meat,1,lb,lb,0,cheapest_comparable,,8.53,APU0000703432,0
+round_steak,Round steak,Meat,1,lb,lb,0,cheapest_comparable,,9.84,APU0000703511,0
+beef_steak_all,Beef steak (all cuts),Meat,1,lb,lb,0,cheapest_comparable,,12.69,APU0000FC3101,0
+beef_other,Other beef cuts,Meat,1,lb,lb,0,cheapest_comparable,,8.10,APU0000FC4101,0
+pork_chops_boneless,Boneless pork chops,Meat,1,lb,lb,0,cheapest_comparable,,4.55,APU0000704212,0
+ham_boneless,Boneless ham,Meat,1,lb,lb,0,cheapest_comparable,,5.45,APU0000704312,0
+ham_all,Ham (all types),Meat,1,lb,lb,0,cheapest_comparable,,4.45,APU0000FD2101,0
+pork_other,Other pork cuts,Meat,1,lb,lb,0,cheapest_comparable,,3.68,APU0000FD4101,0
+chicken_legs,Chicken legs,Meat,1,lb,lb,0,cheapest_comparable,,1.74,APU0000706212,0
 bananas,Bananas,Produce,1,lb,lb,0,cheapest_comparable,,0.62,APU0000711211,1
 apples,Gala apples,Produce,3,lb,package,0.1,cheapest_comparable,,4.99,,0
 oranges,Navel oranges,Produce,1,lb,lb,0,cheapest_comparable,,1.49,APU0000711311,0
@@ -53,6 +66,7 @@ bell_pepper,Green bell pepper,Produce,1,each,each,0,cheapest_comparable,,0.89,,0
 broccoli,Broccoli crowns,Produce,1,lb,lb,0,cheapest_comparable,,1.99,,0
 spinach,Baby spinach,Produce,5,oz,package,0.1,cheapest_comparable,,2.99,,0
 cucumber,Cucumber,Produce,1,each,each,0,cheapest_comparable,,0.79,,0
+grapefruit,Grapefruit,Produce,1,lb,lb,0,cheapest_comparable,,1.62,APU0000711411,0
 bread,White bread,Bakery,20,oz,package,0.1,cheapest_comparable,,2.79,APU0000702111,1
 bread_wheat,Wheat bread,Bakery,20,oz,package,0.1,cheapest_comparable,,3.29,,0
 buns_hamburger,Hamburger buns,Bakery,8,ct,package,0,cheapest_comparable,,2.49,,0
@@ -123,6 +137,9 @@ water24,Bottled water 24-pack,Beverages,24,ct,package,0,cheapest_comparable,,4.9
 sparkling_water,Sparkling water 8-pack,Beverages,8,ct,package,0,cheapest_comparable,,4.49,,0
 iced_tea,Iced tea,Beverages,1,gal,package,0.05,cheapest_comparable,,3.49,,0
 coffee_pods,Coffee pods,Beverages,12,ct,package,0,cheapest_comparable,,8.99,,0
+beer12,Beer 12-pack,Beverages,144,fl_oz,package,0,cheapest_comparable,,16.88,APU0000720111,0
+wine,Table wine,Beverages,750,ml,package,0,cheapest_comparable,,10.33,APU0000720311,0
+soda12,Soda 12-pack (any brand),Beverages,144,fl_oz,package,0,cheapest_comparable,,7.09,APU0000FN1102,0
 chips,Potato chips,Snacks,8,oz,package,0.15,cheapest_comparable,,4.29,APU0000718311,0
 tortilla_chips,Tortilla chips,Snacks,13,oz,package,0.15,cheapest_comparable,,3.99,,0
 pretzels,Pretzels,Snacks,16,oz,package,0.1,cheapest_comparable,,3.49,,0
@@ -131,6 +148,7 @@ saltines,Saltine crackers,Snacks,16,oz,package,0.1,cheapest_comparable,,2.99,,0
 popcorn,Microwave popcorn,Snacks,3,ct,package,0,cheapest_comparable,,3.49,,0
 granola_bars,Granola bars,Snacks,6,ct,package,0,cheapest_comparable,,3.49,,0
 salsa,Salsa,Snacks,16,oz,package,0.1,cheapest_comparable,,3.29,,0
+cookies_choc_chip,Chocolate chip cookies,Snacks,13,oz,package,0.15,cheapest_comparable,,4.19,APU0000702421,0
 towels,Paper towels,Household,6,roll,package,0,cheapest_comparable,,11.99,,1
 toilet_paper,Toilet paper,Household,12,roll,package,0,cheapest_comparable,,12.99,,0
 trash_bags,Trash bags 13 gal,Household,40,ct,package,0.1,cheapest_comparable,,8.99,,0
@@ -149,3 +167,11 @@ body_wash,Body wash,Personal care,18,fl_oz,package,0.15,cheapest_comparable,,6.4
 diapers,Diapers size 3,Personal care,31,ct,package,0.2,cheapest_comparable,,9.99,,0
 wipes,Baby wipes,Personal care,72,ct,package,0.2,cheapest_comparable,,3.49,,0
 ibuprofen,Ibuprofen 200 mg,Personal care,100,ct,package,0,cheapest_comparable,,6.99,,0
+gas_regular,Regular gasoline,Fuel,1,gal,package,0,cheapest_comparable,,4.48,APU000074714,0
+gas_midgrade,Midgrade gasoline,Fuel,1,gal,package,0,cheapest_comparable,,4.96,APU000074715,0
+gas_premium,Premium gasoline,Fuel,1,gal,package,0,cheapest_comparable,,5.43,APU000074716,0
+gas_all,Gasoline (all grades),Fuel,1,gal,package,0,cheapest_comparable,,4.63,APU00007471A,0
+diesel_bls,Diesel fuel,Fuel,1,gal,package,0,cheapest_comparable,,6.33,APU000074717,0
+heating_oil,Heating oil (No. 2),Fuel,1,gal,package,0,cheapest_comparable,,5.92,APU000072511,0
+electricity,Electricity,Fuel,1,kwh,package,0,cheapest_comparable,,0.20,APU000072610,0
+natural_gas,Piped natural gas,Fuel,1,therm,package,0,cheapest_comparable,,1.70,APU000072620,0

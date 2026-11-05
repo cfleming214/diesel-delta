@@ -3,7 +3,7 @@
 //   npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,...] [--discover] [--dry-run]
 //   npm run bot -- simulate --days 30 [--end 2026-10-30]
 //   npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]   (30-day and 1-year changes)
-//   npm run bot -- bls [--dry-run]   (BLS Average Price Data for the catalog's mapped items, monthly)
+//   npm run bot -- bls [--dry-run]   (BLS Average Price Data for mapped items and fuels, monthly)
 //
 // Targets SUPABASE_URL with SUPABASE_SERVICE_ROLE_KEY; both default to the local mock server
 // (npm run mock:server). --dry-run starts an in-process mock server instead, so nothing outside
@@ -186,7 +186,8 @@ async function main() {
       const s = await runBls({
         db,
         http,
-        items,
+        // Fuels are BLS benchmarks only, so this is the one command that loads them.
+        items: loadCatalog({ benchmarks: true }),
         baseUrl: mock ? `${mock.url}/bls-mock` : (process.env.BLS_URL ?? BLS_DEFAULT_URL),
         minIntervalMs: mock ? 0 : undefined,
         log,

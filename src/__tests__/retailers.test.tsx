@@ -10,14 +10,14 @@ describe('Retailer scorecard', () => {
   test('lists the tracked chains by grade and expands one at a time', async () => {
     await renderRouter('./src/app', { initialUrl: '/retailers' });
     const kroger = await screen.findByLabelText(
-      'Grade D−, Kroger, 144 items tracked, 38% rolled back',
+      'Grade D−, Kroger, 162 items tracked, 35% rolled back',
     );
     const labels = () =>
       screen.getAllByRole('button', { name: /^Grade / }).map((b) => b.props.accessibilityLabel);
     expect(labels()).toEqual([
-      'Grade D−, Kroger, 144 items tracked, 38% rolled back',
-      'Grade D−, Amazon, 145 items tracked, 37% rolled back',
-      'Grade F, Walmart, 146 items tracked, 28% rolled back',
+      'Grade D−, Amazon, 162 items tracked, 36% rolled back',
+      'Grade D−, Kroger, 162 items tracked, 35% rolled back',
+      'Grade F, Walmart, 162 items tracked, 27% rolled back',
     ]);
     expect(screen.queryByLabelText('Personal care 57%')).toBeNull();
 
@@ -27,7 +27,7 @@ describe('Retailer scorecard', () => {
 
     await fireEvent.press(screen.getByText('Walmart'));
     expect(screen.queryByLabelText('Personal care 57%')).toBeNull();
-    expect(screen.getByLabelText('Snacks 56%')).toBeTruthy();
+    expect(screen.getByLabelText('Snacks 50%')).toBeTruthy();
   });
 
   test('sorts by items tracked', async () => {
@@ -36,10 +36,11 @@ describe('Retailer scorecard', () => {
     await fireEvent.press(screen.getByText('Items tracked'));
     expect(
       screen.getAllByRole('button', { name: /^Grade / }).map((b) => b.props.accessibilityLabel),
+      // All three chains carry the same 162 items today, so the sort falls back to the grade order.
     ).toEqual([
-      'Grade F, Walmart, 146 items tracked, 28% rolled back',
-      'Grade D−, Amazon, 145 items tracked, 37% rolled back',
-      'Grade D−, Kroger, 144 items tracked, 38% rolled back',
+      'Grade D−, Amazon, 162 items tracked, 36% rolled back',
+      'Grade D−, Kroger, 162 items tracked, 35% rolled back',
+      'Grade F, Walmart, 162 items tracked, 27% rolled back',
     ]);
   });
 });
