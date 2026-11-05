@@ -77,6 +77,21 @@ export type PriceEventRow = {
   tag: string | null;
 };
 
+export type BlsSeriesRow = {
+  id: string;
+  item_code: string;
+  area_code: string;
+  region: string;
+  item_name: string;
+  unit_qty: number | null;
+  unit: string | null;
+  begin_month: string;
+  end_month: string;
+  updated_at: string;
+};
+
+export type BlsPriceRow = { series_id: string; month: string; price: number; run_id: number };
+
 export type TaskRow = {
   id: number;
   run_id: number;
@@ -295,6 +310,22 @@ export function createBotDb(
             .from('price_observations')
             .upsert(b, { onConflict: 'item_id,retailer_id,store_id,day,source_id' }),
         'write observations',
+      );
+    },
+
+    async upsertBlsSeries(rows: BlsSeriesRow[]) {
+      await inBatches(
+        rows,
+        (b) => sb.from('bls_series').upsert(b, { onConflict: 'id' }),
+        'write BLS series',
+      );
+    },
+
+    async upsertBlsPrices(rows: BlsPriceRow[]) {
+      await inBatches(
+        rows,
+        (b) => sb.from('bls_prices').upsert(b, { onConflict: 'series_id,month' }),
+        'write BLS prices',
       );
     },
 

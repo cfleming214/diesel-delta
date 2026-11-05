@@ -15,7 +15,7 @@ The separate service that collects daily prices for the canonical catalog. The d
 | `size_tolerance` | Allowed size difference when matching a retailer product, from 0 to 0.25. |
 | `brand_policy`, `brand` | `national` pins `brand`. `cheapest_comparable` allows store brands. |
 | `ref_price` | An approximate U.S. shelf price. Only the mock retailers and the first validation bands use it. |
-| `bls_series_id` | BLS Average Price series for cross-checks. These are from memory and are unverified until the BLS adapter fetches them (P6). |
+| `bls_series_id` | The national BLS Average Price series for the same product, used for history and cross-checks. 33 items are mapped; `npm run bot -- bls` checks each one against BLS (see [BLS benchmark](#bls-benchmark)). |
 | `in_default_basket` | `1` for the app's default basket. |
 
 Retailer GTINs and SKUs are not in the catalog. They are matched per retailer, reviewed, and stored in `item_identifiers`.
@@ -26,6 +26,7 @@ Retailer GTINs and SKUs are not in the catalog. They are matched per retailer, r
 npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,mock-walmart] [--discover] [--workers 4] [--dry-run]
 npm run bot -- simulate --days 30 [--end 2026-10-30]
 npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]
+npm run bot -- bls [--dry-run]
 ```
 
 | Setting | Default | Meaning |
@@ -34,6 +35,7 @@ npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]
 | `BOT_CONTACT_URL` | `https://dd.app/bot` | Sent in the User-Agent (`DieselDataPriceBot/0.1 (+url)`). Point it at a real page that explains the bot before any live source runs. |
 | `BOT_RAW_DIR` | `price-bot/.data/raw` | Raw responses, purged after 90 days. Production should use object storage. |
 | `MOCK_RETAIL_URL` | `SUPABASE_URL` | Where the simulated retailers live. |
+| `BLS_URL` | `https://download.bls.gov` | Where `bls` reads the BLS files. With `--dry-run` it reads the mock's copy. |
 
 - **`--dry-run`:** starts a mock server inside the process, so nothing outside it is touched.
 - **`simulate`:** replays past days and refuses any source that isn't a mock retailer. Because the retailers are simulated, it skips the politeness wait and raw capture, and carries each day's prices to the next run in memory. A year takes about 15 minutes. Give the mock server more memory for a year (`NODE_OPTIONS=--max-old-space-size=8192`), because it holds about 1.1 million rows.
@@ -63,6 +65,18 @@ npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]
    - It holds out-of-band prices (a misplaced decimal) and moves over 40% for review in `review_queue`.
    - A package size change on the same SKU is published and recorded in `price_events` as `size_change`.
 6. **Load:** upserts `price_observations`, one row per item × retailer × store × day × source, so re-running a day updates it. The run summary goes in `ingest_runs`.
+
+## BLS benchmark
+
+`npm run bot -- bls` loads [BLS Average Price Data](https://www.bls.gov/cpi/factsheets/average-prices.htm): monthly all-outlet average prices, public domain. These are not a retailer's prices. They provide history from before the bot started collecting, and a reference to check the bot's own prices against.
+
+- **What it loads:** for each mapped item, the national series plus each of the four Census-region series that exists (Northeast, Midwest, South, West). It keeps the full history, which goes back to 1980 for many items. That comes to about 150 series and 55,000 monthly prices, written to `bls_series` and `bls_prices`. `bls_series.unit_qty` and `unit` say what one BLS price buys (1 lb, ½ gal, 12 ct, ...). `blsPriceForSize()` in `adapters/bls.ts` scales a BLS price to an item's package size.
+- **Requests:** three bulk files from `download.bls.gov/pub/time.series/ap/` (`ap.item`, `ap.series`, `ap.data.3.Food`, about 6 MB), fetched through PoliteHttp 5 s apart. The `bls-ap` source starts enabled, because the data is public domain and its kill switch still applies.
+- **When to run it:** monthly, after BLS publishes the CPI (around mid-month). Re-running upserts.
+- **Mapping checks:** every run reports catalog mappings that are `missing` from BLS, `stale` (BLS stopped publishing them), or in a `unit` that can't be compared with the item's size. These are listed in the summary and in `ingest_runs.detail`, and they don't fail the run. `bls.test.ts` runs the same check offline against the real BLS metadata in `mock-server/fixtures/bls/`.
+- **Regional gaps:** BLS stopped many regional series after October 2025, during the lapse in appropriations. In the September 2026 release, all 31 national series are current, but only 10–27 regional series per region are. October 2025 is missing from every series.
+
+To refresh the fixtures after changing mappings, replace `mock-server/fixtures/bls/ap.item` and `ap.series` with BLS's files, keeping only areas `0000`–`0400` (`ap.series` has its titles blanked to keep it small).
 
 ## Printable report
 

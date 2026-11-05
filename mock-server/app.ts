@@ -7,6 +7,7 @@ import { EVENT_NAMES as APP_EVENT_NAMES } from '@/domain/events';
 
 import { computeMetrics } from '../supabase/functions/_shared/metrics.ts';
 import { createHandler, type IngestDb } from '../supabase/functions/ingest-eia/handler.ts';
+import { blsFile } from './blsMock';
 import { eiaResponse } from './eiaMock';
 import { createMetrics, type Metrics } from './metrics';
 import {
@@ -216,6 +217,15 @@ export function createMockBackend(opts: MockOptions = {}) {
 
     if (path.startsWith('/retail-mock/')) return routeRetail(req, res, url);
 
+    // Stand-in for download.bls.gov (blsMock.ts). No robots.txt, like BLS: everything is allowed.
+    if (req.method === 'GET' && path.startsWith('/bls-mock/pub/time.series/ap/')) {
+      const body = blsFile(path.slice('/bls-mock/pub/time.series/ap/'.length));
+      if (body === null) return (send(res, 404, { message: 'no such file' }), 404);
+      res.writeHead(200, { 'content-type': 'text/plain' });
+      res.end(body);
+      return 200;
+    }
+
     const bearer = (req.headers.authorization ?? '').replace(/^Bearer\s+/i, '');
     const service = bearer === serviceKey || req.headers.apikey === serviceKey;
 
@@ -359,6 +369,7 @@ export function createMockBackend(opts: MockOptions = {}) {
         req.method !== 'OPTIONS' &&
         !path.startsWith('/admin') &&
         !path.startsWith('/retail-mock/') &&
+        !path.startsWith('/bls-mock/') &&
         path !== '/health'
       ) {
         metrics.record({

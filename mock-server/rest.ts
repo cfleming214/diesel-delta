@@ -1,7 +1,7 @@
 // The subset of PostgREST that the price bot uses through supabase-js, over in-memory tables that
-// mirror supabase/migrations/20261031000000_price_bot.sql: select with eq/neq/gt/gte/lt/lte/in/is
-// filters, order, limit and offset; insert; upsert on a conflict key (nulls equal, like the
-// migration's `unique nulls not distinct`); and update.
+// mirror supabase/migrations/20261031000000_price_bot.sql and 20261104000000_bls_prices.sql:
+// select with eq/neq/gt/gte/lt/lte/in/is filters, order, limit and offset; insert; upsert on a
+// conflict key (nulls equal, like the migration's `unique nulls not distinct`); and update.
 export type Row = Record<string, unknown>;
 
 type TableDef = {
@@ -53,7 +53,7 @@ export function createTables(runs: Row[]) {
         ['walmart-page', 'walmart', 'page', 'store', false],
         ['amazon-creators', 'amazon', 'api', 'online', false],
         ['amazon-page', 'amazon', 'page', 'online', false],
-        ['bls-ap', null, 'structured', 'region', false],
+        ['bls-ap', null, 'structured', 'region', true],
         ['mock-kroger', 'kroger', 'mock', 'store', true],
         ['mock-walmart', 'walmart', 'mock', 'store', true],
         ['mock-amazon', 'amazon', 'mock', 'online', true],
@@ -102,6 +102,8 @@ export function createTables(runs: Row[]) {
       defaults: () => ({ state: 'open', created_at: new Date().toISOString(), detail: {} }),
     }),
     contributed_prices: t({ publicRead: false }),
+    bls_series: t({ key: ['id'], publicRead: true }),
+    bls_prices: t({ key: ['series_id', 'month'], publicRead: true }),
     ingest_runs: t({
       identity: true,
       publicRead: false,
