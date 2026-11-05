@@ -260,8 +260,8 @@ describe('daily run against the mock server', () => {
     const s = await runDay({ db, http: http(), adapters, items, day: '2026-10-11' });
     assert.equal(s.status, 'succeeded');
     assert.ok(s.coverage.pct >= 95, `coverage ${s.coverage.pct}%`);
-    assert.equal(s.sources['mock-kroger']!.tasks, 30, '10 stores × 3 batches');
-    assert.equal(s.sources['mock-amazon']!.tasks, 3, 'online: 3 batches');
+    assert.equal(s.sources['mock-kroger']!.tasks, 40, '10 stores × 4 batches');
+    assert.equal(s.sources['mock-amazon']!.tasks, 4, 'online: 4 batches');
     const count = (await db.observations('2026-10-11', '2026-10-12')).length;
     assert.ok(count > 2900, `observations ${count}`);
 
@@ -302,7 +302,7 @@ describe('daily run against the mock server', () => {
     await db.disableSource('mock-amazon', 'test');
     const s = await runDay({ db, http: http(), adapters, items, day: '2026-10-13' });
     assert.equal(s.sources['mock-amazon'], undefined);
-    assert.equal(s.coverage.possible, 300);
+    assert.equal(s.coverage.possible, items.length * 2, 'two sources left');
     await db.client.from('sources').update({ enabled: true }).eq('id', 'mock-amazon');
   });
 

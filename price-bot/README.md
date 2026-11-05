@@ -4,18 +4,18 @@ The separate service that collects daily prices for the canonical catalog. The d
 
 ## Catalog
 
-`catalog/items.csv` holds the 150 item specs. `catalog.ts` loads and validates it, and `npm run bot:test` checks it.
+`catalog/items.csv` holds 176 item specs: 168 shelf items and 8 fuels. `catalog.ts` loads and validates it, and `npm run bot:test` checks it. Fuels (gasoline grades, diesel, heating oil, electricity, piped gas) are BLS benchmarks only: `loadCatalog()` leaves them out, so retailer collection, the mock retailers, reports and the app's product list never see them. Only the `bls` command loads them, with `loadCatalog({ benchmarks: true })`.
 
 | Column | Meaning |
 | --- | --- |
 | `id` | Stable item ID. The 22 IDs from the app's fixtures are kept, so saved baskets and follows survive. |
-| `name`, `category` | Display name, and one of the 11 categories in `catalog.ts`. |
-| `size_qty`, `size_unit` | Target size. Units: `oz`, `lb`, `fl_oz`, `gal`, `qt`, `l`, `ml`, `ct`, `roll`, `each`, `sq_ft`. |
+| `name`, `category` | Display name, and one of the 12 categories in `catalog.ts` (11 grocery categories plus `Fuel`). |
+| `size_qty`, `size_unit` | Target size. Units: `oz`, `lb`, `fl_oz`, `gal`, `qt`, `l`, `ml`, `ct`, `roll`, `each`, `sq_ft`, and `kwh` and `therm` for utility fuels. |
 | `priced_by` | `package`, `lb` (sold by weight; size must be 1 lb) or `each` (by the piece; size must be 1 each). |
 | `size_tolerance` | Allowed size difference when matching a retailer product, from 0 to 0.25. |
 | `brand_policy`, `brand` | `national` pins `brand`. `cheapest_comparable` allows store brands. |
 | `ref_price` | An approximate U.S. shelf price. Only the mock retailers and the first validation bands use it. |
-| `bls_series_id` | The national BLS Average Price series for the same product, used for history and cross-checks. 33 items are mapped; `npm run bot -- bls` checks each one against BLS (see [BLS benchmark](#bls-benchmark)). |
+| `bls_series_id` | The national BLS Average Price series for the same product, used for history and cross-checks. 59 items are mapped, to 57 series; `npm run bot -- bls` checks each one against BLS (see [BLS benchmark](#bls-benchmark)). |
 | `in_default_basket` | `1` for the app's default basket. |
 
 Retailer GTINs and SKUs are not in the catalog. They are matched per retailer, reviewed, and stored in `item_identifiers`.
@@ -70,11 +70,11 @@ npm run bot -- bls [--dry-run]
 
 `npm run bot -- bls` loads [BLS Average Price Data](https://www.bls.gov/cpi/factsheets/average-prices.htm): monthly all-outlet average prices, public domain. These are not a retailer's prices. They provide history from before the bot started collecting, and a reference to check the bot's own prices against.
 
-- **What it loads:** for each mapped item, the national series plus each of the four Census-region series that exists (Northeast, Midwest, South, West). It keeps the full history, which goes back to 1980 for many items. That comes to about 150 series and 55,000 monthly prices, written to `bls_series` and `bls_prices`. `bls_series.unit_qty` and `unit` say what one BLS price buys (1 lb, ½ gal, 12 ct, ...). `blsPriceForSize()` in `adapters/bls.ts` scales a BLS price to an item's package size.
-- **Requests:** three bulk files from `download.bls.gov/pub/time.series/ap/` (`ap.item`, `ap.series`, `ap.data.3.Food`, about 6 MB), fetched through PoliteHttp 5 s apart. The `bls-ap` source starts enabled, because the data is public domain and its kill switch still applies.
+- **What it loads:** for each mapped item, the national series plus each of the four Census-region series that exists (Northeast, Midwest, South, West). It keeps the full history, which goes back to the 1970s and 1980s for many items. That comes to about 280 series and 109,000 monthly prices, written to `bls_series` and `bls_prices`. `bls_series.unit_qty` and `unit` say what one BLS price buys (1 lb, ½ gal, 12 ct, 1 kWh, ...). `blsPriceForSize()` in `adapters/bls.ts` scales a BLS price to an item's package size.
+- **Requests:** five bulk files from `download.bls.gov/pub/time.series/ap/` (`ap.item`, `ap.series`, `ap.data.3.Food`, `ap.data.2.Gasoline` and `ap.data.1.HouseholdFuels`, about 15 MB), fetched through PoliteHttp 5 s apart. The `bls-ap` source starts enabled, because the data is public domain and its kill switch still applies.
 - **When to run it:** monthly, after BLS publishes the CPI (around mid-month). Re-running upserts.
 - **Mapping checks:** every run reports catalog mappings that are `missing` from BLS, `stale` (BLS stopped publishing them), or in a `unit` that can't be compared with the item's size. These are listed in the summary and in `ingest_runs.detail`, and they don't fail the run. `bls.test.ts` runs the same check offline against the real BLS metadata in `mock-server/fixtures/bls/`.
-- **Regional gaps:** BLS stopped many regional series after October 2025, during the lapse in appropriations. In the September 2026 release, all 31 national series are current, but only 10–27 regional series per region are. October 2025 is missing from every series.
+- **Regional gaps:** BLS stopped many regional series after October 2025, during the lapse in appropriations. In the September 2026 release, all 57 mapped national series are current, but only 28–51 of about 56 regional series per region are. October 2025 is missing from every series.
 
 To refresh the fixtures after changing mappings, replace `mock-server/fixtures/bls/ap.item` and `ap.series` with BLS's files, keeping only areas `0000`–`0400` (`ap.series` has its titles blanked to keep it small).
 
@@ -93,7 +93,7 @@ It contains:
 - **Biggest movers:** the largest rises and falls over 30 days and over the year.
 - **Shrinkflation:** package-size reductions over the past year.
 - **Data quality:** held prices and the daily runs for the last 30 days, plus a summary for the year.
-- **Appendix:** a price table for all 150 items, grouped by category, with 30-day and 1-year change.
+- **Appendix:** a price table for all 168 shelf items, grouped by category, with 30-day and 1-year change.
 
 With less than a year of history, the 1-year figures show "—" and the report says when they will be available. A report built from mock sources carries a "Simulated data" banner.
 

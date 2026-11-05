@@ -32,7 +32,7 @@ describe('Search tab', () => {
   test('lists every product; a suggestion filters, and + / check toggles the basket', async () => {
     await openSearch();
     expect(
-      await screen.findByText('All 150 products · cheapest price · 30D, 90D and 1Y change'),
+      await screen.findByText('All 168 products · cheapest price · 30D, 90D and 1Y change'),
     ).toBeTruthy();
     await fireEvent.press(screen.getByText('heinz ketchup'));
     expect(await screen.findByText('2 products')).toBeTruthy();
@@ -85,13 +85,13 @@ describe('Search tab', () => {
 
   test('results load 20 at a time', async () => {
     await openSearch();
-    expect(await screen.findByText('Showing 20 of 150')).toBeTruthy();
+    expect(await screen.findByText('Showing 20 of 168')).toBeTruthy();
     // (The list itself is virtualized, so the counter is what to check.)
     await fireEvent.press(screen.getByText('Show more'));
-    expect(screen.getByText('Showing 40 of 150')).toBeTruthy();
-    // 40 → 60, 80, 100, 120, 140, 150.
-    for (let i = 0; i < 6; i++) await fireEvent.press(screen.getByText('Show more'));
-    expect(screen.getByText('Showing all 150')).toBeTruthy();
+    expect(screen.getByText('Showing 40 of 168')).toBeTruthy();
+    // 40 → 60, 80, 100, 120, 140, 160, 168.
+    for (let i = 0; i < 7; i++) await fireEvent.press(screen.getByText('Show more'));
+    expect(screen.getByText('Showing all 168')).toBeTruthy();
     expect(screen.queryByText('Show more')).toBeNull();
 
     // A new query starts from the first page; a short result list has no footer.
@@ -99,7 +99,7 @@ describe('Search tab', () => {
     expect(await screen.findByText(/^1\d products$/)).toBeTruthy();
     expect(screen.queryByText(/^Showing /)).toBeNull();
     await fireEvent.changeText(screen.getByLabelText('Search items'), '');
-    expect(await screen.findByText('Showing 20 of 150')).toBeTruthy();
+    expect(await screen.findByText('Showing 20 of 168')).toBeTruthy();
   });
 
   test('a pasted retailer link resolves', async () => {

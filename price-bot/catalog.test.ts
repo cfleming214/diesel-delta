@@ -4,7 +4,14 @@ import { describe, test } from 'node:test';
 import { CATALOG, DEFAULT_BASKET_IDS } from '@/data/fixtures/catalog';
 import { PRODUCT_SEEDS } from '@/data/fixtures/products.gen';
 
-import { CATEGORIES, loadCatalog, parseCatalog, sizeLabel } from './catalog';
+import {
+  BENCHMARK_CATEGORIES,
+  CATEGORIES,
+  isShelfItem,
+  loadCatalog,
+  parseCatalog,
+  sizeLabel,
+} from './catalog';
 import { parseSize, sizeRatio, toBase } from './units';
 
 const HEADER =
@@ -13,10 +20,27 @@ const HEADER =
 describe('catalog', () => {
   const items = loadCatalog();
 
-  test('has 150 unique items across the 11 categories', () => {
-    assert.equal(items.length, 150);
-    assert.equal(new Set(items.map((i) => i.id)).size, 150);
-    assert.deepEqual(new Set(items.map((i) => i.category)), new Set(CATEGORIES));
+  test('has 168 unique shelf items across the 11 grocery categories', () => {
+    assert.equal(items.length, 168);
+    assert.equal(new Set(items.map((i) => i.id)).size, 168);
+    assert.deepEqual(
+      new Set(items.map((i) => i.category)),
+      new Set(CATEGORIES.filter((c) => !BENCHMARK_CATEGORIES.includes(c))),
+    );
+  });
+
+  test('fuels are BLS benchmarks only: mapped, outside the basket and the shelf list', () => {
+    const all = loadCatalog({ benchmarks: true });
+    const fuels = all.filter((i) => !isShelfItem(i));
+    assert.equal(all.length, 176);
+    assert.equal(new Set(all.map((i) => i.id)).size, 176);
+    assert.deepEqual(new Set(fuels.map((i) => i.category)), new Set(['Fuel']));
+    assert.equal(fuels.length, 8);
+    for (const f of fuels) {
+      assert.ok(f.blsSeriesId, `${f.id} needs a BLS series`);
+      assert.equal(f.inDefaultBasket, false, f.id);
+    }
+    assert.ok(PRODUCT_SEEDS.every((p) => !fuels.some((f) => f.id === p[0])));
   });
 
   test('keeps every fixture item ID and the default basket, so saved baskets survive', () => {

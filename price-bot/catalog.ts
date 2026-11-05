@@ -16,8 +16,17 @@ export const CATEGORIES = [
   'Snacks',
   'Household',
   'Personal care',
+  'Fuel',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
+
+/**
+ * Categories no grocery retailer sells. Their items are BLS benchmarks only: the BLS ingest loads
+ * them, while retailer collection, the mock retailers, reports and the app's product list skip them.
+ */
+export const BENCHMARK_CATEGORIES: readonly Category[] = ['Fuel'];
+export const isShelfItem = (item: Pick<CanonicalItem, 'category'>) =>
+  !BENCHMARK_CATEGORIES.includes(item.category);
 
 /** How the retailer sells it: a fixed package, by weight, or by the piece. */
 export type PricedBy = 'package' | 'lb' | 'each';
@@ -106,7 +115,7 @@ export function parseCatalog(csv: string): CanonicalItem[] {
     if (c.brand_policy === 'national' && !c.brand) fail('national brand_policy needs a brand');
     const ref = Number(c.ref_price);
     if (!(ref > 0 && ref < 100)) fail(`bad ref_price "${c.ref_price}"`);
-    if (c.bls_series_id && !/^APU0000[A-Z0-9]{6}$/.test(c.bls_series_id)) {
+    if (c.bls_series_id && !/^APU0000[A-Z0-9]{5,6}$/.test(c.bls_series_id)) {
       fail(`bad bls_series_id "${c.bls_series_id}"`);
     }
     if (!['0', '1'].includes(c.in_default_basket)) fail('in_default_basket must be 0 or 1');
@@ -130,8 +139,10 @@ export function parseCatalog(csv: string): CanonicalItem[] {
   return items;
 }
 
-export function loadCatalog(path = CATALOG_PATH): CanonicalItem[] {
-  return parseCatalog(readFileSync(path, 'utf8'));
+/** The catalog's shelf items; `benchmarks: true` also returns the BLS-only items (fuels). */
+export function loadCatalog(opts: { path?: string; benchmarks?: boolean } = {}): CanonicalItem[] {
+  const items = parseCatalog(readFileSync(opts.path ?? CATALOG_PATH, 'utf8'));
+  return opts.benchmarks ? items : items.filter(isShelfItem);
 }
 
 /** Display size, e.g. "32 oz", "1 gal", "per lb", "each". */

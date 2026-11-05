@@ -40,6 +40,23 @@ begin
     raise exception 'metro areas are not loaded';
   exception when check_violation then null;
   end;
+
+  -- Fuel series have five-character item codes, and utilities are priced per kWh or therm.
+  insert into public.bls_series
+    (id, item_code, area_code, region, item_name, unit_qty, unit, begin_month, end_month)
+  values
+    ('APU000072610', '72610', '0000', 'nat', 'Electricity per KWH', 1, 'kwh', '1978-11-01', '2026-09-01'),
+    ('APU00007471A', '7471A', '0000', 'nat', 'Gasoline, all types, per gallon/3.785 liters', 1, 'gal',
+     '1978-01-01', '2026-09-01');
+  delete from public.bls_series where item_code in ('72610', '7471A');
+
+  begin
+    insert into public.bls_series
+      (id, item_code, area_code, region, item_name, unit_qty, unit, begin_month, end_month)
+    values ('APU000072620', '72620', '0000', 'nat', 'Gas', 1, 'cu_ft', '1978-11-01', '2026-09-01');
+    raise exception 'an unknown unit should fail';
+  exception when check_violation then null;
+  end;
 end $$;
 
 -- Public read, no client writes.
