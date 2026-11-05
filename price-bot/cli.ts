@@ -3,10 +3,12 @@
 //   npm run bot -- run [--day 2026-10-30] [--sources mock-kroger,...] [--discover] [--dry-run]
 //   npm run bot -- simulate --days 30 [--end 2026-10-30]
 //   npm run bot -- report [--end 2026-10-30] [--out dir] [--no-pdf]   (30-day and 1-year changes)
+//   npm run bot -- bls [--dry-run]   (BLS Average Price Data for the catalog's mapped items, monthly)
 //
 // Targets SUPABASE_URL with SUPABASE_SERVICE_ROLE_KEY; both default to the local mock server
 // (npm run mock:server). --dry-run starts an in-process mock server instead, so nothing outside
-// this process is touched. `simulate` replays past days against the mock retailers only.
+// this process is touched. `simulate` replays past days against the mock retailers only. `bls`
+// reads download.bls.gov, or BLS_URL; with --dry-run it reads the mock's copy instead.
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -14,8 +16,10 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { createMockBackend } from '../mock-server/app';
+import { BLS_DEFAULT_URL } from './adapters/bls';
 import { mockAdapter } from './adapters/mock';
 import type { SourceAdapter } from './adapters/types';
+import { formatBlsSummary, runBls } from './bls';
 import { loadCatalog } from './catalog';
 import { type BotDb, createBotDb } from './db';
 import { createPoliteHttp } from './http';
@@ -178,6 +182,17 @@ async function main() {
         });
         console.log(formatSummary(s));
       }
+    } else if (command === 'bls') {
+      const s = await runBls({
+        db,
+        http,
+        items,
+        baseUrl: mock ? `${mock.url}/bls-mock` : (process.env.BLS_URL ?? BLS_DEFAULT_URL),
+        minIntervalMs: mock ? 0 : undefined,
+        log,
+      });
+      console.log(formatBlsSummary(s));
+      if (s.status === 'failed') process.exitCode = 1;
     } else if (command === 'report') {
       const end = values.end ?? today();
       const model = buildReport(await loadReportData(db, items, end));
@@ -196,7 +211,7 @@ async function main() {
       }
       return;
     } else {
-      throw new Error(`unknown command "${command}" (use run, simulate or report)`);
+      throw new Error(`unknown command "${command}" (use run, simulate, report or bls)`);
     }
     console.log(
       `requests ${counted.counts.requests}, retries ${counted.counts.retries}, raw responses purged ${await raw.purge()}`,

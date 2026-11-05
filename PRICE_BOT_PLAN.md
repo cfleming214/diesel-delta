@@ -128,7 +128,7 @@ Each item is a **canonical spec**, not a single product. The app compares like w
   - `national`: a pinned brand with GTINs, for example Heinz ketchup 32 oz.
   - `cheapest_comparable`: store brand allowed. This is used for commodities like milk, eggs and bananas.
 - **Weight-priced produce and meat:** compared per pound or each, matching how the retailer sells it.
-- An optional BLS series ID for cross-checks. About 55 of the 150 items map to one.
+- An optional BLS series ID for cross-checks. 33 of the 150 items map to one (checked against BLS by `npm run bot -- bls`).
 
 The 22 existing fixture items keep their IDs (`milk`, `eggs`, `ketchup`, …) so saved baskets and follows survive the switch.
 
