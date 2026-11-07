@@ -92,6 +92,22 @@ export type BlsSeriesRow = {
 
 export type BlsPriceRow = { series_id: string; month: string; price: number; run_id: number };
 
+export type BlsProductRow = {
+  item_code: string;
+  item_name: string;
+  display_name: string;
+  category: string;
+  unit_qty: number | null;
+  unit: string | null;
+  unit_label: string;
+  base_qty: number | null;
+  base_dimension: string | null;
+  current: boolean;
+  latest_month: string | null;
+  regions_current: string[];
+  updated_at: string;
+};
+
 export type TaskRow = {
   id: number;
   run_id: number;
@@ -327,6 +343,23 @@ export function createBotDb(
         (b) => sb.from('bls_prices').upsert(b, { onConflict: 'series_id,month' }),
         'write BLS prices',
       );
+    },
+
+    async upsertBlsProducts(rows: BlsProductRow[]) {
+      await inBatches(
+        rows,
+        (b) => sb.from('bls_products').upsert(b, { onConflict: 'item_code' }),
+        'write BLS products',
+      );
+    },
+
+    /** Item codes already in bls_products, so a run can re-check ones it no longer plans. */
+    async blsProductCodes(): Promise<string[]> {
+      const rows = check(
+        await sb.from('bls_products').select('item_code'),
+        'read BLS products',
+      ) as { item_code: string }[];
+      return rows.map((r) => r.item_code);
     },
 
     async addReviews(rows: ReviewRow[]) {

@@ -6,6 +6,8 @@ import { PRODUCT_SEEDS } from '@/data/fixtures/products.gen';
 
 import {
   BENCHMARK_CATEGORIES,
+  loadBlsProductMeta,
+  parseBlsProductMeta,
   CATEGORIES,
   isShelfItem,
   loadCatalog,
@@ -149,5 +151,37 @@ describe('sizes', () => {
     );
     assert.equal(sizeRatio({ qty: 16, unit: 'oz' }, { qty: 16, unit: 'fl_oz' }), null);
     assert.equal(toBase({ qty: 2, unit: 'l' }).qty, 2000);
+  });
+});
+
+describe('BLS product names', () => {
+  test('every catalog BLS mapping has a curated name and category', () => {
+    const meta = loadBlsProductMeta();
+    assert.equal(meta.size, 60);
+    for (const i of loadCatalog({ benchmarks: true })) {
+      if (!i.blsSeriesId) continue;
+      const m = meta.get(i.blsSeriesId.slice(7));
+      assert.ok(m, `${i.id}: ${i.blsSeriesId} has no row in bls_products.csv`);
+      // Fuel items sit under Fuel products; grocery items under grocery products.
+      assert.equal(m.category === 'Fuel', i.category === 'Fuel', i.id);
+    }
+  });
+
+  test('reports every bad row', () => {
+    const csv = [
+      'item_code,display_name,category,unit_label',
+      '709112,Whole milk,Dairy,',
+      '709112,Milk again,Dairy,',
+      'x,,Snacks,',
+      '74714,Gas,Petrol,',
+    ].join('\n');
+    assert.throws(
+      () => parseBlsProductMeta(csv),
+      (e: Error) =>
+        /duplicate item_code "709112"/.test(e.message) &&
+        /bad item_code "x"/.test(e.message) &&
+        /display_name is required/.test(e.message) &&
+        /unknown category "Petrol"/.test(e.message),
+    );
   });
 });

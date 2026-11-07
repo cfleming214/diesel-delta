@@ -20,7 +20,7 @@ import { BLS_DEFAULT_URL } from './adapters/bls';
 import { mockAdapter } from './adapters/mock';
 import type { SourceAdapter } from './adapters/types';
 import { formatBlsSummary, runBls } from './bls';
-import { loadCatalog } from './catalog';
+import { loadBlsProductMeta, loadCatalog } from './catalog';
 import { type BotDb, createBotDb } from './db';
 import { createPoliteHttp } from './http';
 import { type Carry, runDay, type RunSummary } from './pipeline';
@@ -188,6 +188,7 @@ async function main() {
         http,
         // Fuels are BLS benchmarks only, so this is the one command that loads them.
         items: loadCatalog({ benchmarks: true }),
+        meta: loadBlsProductMeta(),
         baseUrl: mock ? `${mock.url}/bls-mock` : (process.env.BLS_URL ?? BLS_DEFAULT_URL),
         minIntervalMs: mock ? 0 : undefined,
         log,

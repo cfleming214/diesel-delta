@@ -1,5 +1,6 @@
 // The subset of PostgREST that the price bot uses through supabase-js, over in-memory tables that
-// mirror supabase/migrations/20261031000000_price_bot.sql and 20261104000000_bls_prices.sql:
+// mirror supabase/migrations/20261031000000_price_bot.sql, 20261104000000_bls_prices.sql and
+// 20261107000000_bls_products.sql:
 // select with eq/neq/gt/gte/lt/lte/in/is filters, order, limit and offset; insert; upsert on a
 // conflict key (nulls equal, like the migration's `unique nulls not distinct`); and update.
 export type Row = Record<string, unknown>;
@@ -104,6 +105,7 @@ export function createTables(runs: Row[]) {
     contributed_prices: t({ publicRead: false }),
     bls_series: t({ key: ['id'], publicRead: true }),
     bls_prices: t({ key: ['series_id', 'month'], publicRead: true }),
+    bls_products: t({ key: ['item_code'], publicRead: true }),
     ingest_runs: t({
       identity: true,
       publicRead: false,

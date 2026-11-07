@@ -5,14 +5,20 @@ import { after, before, describe, test } from 'node:test';
 
 import {
   blsPriceForSize,
+  blsUnitLabel,
   parseBlsUnit,
   parseData,
   parseItems,
   parseSeries,
   splitSeriesId,
 } from './adapters/bls';
-import { planBls, runBls } from './bls';
-import { type CanonicalItem, loadCatalog } from './catalog';
+import { blsShortName, planBls, runBls } from './bls';
+import {
+  type CanonicalItem,
+  loadBlsProductMeta,
+  loadCatalog,
+  parseBlsProductMeta,
+} from './catalog';
 import { startInProcessMock, userAgent } from './cli';
 import { createBotDb } from './db';
 import { createPoliteHttp } from './http';
@@ -23,6 +29,7 @@ const realItems = parseItems(readFileSync(join(FIXTURES, 'ap.item'), 'utf8'));
 const realSeries = parseSeries(readFileSync(join(FIXTURES, 'ap.series'), 'utf8'));
 // The BLS ingest is the one place that loads the fuel benchmarks too.
 const catalog = loadCatalog({ benchmarks: true });
+const meta = loadBlsProductMeta();
 const item = (over: Partial<CanonicalItem>): CanonicalItem => ({ ...catalog[0]!, ...over });
 
 describe('BLS files', () => {
@@ -102,6 +109,27 @@ describe('BLS units', () => {
     for (const [name, want] of cases) assert.deepEqual(parseBlsUnit(name), want, name);
   });
 
+  test('labels units the way the app shows them', () => {
+    const cases: [Parameters<typeof blsUnitLabel>[0], string][] = [
+      [{ qty: 1, unit: 'lb' }, 'per lb'],
+      [{ qty: 0.5, unit: 'gal' }, 'per ½ gal'],
+      [{ qty: 12, unit: 'ct' }, 'per dozen'],
+      [{ qty: 12, unit: 'oz' }, 'per 12 oz'],
+      [{ qty: 16, unit: 'fl_oz' }, 'per 16 fl oz'],
+      [{ qty: 1, unit: 'l' }, 'per liter'],
+      [{ qty: 2, unit: 'l' }, 'per 2 L'],
+      [{ qty: 1, unit: 'kwh' }, 'per kWh'],
+      [{ qty: 1, unit: 'therm' }, 'per therm'],
+    ];
+    for (const [size, want] of cases) assert.equal(blsUnitLabel(size), want);
+    assert.equal(blsShortName('Bananas, per lb. (453.6 gm)'), 'Bananas');
+    assert.equal(
+      blsShortName('Rice, white, long grain, uncooked (cost per pound/453.6 grams)'),
+      'Rice, white, long grain, uncooked',
+    );
+    assert.equal(blsShortName('Electricity per KWH'), 'Electricity');
+  });
+
   test('scales a BLS price to a catalog size, or refuses across dimensions', () => {
     assert.equal(blsPriceForSize(1.02, { qty: 1, unit: 'lb' }, { qty: 5, unit: 'lb' }), 5.1);
     // Ice cream: $5.20 per 1/2 gal → a 48 fl oz tub.
@@ -118,6 +146,50 @@ describe('planBls', () => {
     // Fuels load from the same plan: every grade and utility, U.S. and all four regions.
     const fuels = plan.series.filter((s) => s.itemCode.length === 5);
     assert.equal(fuels.length, 40);
+  });
+
+  test('plans every current BLS product, mapped or not, as a curated product row', () => {
+    const plan = planBls(catalog, { items: realItems, series: realSeries }, meta);
+    const current = plan.products.filter((p) => p.current);
+    assert.equal(current.length, 60);
+    assert.deepEqual(plan.unlabeled, [], 'every current product has a curated name');
+    // The three produce items the catalog sells by the each, not by the pound: BLS-only.
+    assert.deepEqual(plan.unmapped, ['711412', '712211', 'FL2101']);
+    assert.ok(
+      plan.series.some((s) => s.itemCode === '711412'),
+      'unmapped products still load',
+    );
+    // BLS stopped the U.S. series for these in mid-2026; nothing maps them, so they aren't planned.
+    for (const code of ['703512', '704211']) {
+      assert.ok(!plan.products.some((p) => p.item_code === code), code);
+    }
+    const milk = plan.products.find((p) => p.item_code === 'FJ1101')!;
+    assert.equal(milk.display_name, 'Low-fat and skim milk');
+    assert.equal(milk.category, 'Dairy');
+    assert.equal(milk.unit_label, 'per gal');
+    assert.equal(milk.base_dimension, 'volume_ml');
+    assert.equal(milk.base_qty, 3785.4118);
+    assert.equal(milk.latest_month, '2026-09-01');
+    assert.ok(milk.regions_current.includes('nat'));
+    const eggs = plan.products.find((p) => p.item_code === '708111')!;
+    assert.deepEqual(
+      [eggs.unit_label, eggs.base_qty, eggs.base_dimension],
+      ['per dozen', 12, 'count'],
+    );
+    const power = plan.products.find((p) => p.item_code === '72610')!;
+    assert.deepEqual([power.category, power.unit_label], ['Fuel', 'per kWh']);
+    assert.equal(plan.products.find((p) => p.item_code === 'FN1102')!.unit_label, 'per 12 oz can');
+  });
+
+  test('re-checks stored products, so one BLS stopped is marked not current', () => {
+    const plan = planBls([], { items: realItems, series: realSeries }, meta, ['704211']);
+    const chops = plan.products.find((p) => p.item_code === '704211')!;
+    assert.equal(chops.current, false);
+    assert.equal(chops.latest_month, '2026-05-01');
+    assert.equal(chops.display_name, 'Chops, center cut, bone-in', "falls back to BLS's name");
+    assert.equal(chops.category, 'Pantry', 'uncurated food falls back to Pantry');
+    // Without a catalog, every current product is BLS-only.
+    assert.equal(plan.unmapped.length, 60);
   });
 
   test('loads every region that has the item, and reports bad mappings', () => {
@@ -159,12 +231,21 @@ describe('runBls against the mock', () => {
   after(() => mock.stop());
 
   const run = () =>
-    runBls({ db, http: http(), items: catalog, baseUrl: `${mock.url}/bls-mock`, minIntervalMs: 0 });
+    runBls({
+      db,
+      http: http(),
+      items: catalog,
+      meta,
+      baseUrl: `${mock.url}/bls-mock`,
+      minIntervalMs: 0,
+    });
 
   test('loads series and monthly prices, and re-running upserts', async () => {
     const first = await run();
     assert.equal(first.status, 'succeeded', first.error);
     assert.deepEqual(first.problems, []);
+    assert.equal(first.currentProducts, 60);
+    assert.deepEqual(first.unlabeled, []);
     assert.equal(first.latestMonth, '2026-09-01');
     assert.ok(first.series > first.current.nat!);
     assert.ok(first.prices > 10_000);
@@ -172,6 +253,16 @@ describe('runBls against the mock', () => {
     const count = async (table: string) =>
       (await db.client.from(table).select('*', { count: 'exact', head: true })).count;
     assert.equal(await count('bls_prices'), first.prices);
+    assert.equal(await count('bls_products'), first.products);
+    const { data: bananas } = await db.client
+      .from('bls_products')
+      .select('*')
+      .eq('item_code', '711211')
+      .single();
+    assert.deepEqual(
+      [bananas.display_name, bananas.category, bananas.unit_label, bananas.current],
+      ['Bananas', 'Produce', 'per lb', true],
+    );
 
     const second = await run();
     assert.equal(second.prices, first.prices);

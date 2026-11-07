@@ -20,6 +20,12 @@ The separate service that collects daily prices for the canonical catalog. The d
 
 Retailer GTINs and SKUs are not in the catalog. They are matched per retailer, reviewed, and stored in `item_identifiers`.
 
+### BLS products
+
+The app's products are BLS Average Price products: the 60 with a current U.S. price (52 food, 5 gasoline, 3 household fuels). Retailers are tracked under a product through the catalog items whose `bls_series_id` points at it, so one product can have several specs: `FJ1101` (low-fat and skim milk) has `milk2` and `milk_skim`. In the database the link is `items.bls_item_code`, and `bls_product_items` lists the specs under each product.
+
+`catalog/bls_products.csv` holds the curated name and category of each product (BLS's own names read like "Milk, fresh, whole, fortified, per gal. (3.8 lit)"), plus an optional `unit_label` override. `npm run bot:test` checks that every mapped product has a row. Current products with no catalog item are BLS-only: the fuels, and lemons, iceberg lettuce and romaine, which BLS prices per pound and the catalog sells by the each.
+
 ## Running
 
 ```sh
@@ -70,11 +76,11 @@ npm run bot -- bls [--dry-run]
 
 `npm run bot -- bls` loads [BLS Average Price Data](https://www.bls.gov/cpi/factsheets/average-prices.htm): monthly all-outlet average prices, public domain. These are not a retailer's prices. They provide history from before the bot started collecting, and a reference to check the bot's own prices against.
 
-- **What it loads:** for each mapped item, the national series plus each of the four Census-region series that exists (Northeast, Midwest, South, West). It keeps the full history, which goes back to the 1970s and 1980s for many items. That comes to about 280 series and 109,000 monthly prices, written to `bls_series` and `bls_prices`. `bls_series.unit_qty` and `unit` say what one BLS price buys (1 lb, ½ gal, 12 ct, 1 kWh, ...). `blsPriceForSize()` in `adapters/bls.ts` scales a BLS price to an item's package size.
+- **What it loads:** for every product with a current U.S. price, every product the catalog maps, and every product already in `bls_products`: the national series plus each of the four Census-region series that exists (Northeast, Midwest, South, West). It writes one `bls_products` row per product, with its unit in base units (`base_qty`, so a retailer's `unit_price × base_qty` is its price in BLS's unit) and the regions current in the latest month. A product BLS stops publishing keeps its row and history with `current = false`. It keeps the full history, which goes back to the 1970s and 1980s for many items. That comes to about 295 series and 114,000 monthly prices, written to `bls_series` and `bls_prices`. `bls_series.unit_qty` and `unit` say what one BLS price buys (1 lb, ½ gal, 12 ct, 1 kWh, ...). `blsPriceForSize()` in `adapters/bls.ts` scales a BLS price to an item's package size.
 - **Requests:** five bulk files from `download.bls.gov/pub/time.series/ap/` (`ap.item`, `ap.series`, `ap.data.3.Food`, `ap.data.2.Gasoline` and `ap.data.1.HouseholdFuels`, about 15 MB), fetched through PoliteHttp 5 s apart. The `bls-ap` source starts enabled, because the data is public domain and its kill switch still applies.
 - **When to run it:** monthly, after BLS publishes the CPI (around mid-month). Re-running upserts.
 - **Mapping checks:** every run reports catalog mappings that are `missing` from BLS, `stale` (BLS stopped publishing them), or in a `unit` that can't be compared with the item's size. These are listed in the summary and in `ingest_runs.detail`, and they don't fail the run. `bls.test.ts` runs the same check offline against the real BLS metadata in `mock-server/fixtures/bls/`.
-- **Regional gaps:** BLS stopped many regional series after October 2025, during the lapse in appropriations. In the September 2026 release, all 57 mapped national series are current, but only 28–51 of about 56 regional series per region are. October 2025 is missing from every series.
+- **Regional gaps:** BLS stopped many regional series after October 2025, during the lapse in appropriations. In the September 2026 release, all 60 national series are current, but only 30–53 regional series per region are (Northeast 30, Midwest 33, South 53, West 38). October 2025 is missing from every series.
 
 To refresh the fixtures after changing mappings, replace `mock-server/fixtures/bls/ap.item` and `ap.series` with BLS's files, keeping only areas `0000`–`0400` (`ap.series` has its titles blanked to keep it small).
 
