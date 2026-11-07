@@ -1,4 +1,5 @@
-// The canonical catalog: 150 item specs the bot prices at every retailer (catalog/items.csv).
+// The canonical catalog: item specs the bot prices at every retailer (catalog/items.csv), and the
+// curated names and categories of the BLS products they sit under (catalog/bls_products.csv).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -151,4 +152,44 @@ export function sizeLabel(item: Pick<CanonicalItem, 'size' | 'pricedBy'>): strin
   if (item.pricedBy === 'each') return 'each';
   const unit = item.size.unit === 'fl_oz' ? 'fl oz' : item.size.unit === 'l' ? 'L' : item.size.unit;
   return `${item.size.qty} ${unit.replace('_', ' ')}`;
+}
+
+/** Curated display data for a BLS product (catalog/bls_products.csv). */
+export type BlsProductMeta = {
+  displayName: string;
+  category: Category;
+  /** Overrides the label made from BLS's unit, e.g. "per 12 oz pint". */
+  unitLabel: string | null;
+};
+
+export const BLS_PRODUCTS_PATH = join(__dirname, 'catalog', 'bls_products.csv');
+
+/** Parses bls_products.csv into item code → display data. Throws with every problem found. */
+export function parseBlsProductMeta(csv: string): Map<string, BlsProductMeta> {
+  const lines = csv.split(/\r?\n/).filter((l) => l.trim() !== '');
+  if (lines.shift() !== 'item_code,display_name,category,unit_label') {
+    throw new Error('bls_products header must be: item_code,display_name,category,unit_label');
+  }
+  const out = new Map<string, BlsProductMeta>();
+  const errors: string[] = [];
+  lines.forEach((line, i) => {
+    const [code = '', displayName = '', category = '', unitLabel = '', ...rest] = line
+      .split(',')
+      .map((c) => c.trim());
+    const fail = (msg: string) => errors.push(`row ${i + 2}: ${msg}`);
+    if (rest.length || line.includes('"')) return fail('expected 4 unquoted columns');
+    if (!/^[0-9A-Z]{5,6}$/.test(code)) fail(`bad item_code "${code}"`);
+    if (out.has(code)) fail(`duplicate item_code "${code}"`);
+    if (!displayName) fail('display_name is required');
+    if (!(CATEGORIES as readonly string[]).includes(category)) {
+      fail(`unknown category "${category}"`);
+    }
+    out.set(code, { displayName, category: category as Category, unitLabel: unitLabel || null });
+  });
+  if (errors.length) throw new Error(`bls_products.csv is invalid:\n${errors.join('\n')}`);
+  return out;
+}
+
+export function loadBlsProductMeta(path = BLS_PRODUCTS_PATH): Map<string, BlsProductMeta> {
+  return parseBlsProductMeta(readFileSync(path, 'utf8'));
 }

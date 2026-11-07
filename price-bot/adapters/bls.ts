@@ -133,6 +133,15 @@ export function parseBlsUnit(itemName: string): Size | null {
   return { qty, unit: fluid ? 'fl_oz' : 'oz' };
 }
 
+/** How the app labels a BLS unit: 1 lb → "per lb", 0.5 gal → "per ½ gal", 12 ct → "per dozen". */
+export function blsUnitLabel({ qty, unit }: Size): string {
+  if (unit === 'ct') return qty === 12 ? 'per dozen' : `per ${qty} ct`;
+  if (unit === 'kwh') return 'per kWh';
+  const word = { fl_oz: 'fl oz', l: qty === 1 ? 'liter' : 'L' }[unit as 'fl_oz' | 'l'] ?? unit;
+  if (qty === 1) return `per ${word}`;
+  return `per ${qty === 0.5 ? '½' : qty} ${word}`;
+}
+
 /**
  * A BLS average price scaled to a catalog item's size: e.g. $4.10 per lb → $8.20 for a 2 lb bag.
  * Null when the units measure different things (weight against count, say).

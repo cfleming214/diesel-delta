@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { describe, expect, test } from '@jest/globals';
 
 import {
@@ -9,6 +12,7 @@ import {
   stateForZip,
   STATES,
 } from '@/data';
+import { CENSUS_REGION, censusRegionForState } from '@/data/geo/census';
 
 describe('ZIP → state', () => {
   test.each([
@@ -81,5 +85,27 @@ describe('EIA series selection', () => {
     expect(eiaSeriesId('STX', 'gas')).toBe('EMM_EPMR_PTE_STX_DPG');
     expect(ALL_SERIES.filter((s) => s.kind === 'diesel')).toHaveLength(11);
     expect(ALL_SERIES.filter((s) => s.kind === 'gas')).toHaveLength(19);
+  });
+});
+
+describe('Census regions', () => {
+  test('cover the same 50 states and DC as the EIA table', () => {
+    expect(Object.keys(CENSUS_REGION).sort()).toEqual(Object.keys(STATES).sort());
+    expect(censusRegionForState('tx')).toBe('south');
+    expect(censusRegionForState('PR')).toBeNull();
+    expect(censusRegionForState(null)).toBeNull();
+  });
+
+  test('match census_region() in the BLS products migration', () => {
+    const sql = readFileSync(
+      join(__dirname, '../../../supabase/migrations/20261107000000_bls_products.sql'),
+      'utf8',
+    );
+    const body = sql.slice(sql.indexOf('create function public.census_region'));
+    const fromSql: Record<string, string> = {};
+    for (const m of body.matchAll(/when p_state in \(([^)]*)\)\s*then '(\w+)'/g)) {
+      for (const st of m[1]!.match(/[A-Z]{2}/g) ?? []) fromSql[st] = m[2]!;
+    }
+    expect(fromSql).toEqual(CENSUS_REGION);
   });
 });
