@@ -12,10 +12,13 @@ import { eiaResponse } from './eiaMock';
 import { createMetrics, type Metrics } from './metrics';
 import {
   basketDaily,
+  blsProductList,
+  blsProductMonthly,
   claimPriceTasks,
   createTables,
   handleRest,
   itemPricesOn,
+  productRetailerWeekly,
   RestError,
   type Row,
 } from './rest';
@@ -243,6 +246,26 @@ export function createMockBackend(opts: MockOptions = {}) {
       if (!Array.isArray(body?.p_days))
         return (send(res, 400, { message: 'p_days is required' }), 400);
       return (send(res, 200, itemPricesOn(tables, body.p_days)), 200);
+    }
+    if (req.method === 'POST' && path === '/rest/v1/rpc/bls_product_list') {
+      const b = (await readJson(req)) as { p_region?: string } | null;
+      return (send(res, 200, blsProductList(tables, b?.p_region ?? 'nat')), 200);
+    }
+    if (
+      req.method === 'POST' &&
+      (path === '/rest/v1/rpc/bls_product_monthly' ||
+        path === '/rest/v1/rpc/product_retailer_weekly')
+    ) {
+      const b = (await readJson(req)) as {
+        p_item_code?: string;
+        p_region?: string;
+        p_from?: string | null;
+      } | null;
+      if (!b?.p_item_code) return (send(res, 400, { message: 'p_item_code is required' }), 400);
+      const rows = path.endsWith('bls_product_monthly')
+        ? blsProductMonthly(tables, b.p_item_code, b.p_region, b.p_from ?? null)
+        : productRetailerWeekly(tables, b.p_item_code, b.p_region, b.p_from ?? undefined);
+      return (send(res, 200, rows), 200);
     }
     if (req.method === 'POST' && path === '/rest/v1/rpc/basket_daily') {
       const b = (await readJson(req)) as {
