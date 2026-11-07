@@ -3,6 +3,9 @@
 // 20261107000000_bls_products.sql:
 // select with eq/neq/gt/gte/lt/lte/in/is filters, order, limit and offset; insert; upsert on a
 // conflict key (nulls equal, like the migration's `unique nulls not distinct`); and update.
+// Also the read RPCs from 20261101000000_price_history.sql and 20261107000100_bls_read.sql.
+import { censusRegionForState } from '../src/data/geo/census';
+
 export type Row = Record<string, unknown>;
 
 type TableDef = {
@@ -382,4 +385,183 @@ export function basketDaily(
   return [...byDay]
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([day, d]) => ({ day, cost: round4(d.cost), items: d.items }));
+}
+
+// --- BLS products (same contracts as supabase/migrations/20261107000100_bls_read.sql) ---
+
+const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+const daysAgo = (n: number) => isoDay(new Date(Date.now() - n * 86_400_000));
+const round = (n: number, dp: number) => Math.round(n * 10 ** dp) / 10 ** dp;
+
+/** First of the month `n` months before `month` (YYYY-MM-01). */
+function monthsBefore(month: string, n: number) {
+  const t = Number(month.slice(0, 4)) * 12 + Number(month.slice(5, 7)) - 1 - n;
+  return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}-01`;
+}
+
+/** Monday of the day's week, like date_trunc('week', day). */
+function weekOf(day: string) {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return isoDay(d);
+}
+
+/** items.bls_item_code, a generated column in Postgres. */
+const blsItemCode = (item: Row) => String(item.bls_series_id ?? '').slice(7) || null;
+
+export function blsRegionUsed(tables: Record<string, TableDef>, code: string, region: string) {
+  const p = tables.bls_products!.rows.find((r) => r.item_code === code);
+  return region !== 'nat' && ((p?.regions_current as string[]) ?? []).includes(region)
+    ? region
+    : 'nat';
+}
+
+/** Retailer prices for a product in BLS's unit; mock rows dropped for retailers with real data. */
+function blsRetailerPrices(
+  tables: Record<string, TableDef>,
+  code: string,
+  region: string,
+  from: string,
+) {
+  const product = tables.bls_products!.rows.find((r) => r.item_code === code);
+  const base = Number(product?.base_qty ?? 0);
+  if (!base) return [];
+  const items = new Set(
+    tables.items!.rows.filter((i) => blsItemCode(i) === code).map((i) => String(i.id)),
+  );
+  const storeRegion = new Map(
+    tables.stores!.rows.map((s) => [Number(s.id), censusRegionForState(String(s.state))]),
+  );
+  const kind = new Map(tables.sources!.rows.map((s) => [String(s.id), String(s.kind)]));
+  const obs = tables.price_observations!.rows.flatMap((o) => {
+    const regular = Number(o.regular_price);
+    const storeId = o.store_id === null || o.store_id === undefined ? null : Number(o.store_id);
+    if (!items.has(String(o.item_id)) || String(o.day) < from || !(regular > 0)) return [];
+    if (o.unit_price === null || o.unit_price === undefined) return [];
+    if (region !== 'nat' && storeId !== null && storeRegion.get(storeId) !== region) return [];
+    const effective = o.promo_price ? Number(o.promo_price) : regular;
+    return [
+      {
+        retailerId: String(o.retailer_id),
+        day: String(o.day),
+        price: ((Number(o.unit_price) * effective) / regular) * base,
+        storeId,
+        itemId: String(o.item_id),
+        online: storeId === null,
+        sample: kind.get(String(o.source_id)) === 'mock',
+      },
+    ];
+  });
+  const hasReal = new Set(obs.filter((o) => !o.sample).map((o) => o.retailerId));
+  return obs.filter((o) => !(o.sample && hasReal.has(o.retailerId)));
+}
+
+/** Same contract as the SQL product_retailer_weekly(). */
+export function productRetailerWeekly(
+  tables: Record<string, TableDef>,
+  code: string,
+  region = 'nat',
+  from = daysAgo(371),
+) {
+  const groups = new Map<string, ReturnType<typeof blsRetailerPrices>>();
+  for (const o of blsRetailerPrices(tables, code, region, from)) {
+    const k = `${o.retailerId}|${weekOf(o.day)}`;
+    (groups.get(k) ?? groups.set(k, []).get(k)!).push(o);
+  }
+  return [...groups]
+    .map(([k, rows]) => {
+      const [retailer_id, week] = k.split('|') as [string, string];
+      return {
+        retailer_id,
+        week,
+        price: round(medianOf(rows.map((r) => r.price)), 3),
+        observations: rows.length,
+        stores: new Set(rows.map((r) => r.storeId)).size,
+        items: new Set(rows.map((r) => r.itemId)).size,
+        online: rows.every((r) => r.online),
+        sample: rows.some((r) => r.sample),
+      };
+    })
+    .sort((a, b) => a.retailer_id.localeCompare(b.retailer_id) || a.week.localeCompare(b.week));
+}
+
+/** Same contract as the SQL bls_product_monthly(). */
+export function blsProductMonthly(
+  tables: Record<string, TableDef>,
+  code: string,
+  region = 'nat',
+  from: string | null = null,
+) {
+  const used = blsRegionUsed(tables, code, region);
+  const series = new Map(
+    tables
+      .bls_series!.rows.filter(
+        (s) => s.item_code === code && (s.region === used || s.region === 'nat'),
+      )
+      .map((s) => [String(s.id), String(s.region)]),
+  );
+  return tables
+    .bls_prices!.rows.filter(
+      (p) => series.has(String(p.series_id)) && (!from || String(p.month) >= from),
+    )
+    .map((p) => ({
+      region: series.get(String(p.series_id))!,
+      month: String(p.month),
+      price: Number(p.price),
+    }))
+    .sort((a, b) => a.region.localeCompare(b.region) || a.month.localeCompare(b.month));
+}
+
+/** Same contract as the SQL bls_product_list(). */
+export function blsProductList(tables: Record<string, TableDef>, region = 'nat') {
+  const priceOf = new Map(
+    tables.bls_prices!.rows.map((p) => [`${p.series_id}|${p.month}`, Number(p.price)]),
+  );
+  const change = (seriesId: string, month: string, price: number, n: number) => {
+    const before = priceOf.get(`${seriesId}|${monthsBefore(month, n)}`);
+    return before ? round((price / before - 1) * 100, 2) : null;
+  };
+  return tables
+    .bls_products!.rows.filter((p) => p.current)
+    .flatMap((p) => {
+      const code = String(p.item_code);
+      const used = blsRegionUsed(tables, code, region);
+      const series = tables.bls_series!.rows.find((s) => s.item_code === code && s.region === used);
+      if (!series) return [];
+      const latest = tables
+        .bls_prices!.rows.filter((r) => r.series_id === series.id)
+        .sort((a, b) => String(b.month).localeCompare(String(a.month)))[0];
+      if (!latest) return [];
+      const id = String(series.id);
+      const month = String(latest.month);
+      const price = Number(latest.price);
+      const recent = blsRetailerPrices(tables, code, region, daysAgo(35));
+      return [
+        {
+          item_code: code,
+          display_name: String(p.display_name),
+          category: String(p.category),
+          unit_label: String(p.unit_label),
+          region_used: used,
+          series_id: id,
+          month,
+          price,
+          change_1m: change(id, month, price, 1),
+          change_3m: change(id, month, price, 3),
+          change_12m: change(id, month, price, 12),
+          retailers: new Set(recent.map((r) => r.retailerId)).size,
+          sample: recent.some((r) => r.sample),
+          item_ids: tables
+            .items!.rows.filter(
+              (i) => blsItemCode(i) === code && i.active !== false && i.category !== 'Fuel',
+            )
+            .map((i) => String(i.id))
+            .sort(),
+        },
+      ];
+    })
+    .sort(
+      (a, b) =>
+        a.category.localeCompare(b.category) || a.display_name.localeCompare(b.display_name),
+    );
 }

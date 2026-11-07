@@ -252,4 +252,176 @@ describe('PostgREST subset for the price bot', () => {
       { day: '2026-09-02', cost: 7.4, items: 2 },
     ]);
   });
+
+  test('the BLS product RPCs match the SQL functions', async () => {
+    const db = service();
+    const day = new Date(Date.now() - 3 * 86_400_000).toISOString().slice(0, 10);
+    await db.from('bls_products').insert([
+      {
+        item_code: '709112',
+        display_name: 'Whole milk',
+        category: 'Dairy',
+        unit_label: 'per gal',
+        base_qty: 3785.4118,
+        current: true,
+        regions_current: ['nat', 'south'],
+      },
+      {
+        item_code: '708111',
+        display_name: 'Large eggs',
+        category: 'Dairy',
+        unit_label: 'per dozen',
+        base_qty: 12,
+        current: true,
+        regions_current: ['nat'],
+      },
+      {
+        item_code: '701311',
+        display_name: 'Instant rice',
+        category: 'Pantry',
+        unit_label: 'per lb',
+        base_qty: 453.5924,
+        current: false,
+        regions_current: [],
+      },
+    ]);
+    await db.from('bls_series').insert([
+      { id: 'APU0000709112', item_code: '709112', region: 'nat' },
+      { id: 'APU0300709112', item_code: '709112', region: 'south' },
+      { id: 'APU0000708111', item_code: '708111', region: 'nat' },
+    ]);
+    const bls = (series_id: string, month: string, price: number) => ({ series_id, month, price });
+    await db
+      .from('bls_prices')
+      .insert([
+        bls('APU0000709112', '2026-08-01', 4.05),
+        bls('APU0000709112', '2026-09-01', 4.1),
+        bls('APU0300709112', '2025-09-01', 4.0),
+        bls('APU0300709112', '2026-06-01', 4.1),
+        bls('APU0300709112', '2026-08-01', 4.15),
+        bls('APU0300709112', '2026-09-01', 4.2),
+        bls('APU0000708111', '2026-06-01', 2.9),
+        bls('APU0000708111', '2026-09-01', 3.0),
+      ]);
+    await db.from('items').insert([
+      { id: 'bls_milk', category: 'Dairy', bls_series_id: 'APU0000709112' },
+      { id: 'bls_milk_half', category: 'Dairy', bls_series_id: 'APU0000709112' },
+      { id: 'bls_eggs', category: 'Dairy', bls_series_id: 'APU0000708111' },
+    ]);
+    await db.from('stores').insert([
+      {
+        retailer_id: 'kroger',
+        external_id: 'bls-tx',
+        name: 'Houston',
+        zip: '77002',
+        state: 'TX',
+        padd: 'gulf',
+      },
+      {
+        retailer_id: 'kroger',
+        external_id: 'bls-oh',
+        name: 'Cincinnati',
+        zip: '45202',
+        state: 'OH',
+        padd: 'mid',
+      },
+    ]);
+    const { data: stores } = await db
+      .from('stores')
+      .select('id, external_id')
+      .in('external_id', ['bls-tx', 'bls-oh']);
+    const store = (ext: string) =>
+      (stores as { id: number; external_id: string }[]).find((r) => r.external_id === ext)!.id;
+    const obs = (
+      item_id: string,
+      retailer_id: string,
+      store_id: number | null,
+      source_id: string,
+      regular_price: number,
+      unit_price: number,
+      promo_price: number | null = null,
+    ) => ({
+      item_id,
+      retailer_id,
+      store_id,
+      source_id,
+      day,
+      regular_price,
+      promo_price,
+      unit_price,
+    });
+    await db
+      .from('price_observations')
+      .insert([
+        obs('bls_milk', 'kroger', store('bls-tx'), 'mock-kroger', 4.0, 4.0 / 3785.411784),
+        obs('bls_milk_half', 'kroger', store('bls-tx'), 'mock-kroger', 2.4, 2.4 / 1892.705892),
+        obs('bls_milk', 'kroger', store('bls-oh'), 'mock-kroger', 3.6, 3.6 / 3785.411784),
+        obs('bls_milk', 'amazon', null, 'mock-amazon', 4.2, 4.2 / 3785.411784, 3.99),
+        obs('bls_eggs', 'kroger', store('bls-tx'), 'mock-kroger', 3.6, 0.3),
+      ]);
+
+    const weekly = async (code: string, region: string) =>
+      (await anon().rpc('product_retailer_weekly', { p_item_code: code, p_region: region }))
+        .data as {
+        retailer_id: string;
+        price: number;
+        stores: number;
+        items: number;
+        online: boolean;
+        sample: boolean;
+      }[];
+    const south = await weekly('709112', 'south');
+    const kroger = south.find((r) => r.retailer_id === 'kroger')!;
+    assert.equal(kroger.price, 4.4);
+    assert.deepEqual(
+      [kroger.items, kroger.stores, kroger.sample, kroger.online],
+      [2, 1, true, false],
+    );
+    const amazon = south.find((r) => r.retailer_id === 'amazon')!;
+    assert.deepEqual([amazon.price, amazon.online, amazon.sample], [3.99, true, true]);
+    assert.equal((await weekly('709112', 'nat')).find((r) => r.retailer_id === 'kroger')!.price, 4);
+    assert.equal((await weekly('708111', 'nat'))[0]!.price, 3.6);
+
+    const list = (await anon().rpc('bls_product_list', { p_region: 'south' })).data as Record<
+      string,
+      unknown
+    >[];
+    assert.equal(list.length, 2, 'products BLS no longer publishes are not listed');
+    const milk = list.find((r) => r.item_code === '709112')!;
+    assert.deepEqual(
+      [
+        milk.region_used,
+        milk.series_id,
+        milk.price,
+        milk.change_1m,
+        milk.change_3m,
+        milk.change_12m,
+      ],
+      ['south', 'APU0300709112', 4.2, 1.2, 2.44, 5],
+    );
+    assert.deepEqual(
+      [milk.retailers, milk.sample, milk.item_ids],
+      [2, true, ['bls_milk', 'bls_milk_half']],
+    );
+    const eggs = list.find((r) => r.item_code === '708111')!;
+    assert.deepEqual([eggs.region_used, eggs.change_1m], ['nat', null]);
+
+    const monthly = (
+      await anon().rpc('bls_product_monthly', { p_item_code: '709112', p_region: 'south' })
+    ).data as { region: string }[];
+    assert.deepEqual(
+      [
+        monthly.filter((r) => r.region === 'south').length,
+        monthly.filter((r) => r.region === 'nat').length,
+      ],
+      [4, 2],
+    );
+
+    // A real Kroger source replaces Kroger's sample line.
+    await db
+      .from('price_observations')
+      .insert([obs('bls_milk', 'kroger', store('bls-tx'), 'kroger-api', 4.5, 4.5 / 3785.411784)]);
+    const after = (await weekly('709112', 'south')).find((r) => r.retailer_id === 'kroger')!;
+    assert.deepEqual([after.price, after.sample], [4.5, false]);
+  });
 });
